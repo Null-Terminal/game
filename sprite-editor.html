@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Простой редактор спрайтов</title>
+  <link rel="stylesheet" href="src/sprite-editor.css">
+  <script src="src/sprite-editor.ts" type="module" defer></script>
+</head>
+
+<body>
+  <form id="sprite-settings">
+    <p>
+      <label>
+        Изображение спрайта
+        <input name="sprite" type="file" accept="image/*">
+      </label>
+
+      <label>
+        Количество спрайтов
+        <input name="length" type="number" value="8">
+      </label>
+
+      <label>
+        Ширина одного тайла
+        <input name="width" type="number" value="400">
+      </label>
+
+      <label>
+        Высота одного тайла
+        <input name="height" type="number" value="260">
+      </label>
+    </p>
+
+    <p>
+      <button name="generate">Генерировать сетку</button>
+      <button name="render">Рендерить спрайты</button>
+    </p>
+  </form>
+
+  <div id="sprite-grid" class="sprite-grid">
+
+  </div>
+</body>
+
+</html>
