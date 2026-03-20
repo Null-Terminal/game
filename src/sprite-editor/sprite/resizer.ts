@@ -81,12 +81,10 @@ export class SpriteResizer {
 
     if (this.#resizing === "nw-resize" || this.#resizing === "w-resize") {
       canvas.width = newWidth;
-      this.#sprite.x = canvas.width / 2;
     }
 
     if (this.#resizing === "nw-resize" || this.#resizing === "ns-resize") {
       canvas.height = newHeight;
-      this.#sprite.y = canvas.height / 2;
     }
 
     this.#sprite.draw();
