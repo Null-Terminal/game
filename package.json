@@ -1,0 +1,29 @@
+{
+  "name": "@null-terminal/game",
+  "version": "0.0.1",
+  "description": "Спасаем мир от невежества эпохи ИИ",
+  "homepage": "https://github.com/Null-Terminal/game#readme",
+  "bugs": {
+    "url": "https://github.com/Null-Terminal/game/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Null-Terminal/game.git"
+  },
+  "license": "ISC",
+  "author": "kobezzza",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.1",
+    "vite": "^8.0.1",
+    "vite-tsconfig-paths": "^6.1.1"
+  }
+}
