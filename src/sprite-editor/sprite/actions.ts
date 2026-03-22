@@ -1,65 +1,61 @@
+import { Handlers } from "#sprite-editor/handlers";
+
 import type { Sprite } from "#sprite-editor/sprite";
 
-export class ActionHandlers {
-  readonly #sprite: Sprite;
-
-  constructor(sprite: Sprite) {
-    this.#sprite = sprite;
-    this.#initHandlers();
+export class ActionHandlers extends Handlers<Sprite> {
+  constructor(parent: Sprite) {
+    super(parent);
   }
 
   destroy(): void {
-    this.#sprite.container.removeEventListener("click", this.#onClick);
+    this.parent.controls.removeEventListener("click", this.onClick);
   }
 
   deleteSprite() {
-    const { container } = this.#sprite;
+    const { host } = this.parent;
 
-    container.style.opacity = "0";
+    host.style.opacity = "0";
 
-    container.addEventListener("transitionend", () => {
-      this.#sprite.destroy();
+    host.addEventListener("transitionend", () => {
+      this.parent.remove();
     }, {
       once: true,
     });
   }
 
   copyLeftSize() {
-    const currentSprite = this.#sprite;
+    const currentSprite = this.parent;
 
-    const leftSprite = currentSprite.getContext(this.#sprite.container.previousElementSibling);
+    let leftSprite: Element | null = currentSprite;
 
-    if (leftSprite != null) {
-      currentSprite.resize(leftSprite.canvas.width, leftSprite.canvas.height);
-    }
+    do {
+      leftSprite = leftSprite.previousElementSibling;
+
+      if (leftSprite instanceof (currentSprite.constructor as typeof Sprite)) {
+        currentSprite.resize(leftSprite.canvas.width, leftSprite.canvas.height);
+        break;
+      }
+
+    } while (leftSprite !== null);
   }
 
   copyRightSize() {
-    const currentSprite = this.#sprite;
+    const currentSprite = this.parent;
 
-    const leftSprite = currentSprite.getContext(this.#sprite.container.nextElementSibling);
+    let rightSprite: Element | null = currentSprite;
 
-    if (leftSprite != null) {
-      currentSprite.resize(leftSprite.canvas.width, leftSprite.canvas.height);
-    }
+    do {
+      rightSprite = rightSprite.nextElementSibling;
+
+      if (rightSprite instanceof (currentSprite.constructor as typeof Sprite)) {
+        currentSprite.resize(rightSprite.canvas.width, rightSprite.canvas.height);
+        break;
+      }
+
+    } while (rightSprite !== null);
   }
 
-  #initHandlers() {
-    this.#sprite.container.addEventListener("click", this.#onClick);
+  protected initHandlers() {
+    this.parent.controls.addEventListener("click", this.onClick);
   }
-
-  #onClick = (e: PointerEvent) => {
-    const { target } = e;
-
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const action = target.closest<HTMLElement>("[data-action]")?.dataset["action"] ?? "unknown";
-
-    if (action in this) {
-      e.preventDefault();
-      this[action as keyof ActionHandlers]();
-    }
-  };
 }
