@@ -1,42 +1,7 @@
-.sprite-grid {
+.grid {
   background: #333;
 
-  .sprite {
-    position: relative;
+  sprite-item {
     display: inline-block;
-    margin: 10px;
-    transition: opacity 0.3s ease;
-  }
-
-  .resize-handle {
-    position: absolute;
-    z-index: 10;
-  }
-
-  .sprite-controls,
-  .image-coords {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .sprite-controls {
-    position: absolute;
-    z-index: 1;
-  }
-
-  .image-coords {
-    white-space: nowrap;
-    padding: 10px;
-
-    color: #CCC;
-  }
-
-  .image-coord {
-    width: 80px;
-  }
-
-  canvas {
-    display: block;
-    margin-top: 100px;
   }
 }

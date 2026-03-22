@@ -1,28 +1,43 @@
-import { loadImage } from "#sprite-editor/image-loader";
+import { cache } from "#/decorators/cache";
+import { loadImage } from "#/image-loader";
+
+import styles from "#sprite-editor/sprite/styles.css?raw";
+import template from "#sprite-editor/sprite/template.html?raw";
+import type { SpriteOptions } from "#sprite-editor/sprite/types";
 
 import { SpriteResizer } from "#sprite-editor/sprite/resizer";
 import { SpriteDragger } from "#sprite-editor/sprite/dragger";
 import { ActionHandlers } from "#sprite-editor/sprite/actions";
 
-export interface SpriteOptions {
-  handleSize?: number;
-  handlerColor?: string;
+export type { SpriteOptions };
 
-  borderColor?: string;
-  backgroundColor?: string;
-
-  width: number;
-  height: number;
-}
-
-export class Sprite {
-  readonly container: HTMLDivElement = Object.assign(document.createElement("div"), {
-    className: "sprite",
-  });
-
+export class Sprite extends HTMLElement {
+  readonly file: File;
   readonly options: Required<SpriteOptions>;
-  readonly canvas: HTMLCanvasElement = document.createElement("canvas");
-  readonly ctx: CanvasRenderingContext2D;
+
+  get host(): this {
+    return this.shadowRoot!.host as this;
+  }
+
+  @cache
+  get controls(): HTMLElement {
+    return this.shadowRoot!.getElementById("controls") as HTMLElement;
+  }
+
+  @cache
+  get sprite(): HTMLElement {
+    return this.shadowRoot!.getElementById("sprite")!;
+  }
+
+  @cache
+  get canvas(): HTMLCanvasElement {
+    return this.shadowRoot!.getElementById("sprite-canvas") as HTMLCanvasElement;
+  }
+
+  @cache
+  get ctx(): CanvasRenderingContext2D {
+    return this.canvas.getContext("2d")!;
+  }
 
   get x() {
     return this.#x;
@@ -59,16 +74,30 @@ export class Sprite {
   #imageHeight = 0;
 
   #x!: number;
-  #xInput!: HTMLInputElement;
+
+  @cache
+  get #xInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("x") as HTMLInputElement;
+  }
 
   #y!: number;
-  #yInput!: HTMLInputElement;
+
+  @cache
+  get #yInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("y") as HTMLInputElement;
+  }
 
   #spriteResizer!: SpriteResizer;
   #spriteDragger!: SpriteDragger;
   #actionHandlers!: ActionHandlers;
 
   constructor(file: File, opts: SpriteOptions) {
+    super();
+
+    this.attachShadow({ mode: "open" });
+
+    this.file = file;
+
     this.options = {
       handleSize: 12,
       handlerColor: "#CCC",
@@ -78,21 +107,15 @@ export class Sprite {
 
       ...opts
     };
+  }
 
-    this.#initTemplate();
-
-    const ctx = this.canvas.getContext("2d");
-
-    if (ctx == null) {
-      throw new Error("Cannot get 2D context from canvas");
-    }
-
-    this.ctx = ctx;
+  connectedCallback() {
+    this.#render();
 
     this.x = this.canvas.width / 2;
     this.y = this.canvas.height / 2;
 
-    loadImage(file).then((i) => {
+    loadImage(this.file).then((i) => {
       this.#image = i.image;
       this.#imageWidth = i.width;
       this.#imageHeight = i.height;
@@ -100,19 +123,10 @@ export class Sprite {
     });
   }
 
-  destroy() {
-    this.container.remove();
+  disconnectedCallback() {
     this.#spriteResizer.destroy();
     this.#spriteDragger.destroy();
     this.#actionHandlers.destroy();
-  }
-
-  getContext(elem: Element | null): Sprite | null {
-    if (elem != null && "sprite" in elem) {
-      return elem.sprite as Sprite;
-    }
-
-    return null;
   }
 
   resize(width: number, height: number) {
@@ -158,32 +172,12 @@ export class Sprite {
     this.ctx.stroke();
   }
 
-  #initTemplate() {
-    Object.assign(this.container, {
-      sprite: this
-    });
+  #render() {
+    if (this.shadowRoot == null) {
+      throw new Error("ShadowRoot element not found");
+    }
 
-    this.container.insertAdjacentHTML("afterbegin",`
-      <div class="sprite-controls">
-        <div class="quick-actions">
-          <button title="Удалить спрайт" data-action="deleteSprite">❌</button>
-          <button title="Скопировать размер со слайда слева" data-action="copyLeftSize">👈🏻</button>
-          <button title="Скопировать размер со слайда справа" data-action="copyRightSize">👉🏻</button>
-        </div>
-
-        <div class="image-coords">
-          <label>
-            X
-            <input class="image-coord x">
-          </label>
-
-          <label>
-            Y
-            <input class="image-coord y">
-          </label>
-        </div>
-      </div>
-    `);
+    this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
 
     Object.assign(this.canvas, {
       height: this.options.height,
@@ -197,13 +191,10 @@ export class Sprite {
       cursor: "grab",
     });
 
-    this.container.append(this.canvas);
-
-    this.#xInput = this.container.querySelector(".x")!;
-    this.#yInput = this.container.querySelector(".y")!;
-
     this.#spriteResizer = new SpriteResizer(this);
     this.#spriteDragger = new SpriteDragger(this);
     this.#actionHandlers = new ActionHandlers(this);
   }
 }
+
+customElements.define("sprite-item", Sprite);

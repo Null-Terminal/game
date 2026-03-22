@@ -23,7 +23,7 @@ export class SpriteResizer {
   }
 
   #makeCanvasResizable() {
-    const { container, options } = this.#sprite;
+    const { sprite, options } = this.#sprite;
     const { handleSize } = options;
 
     const right = `-${Math.round(handleSize / 3)}px`;
@@ -49,7 +49,7 @@ export class SpriteResizer {
       });
 
       handle.addEventListener("pointerdown", this.#onResizeStart.bind(this, style.cursor));
-      container.append(handle);
+      sprite.append(handle);
     }
 
     window.addEventListener("pointermove", this.#onResizeMove);
@@ -71,7 +71,7 @@ export class SpriteResizer {
     canvas.style.cursor = type;
   }
 
-  #onResizeMove = (e: PointerEvent) => {
+  readonly #onResizeMove = (e: PointerEvent) => {
     if (!this.#resizing) {
       return;
     }
@@ -95,7 +95,7 @@ export class SpriteResizer {
     this.#sprite.draw();
   };
 
-  #onResizeEnd = () => {
+  readonly #onResizeEnd = () => {
     this.#resizing = null;
     this.#sprite.canvas.style.cursor = "grab";
   };

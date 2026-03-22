@@ -10,7 +10,6 @@ export class SpriteDragger {
 
   #offsetX: number = 0;
   #offsetY: number = 0;
-
   #dragging: boolean = false;
 
   constructor(sprite: Sprite) {
@@ -58,7 +57,7 @@ export class SpriteDragger {
     };
   }
 
-  #onDragSprite = (e: PointerEvent) => {
+  readonly #onDragSprite = (e: PointerEvent) => {
     e.preventDefault();
 
     const { canvas } = this.#sprite;
@@ -75,7 +74,7 @@ export class SpriteDragger {
     }
   };
 
-  #onDraggingSprite = (e: PointerEvent) => {
+  readonly #onDraggingSprite = (e: PointerEvent) => {
     if (!this.#dragging) {
       return;
     }
@@ -88,7 +87,7 @@ export class SpriteDragger {
     this.#sprite.draw();
   };
 
-  #onDropSprite = (e: PointerEvent) => {
+  readonly #onDropSprite = (e: PointerEvent) => {
     if (!this.#dragging) {
       return;
     }
