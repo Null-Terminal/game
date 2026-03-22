@@ -44,19 +44,18 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const canvases = Array.from(editor.grid.querySelectorAll("sprite-item"))
-      .map((elem) => (elem as Sprite).canvas);
+    const canvases = Array.from(editor.grid.querySelectorAll("sprite-item")) as Sprite[];
 
-    const mergedCanvas = await mergeCanvasesHorizontally(canvases);
+    const mergedCanvas = await mergeSprites(canvases);
     const link = document.createElement("a");
 
     link.download = editor.getSetting("name").value;
     link.href = mergedCanvas.toDataURL(`image/${editor.getSetting("ext").value}`);
     link.click();
 
-    function mergeCanvasesHorizontally(canvases: HTMLCanvasElement[]): Promise<HTMLCanvasElement> {
+    function mergeSprites(sprites: Sprite[]): Promise<HTMLCanvasElement> {
       return new Promise((resolve, reject) => {
-        if (canvases.length === 0) {
+        if (sprites.length === 0) {
           reject(new Error("No canvases provided"));
           return;
         }
@@ -65,7 +64,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         let totalWidth = 0;
         let maxHeight = 0;
 
-        for (const canvas of canvases) {
+        for (const { canvas } of sprites) {
           totalWidth += canvas.width;
           maxHeight = Math.max(maxHeight, canvas.height);
         }
@@ -75,17 +74,21 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         resultCanvas.width = totalWidth;
         resultCanvas.height = maxHeight;
 
-        const ctx = resultCanvas.getContext("2d")!;
+        const resultCtx = resultCanvas.getContext("2d")!;
 
         // Рисуем каждый canvas на результирующем
         let currentX = 0;
 
-        for (const canvas of canvases) {
-          // Вычисляем позицию по Y для центрирования по вертикали
-          const y = (maxHeight - canvas.height) / 2;
+        for (const sprite of sprites) {
+          // Создаем временный canvas, чтобы отрисовать туда изображение без сетки
+          const canvas = sprite.canvas.cloneNode() as HTMLCanvasElement;
+          sprite.draw(canvas.getContext("2d")!);
 
-          ctx.drawImage(canvas, currentX, y);
-          currentX += canvas.width;
+          // Вычисляем позицию по Y для центрирования по вертикали
+          const y = (maxHeight - sprite.canvas.height) / 2;
+
+          resultCtx.drawImage(canvas, currentX, y);
+          currentX += sprite.canvas.width;
         }
 
         resolve(resultCanvas);

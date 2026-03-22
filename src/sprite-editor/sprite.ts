@@ -135,12 +135,12 @@ export class Sprite extends HTMLElement {
     this.draw();
   }
 
-  draw() {
-    this.ctx.fillStyle = this.options.backgroundColor;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  draw(target = this.ctx) {
+    target.fillStyle = this.options.backgroundColor;
+    target.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.#image != null) {
-      this.ctx.drawImage(
+      target.drawImage(
         this.#image,
         this.#x - this.imageWidth / 2,
         this.#y - this.imageHeight / 2,
@@ -149,7 +149,9 @@ export class Sprite extends HTMLElement {
       );
     }
 
-    this.#drawGrid();
+    if (target === this.ctx) {
+      this.#drawGrid();
+    }
   }
 
   #drawGrid() {
