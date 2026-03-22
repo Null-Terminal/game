@@ -5,6 +5,7 @@
     position: relative;
     display: inline-block;
     margin: 10px;
+    transition: opacity 0.3s ease;
   }
 
   .resize-handle {
@@ -12,13 +13,18 @@
     z-index: 10;
   }
 
+  .sprite-controls,
   .image-coords {
-    position: absolute;
-    z-index: 1;
-
     display: flex;
     flex-direction: column;
+  }
 
+  .sprite-controls {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .image-coords {
     white-space: nowrap;
     padding: 10px;
 
@@ -31,6 +37,6 @@
 
   canvas {
     display: block;
-    margin-top: 80px;
+    margin-top: 100px;
   }
 }

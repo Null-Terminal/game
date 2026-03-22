@@ -1,6 +1,8 @@
+import { loadImage } from "#sprite-editor/image-loader";
+
 import { SpriteResizer } from "#sprite-editor/sprite/resizer";
 import { SpriteDragger } from "#sprite-editor/sprite/dragger";
-import { loadImage } from "#sprite-editor/sprite/image-loader";
+import { ActionHandlers } from "#sprite-editor/sprite/actions";
 
 export interface SpriteOptions {
   handleSize?: number;
@@ -64,6 +66,7 @@ export class Sprite {
 
   #spriteResizer!: SpriteResizer;
   #spriteDragger!: SpriteDragger;
+  #actionHandlers!: ActionHandlers;
 
   constructor(file: File, opts: SpriteOptions) {
     this.options = {
@@ -98,8 +101,24 @@ export class Sprite {
   }
 
   destroy() {
+    this.container.remove();
     this.#spriteResizer.destroy();
     this.#spriteDragger.destroy();
+    this.#actionHandlers.destroy();
+  }
+
+  getContext(elem: Element | null): Sprite | null {
+    if (elem != null && "sprite" in elem) {
+      return elem.sprite as Sprite;
+    }
+
+    return null;
+  }
+
+  resize(width: number, height: number) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.draw();
   }
 
   draw() {
@@ -140,6 +159,32 @@ export class Sprite {
   }
 
   #initTemplate() {
+    Object.assign(this.container, {
+      sprite: this
+    });
+
+    this.container.insertAdjacentHTML("afterbegin",`
+      <div class="sprite-controls">
+        <div class="quick-actions">
+          <button title="Удалить спрайт" data-action="deleteSprite">❌</button>
+          <button title="Скопировать размер со слайда слева" data-action="copyLeftSize">👈🏻</button>
+          <button title="Скопировать размер со слайда справа" data-action="copyRightSize">👉🏻</button>
+        </div>
+
+        <div class="image-coords">
+          <label>
+            X
+            <input class="image-coord x">
+          </label>
+
+          <label>
+            Y
+            <input class="image-coord y">
+          </label>
+        </div>
+      </div>
+    `);
+
     Object.assign(this.canvas, {
       height: this.options.height,
       width: this.options.width
@@ -152,20 +197,6 @@ export class Sprite {
       cursor: "grab",
     });
 
-    this.container.insertAdjacentHTML("afterbegin",`
-      <div class="image-coords">
-        <label>
-          X
-          <input class="image-coord x">
-        </label>
-
-        <label>
-          Y
-          <input class="image-coord y">
-        </label>
-      </div>
-    `);
-
     this.container.append(this.canvas);
 
     this.#xInput = this.container.querySelector(".x")!;
@@ -173,5 +204,6 @@ export class Sprite {
 
     this.#spriteResizer = new SpriteResizer(this);
     this.#spriteDragger = new SpriteDragger(this);
+    this.#actionHandlers = new ActionHandlers(this);
   }
 }
