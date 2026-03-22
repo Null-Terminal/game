@@ -1,5 +1,6 @@
 import { SpriteResizer } from "#sprite-editor/sprite/resizer";
 import { SpriteDragger } from "#sprite-editor/sprite/dragger";
+import { loadImage } from "#sprite-editor/sprite/image-loader";
 
 export interface SpriteOptions {
   handleSize?: number;
@@ -85,7 +86,12 @@ export class Sprite {
     this.x = this.canvas.width / 2;
     this.y = this.canvas.height / 2;
 
-    this.#loadImage(file);
+    loadImage(file).then((i) => {
+      this.#image = i.image;
+      this.#imageWidth = i.width;
+      this.#imageHeight = i.height;
+      this.draw();
+    });
   }
 
   draw(): void {
