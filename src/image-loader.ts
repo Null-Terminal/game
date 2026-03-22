@@ -38,15 +38,15 @@ export function loadImage(file: File): Promise<LoadedImage> {
         resolve(loadedImage);
       };
 
-      image.onerror = (...args) => {
-        reject(args.at(-1));
+      image.onerror = () => {
+        reject(new Error(`Failed to load image ${result}`));
       };
 
       image.src = result;
     };
 
     reader.onerror = () => {
-      console.error("Failed to read file");
+      reject(reader.error);
     };
 
     reader.readAsDataURL(file);
