@@ -22,18 +22,22 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const sprite = editor.getSettingElement("sprite");
-    const length = this.asNum(editor.getSettingElement("length"));
+    const sprite = editor.getSetting("sprite");
+    const length = this.asNum(editor.getSetting("length"));
 
-    const width = this.asNum(editor.getSettingElement("width"));
-    const height = this.asNum(editor.getSettingElement("height"));
+    const width = this.asNum(editor.getSetting("width"));
+    const height = this.asNum(editor.getSetting("height"));
 
     for (let i = 1; i < length; i++) {
       editor.grid?.append(new Sprite(sprite.files![0]!, { width, height }));
     }
   }
 
-  async renderGrid(filename: string = "merged.png", format: "png" | "jpeg" = "png") {
+  clearGrid() {
+    this.parent.grid.innerHTML = "";
+  }
+
+  async renderGrid() {
     const editor = this.parent;
 
     if (!editor.settings.checkValidity()) {
@@ -44,10 +48,10 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       .map((elem) => (elem as Sprite).canvas);
 
     const mergedCanvas = await mergeCanvasesHorizontally(canvases);
-
     const link = document.createElement("a");
-    link.download = filename;
-    link.href = mergedCanvas.toDataURL(`image/${format}`);
+
+    link.download = editor.getSetting("name").value;
+    link.href = mergedCanvas.toDataURL(`image/${editor.getSetting("ext").value}`);
     link.click();
 
     function mergeCanvasesHorizontally(canvases: HTMLCanvasElement[]): Promise<HTMLCanvasElement> {

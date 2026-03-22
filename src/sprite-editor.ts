@@ -31,7 +31,7 @@ export class SpriteEditor extends HTMLElement {
     this.#actionHandlers.destroy();
   }
 
-  getSettingElement<T extends HTMLInputElement>(name: string): T {
+  getSetting<T extends HTMLInputElement>(name: string): T {
     const elem = this.settings.elements.namedItem(name);
 
     if (elem == null) {
