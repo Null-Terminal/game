@@ -70,7 +70,7 @@ export class Sprite {
       handleSize: 12,
       handlerColor: "#CCC",
 
-      borderColor: "#444",
+      borderColor: "#00084B",
       backgroundColor: "#333",
 
       ...opts
@@ -103,7 +103,8 @@ export class Sprite {
   }
 
   draw() {
-    this.#drawGrid();
+    this.ctx.fillStyle = this.options.backgroundColor;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.#image != null) {
       this.ctx.drawImage(
@@ -114,14 +115,11 @@ export class Sprite {
         this.imageHeight
       );
     }
+
+    this.#drawGrid();
   }
 
-  #drawGrid(): void {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.ctx.fillStyle = this.options.backgroundColor;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
+  #drawGrid() {
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.options.borderColor;
     this.ctx.lineWidth = 1;
