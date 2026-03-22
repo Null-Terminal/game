@@ -18,53 +18,16 @@ export class SpriteDragger {
     this.#makeSpriteDraggable();
   }
 
-  #makeSpriteDraggable(): void {
-    this.#sprite.canvas.addEventListener("pointerdown", this.#onDragSprite.bind(this));
-    window.addEventListener("pointermove", this.#onDraggingSprite.bind(this), { passive: true });
-    window.addEventListener("pointerup", this.#onDropSprite.bind(this), { passive: true });
+  destroy() {
+    this.#sprite.canvas.removeEventListener("pointerdown", this.#onDragSprite);
+    window.removeEventListener("pointermove", this.#onDraggingSprite);
+    window.removeEventListener("pointerup", this.#onDropSprite);
   }
 
-  #onDragSprite(e: PointerEvent): void {
-    e.preventDefault();
-
-    const { canvas } = this.#sprite;
-    const { x, y } = this.#getPointerPosition(e);
-
-    if (this.#isPointInsideImage(x, y)) {
-      this.#dragging = true;
-
-      this.#offsetX = this.#sprite.x - x;
-      this.#offsetY = this.#sprite.y - y;
-
-      canvas.style.cursor = "grabbing";
-      canvas.setPointerCapture(e.pointerId);
-    }
-  }
-
-  #onDraggingSprite(e: PointerEvent): void {
-    if (!this.#dragging) {
-      return;
-    }
-
-    const { x, y } = this.#getPointerPosition(e);
-
-    this.#sprite.x = x + this.#offsetX;
-    this.#sprite.y = y + this.#offsetY;
-
-    this.#sprite.draw();
-  }
-
-  #onDropSprite(e: PointerEvent): void {
-    if (!this.#dragging) {
-      return;
-    }
-
-    const { canvas } = this.#sprite;
-
-    canvas.style.cursor = "grab";
-    canvas.releasePointerCapture(e.pointerId);
-
-    this.#dragging = false;
+  #makeSpriteDraggable() {
+    this.#sprite.canvas.addEventListener("pointerdown", this.#onDragSprite);
+    window.addEventListener("pointermove", this.#onDraggingSprite, { passive: true });
+    window.addEventListener("pointerup", this.#onDropSprite, { passive: true });
   }
 
   #isPointInsideImage(pointX: number, pointY: number): boolean {
@@ -94,4 +57,47 @@ export class SpriteDragger {
       y: (e.clientY - rect.top) * scaleY
     };
   }
+
+  #onDragSprite = (e: PointerEvent) => {
+    e.preventDefault();
+
+    const { canvas } = this.#sprite;
+    const { x, y } = this.#getPointerPosition(e);
+
+    if (this.#isPointInsideImage(x, y)) {
+      this.#dragging = true;
+
+      this.#offsetX = this.#sprite.x - x;
+      this.#offsetY = this.#sprite.y - y;
+
+      canvas.style.cursor = "grabbing";
+      canvas.setPointerCapture(e.pointerId);
+    }
+  };
+
+  #onDraggingSprite = (e: PointerEvent) => {
+    if (!this.#dragging) {
+      return;
+    }
+
+    const { x, y } = this.#getPointerPosition(e);
+
+    this.#sprite.x = x + this.#offsetX;
+    this.#sprite.y = y + this.#offsetY;
+
+    this.#sprite.draw();
+  };
+
+  #onDropSprite = (e: PointerEvent) => {
+    if (!this.#dragging) {
+      return;
+    }
+
+    const { canvas } = this.#sprite;
+
+    canvas.style.cursor = "grab";
+    canvas.releasePointerCapture(e.pointerId);
+
+    this.#dragging = false;
+  };
 }

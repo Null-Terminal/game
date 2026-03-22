@@ -17,7 +17,12 @@ export class SpriteResizer {
     this.#makeCanvasResizable();
   }
 
-  #makeCanvasResizable(): void {
+  destroy() {
+    window.removeEventListener("pointermove", this.#onResizeMove);
+    window.removeEventListener("pointerup", this.#onResizeEnd);
+  }
+
+  #makeCanvasResizable() {
     const { container, options } = this.#sprite;
     const { handleSize } = options;
 
@@ -47,11 +52,11 @@ export class SpriteResizer {
       container.append(handle);
     }
 
-    window.addEventListener("pointermove", this.#onResizeMove.bind(this));
-    window.addEventListener("pointerup", this.#onResizeEnd.bind(this));
+    window.addEventListener("pointermove", this.#onResizeMove);
+    window.addEventListener("pointerup", this.#onResizeEnd);
   }
 
-  #onResizeStart(type: ResizeType, e: PointerEvent): void {
+  #onResizeStart(type: ResizeType, e: PointerEvent) {
     e.preventDefault();
 
     const { canvas } = this.#sprite;
@@ -66,7 +71,7 @@ export class SpriteResizer {
     canvas.style.cursor = type;
   }
 
-  #onResizeMove(e: PointerEvent): void {
+  #onResizeMove = (e: PointerEvent) => {
     if (!this.#resizing) {
       return;
     }
@@ -88,10 +93,10 @@ export class SpriteResizer {
     }
 
     this.#sprite.draw();
-  }
+  };
 
-  #onResizeEnd(): void {
+  #onResizeEnd = () => {
     this.#resizing = null;
     this.#sprite.canvas.style.cursor = "grab";
-  }
+  };
 }

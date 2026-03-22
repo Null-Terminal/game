@@ -62,6 +62,9 @@ export class Sprite {
   #y!: number;
   #yInput!: HTMLInputElement;
 
+  #spriteResizer!: SpriteResizer;
+  #spriteDragger!: SpriteDragger;
+
   constructor(file: File, opts: SpriteOptions) {
     this.options = {
       handleSize: 12,
@@ -94,7 +97,12 @@ export class Sprite {
     });
   }
 
-  draw(): void {
+  destroy() {
+    this.#spriteResizer.destroy();
+    this.#spriteDragger.destroy();
+  }
+
+  draw() {
     this.#drawGrid();
 
     if (this.#image != null) {
@@ -165,43 +173,7 @@ export class Sprite {
     this.#xInput = this.container.querySelector(".x")!;
     this.#yInput = this.container.querySelector(".y")!;
 
-    new SpriteResizer(this);
-    new SpriteDragger(this);
-  }
-
-  #loadImage(file: File): void {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const result = e.target?.result;
-
-      if (typeof result !== "string") {
-        console.error("Failed to read file");
-        return;
-      }
-
-      const img = new Image();
-
-      img.onload = () => {
-        this.#image = img;
-
-        this.#imageWidth = img.width;
-        this.#imageHeight = img.height;
-
-        this.draw();
-      };
-
-      img.onerror = () => {
-        console.error("Failed to load image");
-      };
-
-      img.src = result;
-    };
-
-    reader.onerror = () => {
-      console.error("Failed to read file");
-    };
-
-    reader.readAsDataURL(file);
+    this.#spriteResizer = new SpriteResizer(this);
+    this.#spriteDragger = new SpriteDragger(this);
   }
 }
