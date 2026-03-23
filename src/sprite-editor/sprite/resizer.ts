@@ -81,8 +81,8 @@ export class SpriteResizer {
     const deltaX = e.clientX - this.#resizeStartX;
     const deltaY = e.clientY - this.#resizeStartY;
 
-    const newWidth = Math.max(100, this.#startWidth + deltaX);
-    const newHeight = Math.max(100, this.#startHeight + deltaY);
+    const newWidth = Math.max(50, this.#startWidth + deltaX);
+    const newHeight = Math.max(50, this.#startHeight + deltaY);
 
     if (this.#resizing === "nw-resize" || this.#resizing === "w-resize") {
       canvas.width = newWidth;

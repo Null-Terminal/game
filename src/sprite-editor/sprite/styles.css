@@ -3,15 +3,6 @@
   transition: opacity 0.3s ease;
 }
 
-.sprite {
-  position: relative;
-}
-
-.resize-handle {
-  position: absolute;
-  z-index: 10;
-}
-
 .controls,
 .coords {
   display: flex;
@@ -28,5 +19,14 @@
 }
 
 .coord {
-  width: 80px;
+  width: 50px;
+}
+
+.sprite {
+  position: relative;
+}
+
+.resize-handle {
+  position: absolute;
+  z-index: 10;
 }
