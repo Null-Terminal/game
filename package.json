@@ -15,7 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "ENTRY=sprite-editor.html vite",
     "build": "tsc && cross-env ENTRY=sprite-editor.html vite build",
     "preview": "cross-env ENTRY=sprite-editor.html vite preview"
   },
