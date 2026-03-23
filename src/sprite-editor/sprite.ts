@@ -112,8 +112,8 @@ export class Sprite extends HTMLElement {
   connectedCallback() {
     this.#render();
 
-    this.x = this.canvas.width / 2;
-    this.y = this.canvas.height / 2;
+    this.x = 0;
+    this.y = 0;
 
     loadImage(this.file).then((i) => {
       this.#image = i.image;
@@ -142,8 +142,8 @@ export class Sprite extends HTMLElement {
     if (this.#image != null) {
       target.drawImage(
         this.#image,
-        this.#x - this.imageWidth / 2,
-        this.#y - this.imageHeight / 2,
+        this.#x,
+        this.#y,
         this.imageWidth,
         this.imageHeight
       );

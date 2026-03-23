@@ -36,12 +36,10 @@ export class SpriteDragger {
 
     const { x, y, imageWidth, imageHeight } = this.#sprite;
 
-    const left = x - imageWidth / 2;
-    const right = x + imageWidth / 2;
-    const top = y - imageHeight / 2;
-    const bottom = y + imageHeight / 2;
+    const right = x + imageWidth;
+    const bottom = y + imageHeight;
 
-    return pointX >= left && pointX <= right && pointY >= top && pointY <= bottom;
+    return pointX >= x && pointX <= right && pointY >= y && pointY <= bottom;
   }
 
   #getPointerPosition(e: PointerEvent): PointerPosition {
