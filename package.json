@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/Null-Terminal/game.git"
   },
-  "license": "ISC",
+  "license": "UNLICENSED",
   "author": "kobezzza",
   "type": "module",
   "main": "index.js",
