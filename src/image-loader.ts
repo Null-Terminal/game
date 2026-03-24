@@ -4,51 +4,53 @@ export interface LoadedImage {
   readonly height: number;
 }
 
-const imageCache = new WeakMap<File, LoadedImage>();
+const imageCache = new WeakMap<File, Promise<LoadedImage>>();
 
 export function loadImage(file: File): Promise<LoadedImage> {
-  return new Promise((resolve, reject) => {
-    const fromCache = imageCache.get(file);
+  const fromCache = imageCache.get(file);
 
-    if (fromCache != null) {
-      resolve(fromCache);
+  if (fromCache != null) {
+    return fromCache;
+  }
+
+  const { promise, resolve, reject } = Promise.withResolvers<LoadedImage>();
+
+  imageCache.set(file, promise);
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    const result = e.target?.result;
+
+    if (typeof result !== "string") {
+      reject(new Error("Failed to load image"));
       return;
     }
 
-    const reader = new FileReader();
+    const image = new Image();
 
-    reader.onload = (e) => {
-      const result = e.target?.result;
-
-      if (typeof result !== "string") {
-        reject(new Error("Failed to load image"));
-        return;
-      }
-
-      const image = new Image();
-
-      image.onload = () => {
-        const loadedImage = {
-          image,
-          width: image.width,
-          height: image.height
-        };
-
-        imageCache.set(file, loadedImage);
-        resolve(loadedImage);
+    image.onload = () => {
+      const loadedImage = {
+        image,
+        width: image.width,
+        height: image.height
       };
 
-      image.onerror = () => {
-        reject(new Error(`Failed to load image ${result}`));
-      };
-
-      image.src = result;
+      resolve(loadedImage);
     };
 
-    reader.onerror = () => {
-      reject(reader.error);
+    image.onerror = () => {
+      reject(new Error(`Failed to load image ${result}`));
     };
 
-    reader.readAsDataURL(file);
-  });
+    image.src = result;
+  };
+
+  reader.onerror = () => {
+    reject(reader.error);
+  };
+
+  reader.readAsDataURL(file);
+
+  return promise;
 }
