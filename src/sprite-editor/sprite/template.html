@@ -1,20 +1,30 @@
-<div id="controls" class="controls">
+<div id="controls" class="box">
   <div class="quick-actions">
     <button title="Удалить спрайт" data-action="deleteSprite">❌</button>
     <button title="Скопировать размер со слайда слева" data-action="copyLeftSize">👈🏻</button>
     <button title="Скопировать размер со слайда справа" data-action="copyRightSize">👉🏻</button>
   </div>
 
-  <div class="coords">
-    <label>
-      X
-      <input id="x" class="coord">
-    </label>
+  <div class="box inputs">
+    <div class="row">
+      <label for="id">Идентификатор</label>
+      <input id="id">
+    </div>
 
-    <label>
-      Y
-      <input id="y" class="coord">
-    </label>
+    <div class="row">
+      <label for="delay">Задержка в мс</label>
+      <input id="delay" type="number" value="100">
+    </div>
+
+    <div class="row">
+      <label for="x">X</label>
+      <input id="x" type="number" class="coord">
+    </div>
+
+    <div class="row">
+      <label for="y">Y</label>
+      <input id="y" type="number" class="coord">
+    </div>
   </div>
 </div>
 
