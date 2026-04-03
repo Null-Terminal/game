@@ -47,11 +47,19 @@ export class SpriteBuffer {
   }
 
   get id() {
-    return this.#cachedId ??= new TextDecoder().decode(this.#id);
+    return this.#cachedId ??= new TextDecoder().decode(this.#id).trim();
   }
 
   set id(value: string) {
-    this.#id.set(new TextEncoder().encode(value));
+    const size = SpriteBuffer.ID_SIZE;
+
+    this.#id.set(
+      new TextEncoder().encode(
+        value
+          .slice(0, size)
+          .padEnd(size, " "))
+    );
+
     this.#cachedId = null;
   }
 
