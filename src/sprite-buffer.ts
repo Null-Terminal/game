@@ -1,14 +1,14 @@
 const U8 = Uint8Array.BYTES_PER_ELEMENT;
-const U16 = Uint16Array.BYTES_PER_ELEMENT;
+const I16 = Int16Array.BYTES_PER_ELEMENT;
 const UTF8_6 = U8 * 6;
 
 export class SpriteBuffer {
   static readonly SCHEME = new Map([
-    ["x", U16],
-    ["y", U16],
-    ["width", U16],
-    ["height", U16],
-    ["delay", U16],
+    ["x", I16],
+    ["y", I16],
+    ["width", I16],
+    ["height", I16],
+    ["delay", I16],
     ["id", UTF8_6],
   ] as const);
 
@@ -18,6 +18,8 @@ export class SpriteBuffer {
   static readonly ID_SIZE = this.SCHEME.get("id")!;
   static readonly ID_OFFSET = this.BYTES_PER_ELEMENT - this.ID_SIZE;
   static readonly NUMS_SIZE = (this.BYTES_PER_ELEMENT - this.ID_SIZE) / 2;
+
+  readonly BYTES_PER_ELEMENT = SpriteBuffer.BYTES_PER_ELEMENT;
 
   get buffer() {
     return this.#bytes.buffer;
@@ -41,7 +43,7 @@ export class SpriteBuffer {
     const c = SpriteBuffer;
 
     this.#id = new Uint8Array(bytes.buffer, offset + c.ID_OFFSET, c.ID_SIZE);
-    this.#nums = new Uint16Array(bytes.buffer, offset, c.NUMS_SIZE);
+    this.#nums = new Int16Array(bytes.buffer, offset, c.NUMS_SIZE);
   }
 
   get id() {
