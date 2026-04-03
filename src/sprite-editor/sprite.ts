@@ -1,5 +1,5 @@
 import { cache } from "#/decorators/cache";
-import { loadImage } from "#/image-loader";
+import { loadImage } from "#/file-loader";
 
 import styles from "#sprite-editor/sprite/styles.css?raw";
 import template from "#sprite-editor/sprite/template.html?raw";
@@ -20,16 +20,6 @@ export class Sprite extends HTMLElement {
   }
 
   @cache
-  get controls(): HTMLElement {
-    return this.shadowRoot!.getElementById("controls") as HTMLElement;
-  }
-
-  @cache
-  get sprite(): HTMLElement {
-    return this.shadowRoot!.getElementById("sprite")!;
-  }
-
-  @cache
   get canvas(): HTMLCanvasElement {
     return this.shadowRoot!.getElementById("sprite-canvas") as HTMLCanvasElement;
   }
@@ -37,6 +27,26 @@ export class Sprite extends HTMLElement {
   @cache
   get ctx(): CanvasRenderingContext2D {
     return this.canvas.getContext("2d")!;
+  }
+
+  get image() {
+    return this.#image;
+  }
+
+  get imageWidth() {
+    return this.#imageWidth;
+  }
+
+  get imageHeight() {
+    return this.#imageHeight;
+  }
+
+  get spriteId() {
+    return this.#spriteId.value;
+  }
+
+  get animationDelay() {
+    return parseFloat(this.#animationDelay.value);
   }
 
   get x() {
@@ -57,21 +67,34 @@ export class Sprite extends HTMLElement {
     this.#yInput.value = value.toFixed(1);
   }
 
-  get image() {
-    return this.#image;
+  @cache
+  get controls(): HTMLElement {
+    return this.shadowRoot!.getElementById("controls") as HTMLElement;
   }
 
-  get imageWidth() {
-    return this.#imageWidth;
+  @cache
+  get player(): HTMLCanvasElement {
+    return this.shadowRoot!.getElementById("player") as HTMLCanvasElement;
   }
 
-  get imageHeight() {
-    return this.#imageHeight;
+  @cache
+  get sprite(): HTMLElement {
+    return this.shadowRoot!.getElementById("sprite")!;
   }
 
   #image: HTMLImageElement | null = null;
   #imageWidth = 0;
   #imageHeight = 0;
+
+  @cache
+  get #spriteId(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("id") as HTMLInputElement;
+  }
+
+  @cache
+  get #animationDelay(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("delay") as HTMLInputElement;
+  }
 
   #x!: number;
 
@@ -99,6 +122,12 @@ export class Sprite extends HTMLElement {
     this.file = file;
 
     this.options = {
+      x: 0,
+      y: 0,
+
+      spriteId: "",
+      animationDelay: 100,
+
       handleSize: 12,
       handlerColor: "#CCC",
 
@@ -111,9 +140,6 @@ export class Sprite extends HTMLElement {
 
   connectedCallback() {
     this.#render();
-
-    this.x = 0;
-    this.y = 0;
 
     loadImage(this.file).then((i) => {
       this.#image = i.image;
@@ -180,6 +206,12 @@ export class Sprite extends HTMLElement {
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
+
+    this.x = this.options.x;
+    this.y = this.options.y;
+
+    this.#spriteId.value = this.options.spriteId.toString();
+    this.#animationDelay.value = this.options.animationDelay.toString();
 
     Object.assign(this.canvas, {
       height: this.options.height,
