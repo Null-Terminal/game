@@ -1,25 +1,10 @@
+@import url("https://fonts.cdnfonts.com/css/helvetica-255");
+
 :host {
   padding: 10px;
   transition: opacity 0.3s ease;
-}
-
-.controls,
-.coords {
-  display: flex;
-  flex-direction: column;
-}
-
-.controls > * {
-  margin-bottom: 10px;
-}
-
-.coords {
-  white-space: nowrap;
+  font-family: "Helvetica", sans-serif;
   color: #CCC;
-}
-
-.coord {
-  width: 50px;
 }
 
 .sprite {
@@ -29,4 +14,31 @@
 .resize-handle {
   position: absolute;
   z-index: 10;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  margin: 5px 0;
+}
+
+.row > label {
+  margin-right: 15px;
+}
+
+.row > input {
+  flex: 1;
+}
+
+.quick-actions {
+  margin-bottom: 10px;
+}
+
+.coord {
+  width: 50px;
 }
