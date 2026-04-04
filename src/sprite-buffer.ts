@@ -15,14 +15,18 @@ export class SpriteBuffer {
   static readonly BYTES_PER_ELEMENT = this.SCHEME.values()
     .reduce((acc, size) => acc + size, 0);
 
+  readonly BYTES_PER_ELEMENT = SpriteBuffer.BYTES_PER_ELEMENT;
+
   static readonly ID_SIZE = this.SCHEME.get("id")!;
   static readonly ID_OFFSET = this.BYTES_PER_ELEMENT - this.ID_SIZE;
   static readonly NUMS_SIZE = (this.BYTES_PER_ELEMENT - this.ID_SIZE) / 2;
 
-  readonly BYTES_PER_ELEMENT = SpriteBuffer.BYTES_PER_ELEMENT;
-
   get buffer() {
     return this.#bytes.buffer;
+  }
+
+  get byteLength() {
+    return this.#bytes.byteLength;
   }
 
   get byteOffset() {
