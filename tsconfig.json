@@ -4,6 +4,7 @@
   "compilerOptions": {
     "paths": {
       "#sprite-editor/*": ["./src/sprite-editor/*"],
+      "#sprite-buffer/*": ["./src/sprite-buffer/*"],
       "#/*": ["./src/*"]
     },
 
