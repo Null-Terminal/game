@@ -12,11 +12,6 @@ export class SpriteEditor extends HTMLElement {
   }
 
   @cache
-  get player(): HTMLCanvasElement {
-    return this.shadowRoot!.getElementById("player") as HTMLCanvasElement;
-  }
-
-  @cache
   get grid(): HTMLElement {
     return this.shadowRoot!.getElementById("grid")!;
   }

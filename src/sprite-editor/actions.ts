@@ -87,37 +87,6 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     }
   }
 
-  async playPreview() {
-    const { player } = this.parent;
-    const { canvas, data } = this.#mergeSprites();
-
-    player.width = canvas.width;
-    player.height = canvas.height;
-
-    const ctx = player.getContext("2d")!;
-    ctx.fillStyle = "#0FC475";
-
-    let spriteIndex = 0;
-    let lastFrameTime = 0;
-
-    requestAnimationFrame(animate);
-
-    function animate(now: number) {
-      requestAnimationFrame(animate);
-      const sprite = data.at(spriteIndex)!;
-
-      if (now - lastFrameTime >= sprite.animationDelay) {
-        spriteIndex++;
-        spriteIndex %= data.size;
-
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(canvas, sprite.x, sprite.y, sprite.width, sprite.height, 0, canvas.height - sprite.height, sprite.width, sprite.height);
-
-        lastFrameTime = now;
-      }
-    }
-  }
-
   renderGrid() {
     const editor = this.parent;
 
@@ -125,7 +94,9 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const { canvas, data } = this.#mergeSprites();
+    const { canvas, data } = RenderedSpriteBuffer.mergeSprites(
+      Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[]
+    );
 
     const image = document.createElement("a");
 
@@ -154,10 +125,4 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
   readonly #onSubmit = (e: Event) => {
     e.preventDefault();
   };
-
-  #mergeSprites() {
-    return RenderedSpriteBuffer.mergeSprites(
-      Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[]
-    );
-  }
 }
