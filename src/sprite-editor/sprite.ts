@@ -1,4 +1,4 @@
-import { cache } from "#/decorators/cache";
+import { cache } from "#decorators/cache";
 import { loadImage } from "#/file-loader";
 
 import styles from "#sprite-editor/sprite/styles.css?raw";

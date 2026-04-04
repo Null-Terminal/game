@@ -1,4 +1,6 @@
-import { cache } from "#/decorators/cache";
+import { cache } from "#decorators/cache";
+
+import "#sprite-editor/animation-preview";
 
 import styles from "#sprite-editor/styles.css?raw";
 import template from "#sprite-editor/template.html?raw";
