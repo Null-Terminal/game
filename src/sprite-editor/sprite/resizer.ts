@@ -6,11 +6,11 @@ export class SpriteResizer {
   readonly #sprite: Sprite;
 
   #resizing: ResizeType | null = null;
-  #resizeStartX: number = 0;
-  #resizeStartY: number = 0;
+  #resizeStartX = 0;
+  #resizeStartY = 0;
 
-  #startWidth: number = 0;
-  #startHeight: number = 0;
+  #startWidth = 0;
+  #startHeight = 0;
 
   constructor(sprite: Sprite) {
     this.#sprite = sprite;

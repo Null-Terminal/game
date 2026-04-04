@@ -8,9 +8,9 @@ export interface PointerPosition {
 export class SpriteDragger {
   readonly #sprite: Sprite;
 
-  #offsetX: number = 0;
-  #offsetY: number = 0;
-  #dragging: boolean = false;
+  #offsetX = 0;
+  #offsetY = 0;
+  #dragging = false;
 
   constructor(sprite: Sprite) {
     this.#sprite = sprite;
