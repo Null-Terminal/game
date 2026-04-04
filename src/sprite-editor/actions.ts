@@ -51,17 +51,11 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         const data = new RenderedSpriteBuffer(sprite.data);
 
         for (let i = 0; i < data.size; i++) {
-          const spriteBuffer = data.at(i)!;
-
+          const desc = data.at(i)!.getDescriptor();
           editor.grid?.append(new Sprite(sprite.image, {
-            x: spriteBuffer.x,
-            y: spriteBuffer.y,
-
-            width: spriteBuffer.width,
-            height: spriteBuffer.height,
-
-            spriteId: spriteBuffer.spriteId,
-            animationDelay: spriteBuffer.animationDelay,
+            ...desc,
+            x: -desc.x,
+            y: -desc.y,
           }));
         }
       }
@@ -95,21 +89,31 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
 
   async playPreview() {
     const { player } = this.parent;
-
     const { canvas, data } = this.#mergeSprites();
 
     player.width = canvas.width;
     player.height = canvas.height;
 
     const ctx = player.getContext("2d")!;
+    ctx.fillStyle = "#0FC475";
 
-    while (true) {
-      for (let i = 2; i < data.length; i += 16) {
-        const nums = new Uint16Array(data.buffer, i, 5);
+    let spriteIndex = 0;
+    let lastFrameTime = 0;
 
-        ctx.drawImage(canvas, nums[0], nums[1], nums[2], nums[3], 0, 0, nums[2], nums[3]);
+    requestAnimationFrame(animate);
 
-        await new Promise(resolve => setTimeout(resolve, nums[4]));
+    function animate(now: number) {
+      requestAnimationFrame(animate);
+      const sprite = data.at(spriteIndex)!;
+
+      if (now - lastFrameTime >= sprite.animationDelay) {
+        spriteIndex++;
+        spriteIndex %= data.size;
+
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(canvas, sprite.x, sprite.y, sprite.width, sprite.height, 0, canvas.height - sprite.height, sprite.width, sprite.height);
+
+        lastFrameTime = now;
       }
     }
   }
