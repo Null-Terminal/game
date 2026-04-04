@@ -1,12 +1,8 @@
-export interface SpriteOptions {
+import type { SpriteDescriptor } from "#/sprite-buffer";
+
+export interface SpriteOptions extends Partial<SpriteDescriptor> {
   width: number;
   height: number;
-
-  x?: number;
-  y?: number;
-
-  spriteId?: string;
-  animationDelay?: number;
 
   handleSize?: number;
   handlerColor?: string;

@@ -1,14 +1,16 @@
+import type { SpriteDescriptor } from "#sprite-buffer/types";
+
 const U8 = Uint8Array.BYTES_PER_ELEMENT;
-const I16 = Int16Array.BYTES_PER_ELEMENT;
+const U16 = Uint16Array.BYTES_PER_ELEMENT;
 const UTF8_6 = U8 * 6;
 
 export class SpriteBuffer {
   static readonly SCHEME = new Map([
-    ["x", I16],
-    ["y", I16],
-    ["width", I16],
-    ["height", I16],
-    ["delay", I16],
+    ["x", U16],
+    ["y", U16],
+    ["width", U16],
+    ["height", U16],
+    ["delay", U16],
     ["id", UTF8_6],
   ] as const);
 
@@ -31,23 +33,6 @@ export class SpriteBuffer {
 
   get byteOffset() {
     return this.#byteOffset;
-  }
-
-  #id;
-  #cachedId: string | null = null;
-
-  #nums;
-  #bytes;
-  #byteOffset;
-
-  constructor(bytes: Uint8Array, offset = bytes.byteOffset) {
-    this.#bytes = bytes;
-    this.#byteOffset = offset;
-
-    const c = SpriteBuffer;
-
-    this.#id = new Uint8Array(bytes.buffer, offset + c.ID_OFFSET, c.ID_SIZE);
-    this.#nums = new Int16Array(bytes.buffer, offset, c.NUMS_SIZE);
   }
 
   get spriteId() {
@@ -105,5 +90,35 @@ export class SpriteBuffer {
 
   set animationDelay(value: number) {
     this.#nums[4] = value;
+  }
+
+  #id;
+  #cachedId: string | null = null;
+
+  #nums;
+  #bytes;
+  #byteOffset;
+
+  constructor(bytes: Uint8Array, offset = bytes.byteOffset) {
+    this.#bytes = bytes;
+    this.#byteOffset = offset;
+
+    const c = SpriteBuffer;
+
+    this.#id = new Uint8Array(bytes.buffer, offset + c.ID_OFFSET, c.ID_SIZE);
+    this.#nums = new Uint16Array(bytes.buffer, offset, c.NUMS_SIZE);
+  }
+
+  getDescriptor(): SpriteDescriptor {
+    return {
+      x: this.x,
+      y: this.y,
+
+      width: this.width,
+      height: this.height,
+
+      spriteId: this.spriteId,
+      animationDelay: this.animationDelay,
+    };
   }
 }

@@ -1,4 +1,4 @@
-import { SpriteBuffer } from "#/sprite-buffer/sprite-buffer";
+import { SpriteBuffer } from "#sprite-buffer/sprite-buffer";
 import type { Sprite } from "#sprite-editor/sprite";
 
 const U8 = Uint8Array.BYTES_PER_ELEMENT;
@@ -59,8 +59,8 @@ export class RenderedSpriteBuffer {
 
       const spriteBuffer = data.at(i)!;
 
-      spriteBuffer.x = -currentX;
-      spriteBuffer.y = -y;
+      spriteBuffer.x = currentX;
+      spriteBuffer.y = y;
       spriteBuffer.width = image.width;
       spriteBuffer.height = image.height;
       spriteBuffer.animationDelay = sprite.animationDelay;
