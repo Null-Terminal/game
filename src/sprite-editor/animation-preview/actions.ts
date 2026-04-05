@@ -13,7 +13,7 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
   }
 
   destroy(): void {
-    this.parent.controls.removeEventListener("click", this.onClick);
+    this.parent.controls.removeEventListener("click", this.onAction);
   }
 
   speedUp(): void {
@@ -66,6 +66,6 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
   }
 
   protected initHandlers() {
-    this.parent.controls.addEventListener("click", this.onClick);
+    this.parent.controls.addEventListener("click", this.onAction);
   }
 }

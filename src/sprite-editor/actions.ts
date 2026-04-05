@@ -14,7 +14,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
   destroy(): void {
     const { settings } = this.parent;
 
-    settings.removeEventListener("click", this.onClick);
+    settings.removeEventListener("click", this.onAction);
     settings.removeEventListener("submit", this.#onSubmit);
   }
 
@@ -114,7 +114,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
   protected initHandlers() {
     const { settings } = this.parent;
 
-    settings.addEventListener("click", this.onClick);
+    settings.addEventListener("click", this.onAction);
     settings.addEventListener("submit", this.#onSubmit);
   }
 
