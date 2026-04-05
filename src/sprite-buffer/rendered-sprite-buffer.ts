@@ -52,15 +52,12 @@ export class RenderedSpriteBuffer {
       // Создаем временный canvas, чтобы отрисовать туда изображение без сетки
       const image = sprite.canvas.cloneNode() as HTMLCanvasElement;
       sprite.draw(image.getContext("2d")!);
-
-      // Вычисляем позицию по Y для центрирования по вертикали
-      const y = (maxHeight - sprite.canvas.height) / 2;
-      resultCtx.drawImage(image, currentX, y);
+      resultCtx.drawImage(image, currentX, 0);
 
       const spriteBuffer = data.at(i)!;
 
       spriteBuffer.x = currentX;
-      spriteBuffer.y = y;
+      spriteBuffer.y = 0;
       spriteBuffer.width = image.width;
       spriteBuffer.height = image.height;
       spriteBuffer.animationDelay = sprite.animationDelay;
