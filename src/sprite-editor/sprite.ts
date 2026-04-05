@@ -226,6 +226,10 @@ export class Sprite extends HTMLElement {
     }
   }
 
+  override focus(opts?: FocusOptions) {
+    this.canvas.focus(opts);
+  }
+
   #drawGrid() {
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.options.borderColor;
