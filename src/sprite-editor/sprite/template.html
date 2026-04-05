@@ -18,16 +18,26 @@
 
     <div class="row">
       <label for="x">X</label>
-      <input id="x" type="number" class="coord">
+      <input id="x" type="number" data-action="setX">
     </div>
 
     <div class="row">
       <label for="y">Y</label>
-      <input id="y" type="number" class="coord">
+      <input id="y" type="number" data-action="setY">
+    </div>
+
+    <div class="row">
+      <label for="width">Ширина</label>
+      <input id="width" type="number" data-action="setWidth">
+    </div>
+
+    <div class="row">
+      <label for="height">Высота</label>
+      <input id="height" type="number" data-action="setHeight">
     </div>
   </div>
 </div>
 
 <div id="sprite" class="sprite">
-  <canvas id="sprite-canvas" class="sprite-canvas"></canvas>
+  <canvas id="sprite-canvas" class="sprite-canvas" tabindex="0"></canvas>
 </div>

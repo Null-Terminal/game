@@ -11,20 +11,26 @@
   position: relative;
 }
 
+.sprite-canvas:focus {
+  outline: 2px solid #FF7F50FF;
+}
+
 .resize-handle {
   position: absolute;
   z-index: 10;
 }
 
-.box {
+.box, .row {
   display: flex;
+  margin: 5px 0;
+}
+
+.box {
   flex-direction: column;
 }
 
 .row {
-  display: flex;
-  flex-direction: row;
-  margin: 5px 0;
+  align-items: center;
 }
 
 .row > label {
@@ -35,10 +41,12 @@
   flex: 1;
 }
 
-.quick-actions {
-  margin-bottom: 10px;
+input {
+  background-color: #444;
+  border: none;
+  color: inherit;
 }
 
-.coord {
-  width: 50px;
+.quick-actions {
+  margin-bottom: 10px;
 }

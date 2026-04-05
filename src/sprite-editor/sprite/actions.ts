@@ -8,7 +8,8 @@ export class ActionHandlers extends Handlers<Sprite> {
   }
 
   destroy(): void {
-    this.parent.controls.removeEventListener("click", this.onClick);
+    this.parent.controls.removeEventListener("click", this.onAction);
+    this.parent.controls.removeEventListener("input", this.onAction);
   }
 
   deleteSprite() {
@@ -55,7 +56,24 @@ export class ActionHandlers extends Handlers<Sprite> {
     } while (rightSprite !== null);
   }
 
+  setX(e: Event) {
+    this.parent.x = parseFloat((e.target as HTMLInputElement).value);
+  }
+
+  setY(e: Event) {
+    this.parent.y = parseFloat((e.target as HTMLInputElement).value);
+  }
+
+  setWidth(e: Event) {
+    this.parent.width = parseFloat((e.target as HTMLInputElement).value);
+  }
+
+  setHeight(e: Event) {
+    this.parent.width = parseFloat((e.target as HTMLInputElement).value);
+  }
+
   protected initHandlers() {
-    this.parent.controls.addEventListener("click", this.onClick);
+    this.parent.controls.addEventListener("click", this.onAction);
+    this.parent.controls.addEventListener("input", this.onAction, { capture: true });
   }
 }

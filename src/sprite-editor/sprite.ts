@@ -55,7 +55,8 @@ export class Sprite extends HTMLElement {
 
   set x(value: number) {
     this.#x = value;
-    this.#xInput.value = value.toFixed(1);
+    this.#xInput.value = value.toFixed(0);
+    this.draw();
   }
 
   get y() {
@@ -64,7 +65,36 @@ export class Sprite extends HTMLElement {
 
   set y(value: number) {
     this.#y = value;
-    this.#yInput.value = value.toFixed(1);
+    this.#yInput.value = value.toFixed(0);
+    this.draw();
+  }
+
+  get width() {
+    return this.#width;
+  }
+
+  set width(value: number) {
+    this.#width = value;
+    this.#widthInput.value = value.toFixed(0);
+
+    this.canvas.width = value;
+    this.canvas.parentElement!.style.width = `${value}px`;
+
+    this.draw();
+  }
+
+  get height() {
+    return this.#height;
+  }
+
+  set height(value: number) {
+    this.#height = value;
+    this.#heightInput.value = value.toFixed(0);
+
+    this.canvas.height = value;
+    this.canvas.parentElement!.style.height = `${value}px`;
+
+    this.draw();
   }
 
   @cache
@@ -110,9 +140,25 @@ export class Sprite extends HTMLElement {
     return this.shadowRoot!.getElementById("y") as HTMLInputElement;
   }
 
+  #width!: number;
+
+  @cache
+  get #widthInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("width") as HTMLInputElement;
+  }
+
+  #height!: number;
+
+  @cache
+  get #heightInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("height") as HTMLInputElement;
+  }
+
   #spriteResizer!: SpriteResizer;
   #spriteDragger!: SpriteDragger;
   #actionHandlers!: ActionHandlers;
+
+  #drawTask = 0;
 
   constructor(file: File, opts: SpriteOptions) {
     super();
@@ -150,34 +196,38 @@ export class Sprite extends HTMLElement {
   }
 
   disconnectedCallback() {
+    cancelAnimationFrame(this.#drawTask);
     this.#spriteResizer.destroy();
     this.#spriteDragger.destroy();
     this.#actionHandlers.destroy();
   }
 
   resize(width: number, height: number) {
-    this.canvas.width = width;
-    this.canvas.height = height;
-    this.draw();
+    this.width = width;
+    this.height = height;
   }
 
   draw(target = this.ctx) {
-    target.fillStyle = this.options.backgroundColor;
-    target.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    cancelAnimationFrame(this.#drawTask);
 
-    if (this.#image != null) {
-      target.drawImage(
-        this.#image,
-        this.#x,
-        this.#y,
-        this.imageWidth,
-        this.imageHeight
-      );
-    }
+    this.#drawTask = requestAnimationFrame(() => {
+      target.fillStyle = this.options.backgroundColor;
+      target.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    if (target === this.ctx) {
-      this.#drawGrid();
-    }
+      if (this.#image != null) {
+        target.drawImage(
+          this.#image,
+          this.#x,
+          this.#y,
+          this.imageWidth,
+          this.imageHeight
+        );
+      }
+
+      if (target === this.ctx) {
+        this.#drawGrid();
+      }
+    });
   }
 
   #drawGrid() {
@@ -210,13 +260,11 @@ export class Sprite extends HTMLElement {
     this.x = this.options.x;
     this.y = this.options.y;
 
+    this.width = this.options.width;
+    this.height = this.options.height;
+
     this.#spriteId.value = this.options.spriteId.toString();
     this.#animationDelay.value = this.options.animationDelay.toString();
-
-    Object.assign(this.canvas, {
-      height: this.options.height,
-      width: this.options.width
-    });
 
     Object.assign(this.canvas.style, {
       borderWidth: "1px",

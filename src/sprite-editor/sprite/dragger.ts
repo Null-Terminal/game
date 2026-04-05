@@ -18,12 +18,14 @@ export class SpriteDragger {
   }
 
   destroy() {
+    this.#sprite.canvas.removeEventListener("keydown", this.#onArrowNavigation);
     this.#sprite.canvas.removeEventListener("pointerdown", this.#onDragSprite);
     window.removeEventListener("pointermove", this.#onDraggingSprite);
     window.removeEventListener("pointerup", this.#onDropSprite);
   }
 
   #makeSpriteDraggable() {
+    this.#sprite.addEventListener("keydown", this.#onArrowNavigation);
     this.#sprite.canvas.addEventListener("pointerdown", this.#onDragSprite);
     window.addEventListener("pointermove", this.#onDraggingSprite, { passive: true });
     window.addEventListener("pointerup", this.#onDropSprite, { passive: true });
@@ -53,11 +55,39 @@ export class SpriteDragger {
     };
   }
 
+  readonly #onArrowNavigation = (e: KeyboardEvent) => {
+    if (!e.key.startsWith("Arrow")) {
+      return;
+    }
+
+    e.preventDefault();
+
+    switch (e.key) {
+      case "ArrowUp":
+        this.#sprite.y--;
+        break;
+
+      case "ArrowDown":
+        this.#sprite.y++;
+        break;
+
+      case "ArrowLeft":
+        this.#sprite.x--;
+        break;
+
+      case "ArrowRight":
+        this.#sprite.x++;
+        break;
+    }
+  };
+
   readonly #onDragSprite = (e: PointerEvent) => {
     e.preventDefault();
 
     const { canvas } = this.#sprite;
     const { x, y } = this.#getPointerPosition(e);
+
+    canvas.focus();
 
     if (this.#isPointInsideImage(x, y)) {
       this.#dragging = true;
@@ -79,8 +109,6 @@ export class SpriteDragger {
 
     this.#sprite.x = x + this.#offsetX;
     this.#sprite.y = y + this.#offsetY;
-
-    this.#sprite.draw();
   };
 
   readonly #onDropSprite = (e: PointerEvent) => {

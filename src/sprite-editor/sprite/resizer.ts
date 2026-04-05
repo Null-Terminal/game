@@ -76,8 +76,6 @@ export class SpriteResizer {
       return;
     }
 
-    const { canvas } = this.#sprite;
-
     const deltaX = e.clientX - this.#resizeStartX;
     const deltaY = e.clientY - this.#resizeStartY;
 
@@ -85,14 +83,12 @@ export class SpriteResizer {
     const newHeight = Math.max(50, this.#startHeight + deltaY);
 
     if (this.#resizing === "nw-resize" || this.#resizing === "w-resize") {
-      canvas.width = newWidth;
+      this.#sprite.width = newWidth;
     }
 
     if (this.#resizing === "nw-resize" || this.#resizing === "ns-resize") {
-      canvas.height = newHeight;
+      this.#sprite.height = newHeight;
     }
-
-    this.#sprite.draw();
   };
 
   readonly #onResizeEnd = () => {
