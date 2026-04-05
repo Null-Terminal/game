@@ -35,6 +35,10 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
     this.parent.renderSprite(++this.parent.spriteIndex);
   }
 
+  reloadSprite() {
+    this.parent.renderSprite(this.parent.spriteIndex);
+  }
+
   previousSprite() {
     this.parent.renderSprite(--this.parent.spriteIndex);
   }

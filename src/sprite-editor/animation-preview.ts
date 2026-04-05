@@ -17,7 +17,7 @@ export class AnimationPreview extends HTMLElement {
 
   speed = 1;
   spriteIndex = 0;
-  backgroundColor = "#1BBF68";
+  backgroundColor = "#FFF";
 
   @cache
   get #ctx() {
@@ -64,7 +64,7 @@ export class AnimationPreview extends HTMLElement {
   play() {
     const { canvas, data } = this.#renderSprite();
 
-    this.resize(canvas.width, canvas.height);
+    this.#player.height = canvas.height;
 
     let lastFrameTime = 0;
 
@@ -81,10 +81,16 @@ export class AnimationPreview extends HTMLElement {
       const sprite = data.at(this.spriteIndex)!;
 
       if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
+        this.#editor.grid
+          .querySelector<HTMLElement>(`sprite-item:nth-child(${this.spriteIndex + 1})`)
+          ?.focus({ preventScroll: true });
+
         this.spriteIndex++;
         this.spriteIndex %= data.size;
 
+        this.#player.width = sprite.width;
         this.clear();
+
         this.#ctx.drawImage(
           canvas,
           sprite.x,
@@ -114,6 +120,10 @@ export class AnimationPreview extends HTMLElement {
     const sprite = data.at(spriteIndex);
 
     if (sprite != null) {
+      this.#editor.grid
+        .querySelector<HTMLElement>(`sprite-item:nth-child(${spriteIndex + 1})`)
+        ?.focus({ preventScroll: true });
+
       this.#ctx.drawImage(
         canvas,
         sprite.x,
