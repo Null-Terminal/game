@@ -15,7 +15,7 @@ export abstract class Handlers<T> {
 
   protected abstract destroy(): void;
 
-  protected readonly onClick = (e: PointerEvent) => {
+  protected readonly onAction = (e: Event) => {
     const { target } = e;
 
     if (!(target instanceof HTMLElement)) {
@@ -28,7 +28,7 @@ export abstract class Handlers<T> {
       const method = action as keyof this;
 
       if (typeof this[method] === "function") {
-        this[method]();
+        this[method](e);
       }
     }
   };
