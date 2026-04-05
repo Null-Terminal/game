@@ -56,7 +56,7 @@ export class Sprite extends HTMLElement {
   set x(value: number) {
     this.#x = value;
     this.#xInput.value = value.toFixed(0);
-    this.draw();
+    this.redraw();
   }
 
   get y() {
@@ -66,7 +66,7 @@ export class Sprite extends HTMLElement {
   set y(value: number) {
     this.#y = value;
     this.#yInput.value = value.toFixed(0);
-    this.draw();
+    this.redraw();
   }
 
   get width() {
@@ -80,7 +80,7 @@ export class Sprite extends HTMLElement {
     this.canvas.width = value;
     this.canvas.parentElement!.style.width = `${value}px`;
 
-    this.draw();
+    this.redraw();
   }
 
   get height() {
@@ -94,7 +94,7 @@ export class Sprite extends HTMLElement {
     this.canvas.height = value;
     this.canvas.parentElement!.style.height = `${value}px`;
 
-    this.draw();
+    this.redraw();
   }
 
   @cache
@@ -191,7 +191,7 @@ export class Sprite extends HTMLElement {
       this.#image = i.image;
       this.#imageWidth = i.width;
       this.#imageHeight = i.height;
-      this.draw();
+      this.redraw();
     });
   }
 
@@ -207,27 +207,28 @@ export class Sprite extends HTMLElement {
     this.height = height;
   }
 
-  draw(target = this.ctx) {
+  redraw(target = this.ctx) {
     cancelAnimationFrame(this.#drawTask);
+    this.#drawTask = requestAnimationFrame(() => this.draw(target));
+  }
 
-    this.#drawTask = requestAnimationFrame(() => {
-      target.fillStyle = this.options.backgroundColor;
-      target.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  draw(target = this.ctx) {
+    target.fillStyle = this.options.backgroundColor;
+    target.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-      if (this.#image != null) {
-        target.drawImage(
-          this.#image,
-          this.#x,
-          this.#y,
-          this.imageWidth,
-          this.imageHeight
-        );
-      }
+    if (this.#image != null) {
+      target.drawImage(
+        this.#image,
+        this.#x,
+        this.#y,
+        this.imageWidth,
+        this.imageHeight
+      );
+    }
 
-      if (target === this.ctx) {
-        this.#drawGrid();
-      }
-    });
+    if (target === this.ctx) {
+      this.#drawGrid();
+    }
   }
 
   #drawGrid() {
