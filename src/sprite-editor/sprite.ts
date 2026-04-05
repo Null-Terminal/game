@@ -103,11 +103,6 @@ export class Sprite extends HTMLElement {
   }
 
   @cache
-  get player(): HTMLCanvasElement {
-    return this.shadowRoot!.getElementById("player") as HTMLCanvasElement;
-  }
-
-  @cache
   get sprite(): HTMLElement {
     return this.shadowRoot!.getElementById("sprite")!;
   }
