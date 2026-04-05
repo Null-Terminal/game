@@ -1,0 +1,19 @@
+:host {
+  padding: 10px;
+  color: #CCC;
+}
+
+.box {
+  background: #333;
+}
+
+.row {
+  padding: 10px;
+}
+
+button {
+  width: 40px;
+  height: 40px;
+  background-color: #DDD;
+  font-size: 18px;
+}

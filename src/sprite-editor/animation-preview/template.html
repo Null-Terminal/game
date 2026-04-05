@@ -1,24 +1,20 @@
 <div id="controls" class="box">
   <div class="row">
-    <button data-action="play">▶</button>
-    <button data-action="pause">⏸</button>
-    <button data-action="stop">⏹</button>
-    <button data-action="speedUp">⤴</button>
-    <button data-action="speedDown">⤵</button>
+    <button title="Играть" data-action="play">▶</button>
+    <button title="Пауза" data-action="pause">⏸</button>
+    <button title="Стоп" data-action="stop">⏹</button>
+    <button title="Увеличить скорость" data-action="speedUp">⤴</button>
+    <button title="Уменьшить скорость" data-action="speedDown">⤵</button>
   </div>
 
   <div class="row">
-    <button data-action="previousSprite">⏮</button>
-    <button data-action="nextSprite">⏭</button>
-  </div>
-
-  <div class="row">
-    <label for="index">Номер спрайта</label>
-    <input id="index">
-
-    <label for="id">Идентификатор спрайта</label>
-    <input id="id">
+    <button title="Предыдущий спрайт" data-action="previousSprite">⏮</button>
+    <button title="Обновить спрайт" data-action="reloadSprite">🔄</button>
+    <button title="Следующий спрайт" data-action="nextSprite">⏭</button>
   </div>
 </div>
 
-<canvas id="player"></canvas>
+<div class="box">
+  <canvas id="player"></canvas>
+</div>
+
