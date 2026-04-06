@@ -1,5 +1,7 @@
-import { SpriteBuffer } from "#sprite-buffer/sprite-buffer";
 import type { Sprite } from "#sprite-editor/sprite";
+
+import { SpriteBuffer } from "#sprite-buffer/sprite-buffer";
+import type { MergedSprite } from "#sprite-buffer/types";
 
 const U8 = Uint8Array.BYTES_PER_ELEMENT;
 
@@ -25,7 +27,7 @@ export class RenderedSpriteBuffer {
     return buffer;
   }
 
-  static mergeSprites(sprites: Sprite[], repeat?: number): { canvas: HTMLCanvasElement; data: RenderedSpriteBuffer } {
+  static mergeSprites(sprites: Sprite[], repeat?: number): MergedSprite {
     // Вычисляем общую ширину и максимальную высоту
     let totalWidth = 0;
     let maxHeight = 0;

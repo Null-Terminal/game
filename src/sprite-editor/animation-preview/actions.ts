@@ -32,14 +32,17 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
   }
 
   nextSprite() {
+    this.parent.pause();
     this.parent.renderSprite(++this.parent.spriteIndex);
   }
 
   reloadSprite() {
+    this.parent.pause();
     this.parent.renderSprite(this.parent.spriteIndex);
   }
 
   previousSprite() {
+    this.parent.pause();
     this.parent.renderSprite(--this.parent.spriteIndex);
   }
 

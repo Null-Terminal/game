@@ -43,6 +43,12 @@ export class SpriteEditor extends HTMLElement {
     return elem as T;
   }
 
+  focusSprite(index: number, opts?: FocusOptions) {
+    this.grid
+      .querySelector<HTMLElement>(`sprite-item:nth-child(${index + 1})`)
+      ?.focus(opts);
+  }
+
   #render() {
     if (this.shadowRoot == null) {
       throw new Error("ShadowRoot element not found");

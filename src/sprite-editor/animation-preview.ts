@@ -1,5 +1,5 @@
 import { cache } from "#decorators/cache";
-import { RenderedSpriteBuffer } from "#sprite-buffer/rendered-sprite-buffer";
+import { RenderedSpriteBuffer } from "#/sprite-buffer";
 
 import styles from "#sprite-editor/animation-preview/styles.css?raw";
 import template from "#sprite-editor/animation-preview/template.html?raw";
@@ -62,9 +62,7 @@ export class AnimationPreview extends HTMLElement {
   }
 
   play() {
-    const { canvas, data } = this.#renderSprite();
-
-    this.#player.height = canvas.height;
+    const mergedSprite = this.#renderSprite();
 
     let lastFrameTime = 0;
 
@@ -77,32 +75,12 @@ export class AnimationPreview extends HTMLElement {
         return;
       }
 
-      this.spriteIndex %= data.size;
-      const sprite = data.at(this.spriteIndex)!;
+      this.spriteIndex %= mergedSprite.data.size;
+      const sprite = mergedSprite.data.at(this.spriteIndex)!;
 
       if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
-        this.#editor.grid
-          .querySelector<HTMLElement>(`sprite-item:nth-child(${this.spriteIndex + 1})`)
-          ?.focus({ preventScroll: true });
-
+        this.renderSprite(this.spriteIndex, mergedSprite);
         this.spriteIndex++;
-        this.spriteIndex %= data.size;
-
-        this.#player.width = sprite.width;
-        this.clear();
-
-        this.#ctx.drawImage(
-          canvas,
-          sprite.x,
-          sprite.y,
-          sprite.width,
-          sprite.height,
-          0,
-          canvas.height - sprite.height,
-          sprite.width,
-          sprite.height
-        );
-
         lastFrameTime = now;
       }
     };
@@ -110,19 +88,18 @@ export class AnimationPreview extends HTMLElement {
     animate();
   }
 
-  renderSprite(spriteIndex: number) {
-    this.pause();
+  renderSprite(spriteIndex: number, { canvas, data } = this.#renderSprite()) {
     this.clear();
-
-    const { canvas, data } = this.#renderSprite();
 
     spriteIndex %= data.size;
     const sprite = data.at(spriteIndex);
 
     if (sprite != null) {
-      this.#editor.grid
-        .querySelector<HTMLElement>(`sprite-item:nth-child(${spriteIndex + 1})`)
-        ?.focus({ preventScroll: true });
+      this.#player.height = canvas.height;
+      this.#player.width = sprite.width;
+
+      this.clear();
+      this.#editor.focusSprite(spriteIndex, { preventScroll: true });
 
       this.#ctx.drawImage(
         canvas,
