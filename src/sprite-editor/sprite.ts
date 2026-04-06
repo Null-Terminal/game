@@ -43,14 +43,6 @@ export class Sprite extends HTMLElement {
     return this.#imageHeight;
   }
 
-  get spriteId() {
-    return this.#spriteId.value;
-  }
-
-  get animationDelay() {
-    return parseFloat(this.#animationDelay.value);
-  }
-
   get x() {
     return this.#x;
   }
@@ -99,6 +91,24 @@ export class Sprite extends HTMLElement {
     this.redraw();
   }
 
+  get spriteId() {
+    return this.#spriteId;
+  }
+
+  set spriteId(value: string) {
+    this.#spriteId = value;
+    this.#spriteIdInput.value = value;
+  }
+
+  get animationDelay() {
+    return this.#animationDelay;
+  }
+
+  set animationDelay(value: number) {
+    this.#animationDelay = value;
+    this.#animationDelayInput.value = value.toString();
+  }
+
   @cache
   get controls(): HTMLElement {
     return this.shadowRoot!.getElementById("controls") as HTMLElement;
@@ -113,15 +123,19 @@ export class Sprite extends HTMLElement {
   #imageWidth = 0;
   #imageHeight = 0;
 
+  #spriteId!: string;
+
   @cache
-  get #spriteId(): HTMLInputElement {
-    return this.shadowRoot!.getElementById("id") as HTMLInputElement;
+  get #spriteIdInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("spriteId") as HTMLInputElement;
   }
 
   @cache
-  get #animationDelay(): HTMLInputElement {
-    return this.shadowRoot!.getElementById("delay") as HTMLInputElement;
+  get #animationDelayInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("animationDelay") as HTMLInputElement;
   }
+
+  #animationDelay!: number;
 
   #x!: number;
 
@@ -265,8 +279,8 @@ export class Sprite extends HTMLElement {
     this.width = this.options.width;
     this.height = this.options.height;
 
-    this.#spriteId.value = this.options.spriteId.toString();
-    this.#animationDelay.value = this.options.animationDelay.toString();
+    this.#spriteIdInput.value = this.options.spriteId.toString();
+    this.#animationDelayInput.value = this.options.animationDelay.toString();
 
     Object.assign(this.canvas.style, {
       borderWidth: "1px",
