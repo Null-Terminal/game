@@ -79,6 +79,8 @@ export class SpriteDragger {
         this.#sprite.x++;
         break;
     }
+
+    this.#sprite.history.saveState();
   };
 
   readonly #onDragSprite = (e: PointerEvent) => {
@@ -122,5 +124,6 @@ export class SpriteDragger {
     canvas.releasePointerCapture(e.pointerId);
 
     this.#dragging = false;
+    this.#sprite.history.saveState();
   };
 }

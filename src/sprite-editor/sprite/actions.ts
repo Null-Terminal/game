@@ -57,19 +57,33 @@ export class ActionHandlers extends Handlers<Sprite> {
   }
 
   setX(e: Event) {
-    this.parent.x = parseFloat((e.target as HTMLInputElement).value);
+    this.parent.x = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.history.saveState();
   }
 
   setY(e: Event) {
-    this.parent.y = parseFloat((e.target as HTMLInputElement).value);
+    this.parent.y = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.history.saveState();
   }
 
   setWidth(e: Event) {
-    this.parent.width = parseFloat((e.target as HTMLInputElement).value);
+    this.parent.width = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.history.saveState();
   }
 
   setHeight(e: Event) {
-    this.parent.width = parseFloat((e.target as HTMLInputElement).value);
+    this.parent.width = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.history.saveState();
+  }
+
+  setId(e: Event) {
+    this.parent.spriteId = (e.target as HTMLInputElement).value;
+    this.parent.history.saveState();
+  }
+
+  setAnimationDelay(e: Event) {
+    this.parent.animationDelay = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.history.saveState();
   }
 
   protected initHandlers() {

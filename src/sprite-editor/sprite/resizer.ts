@@ -72,7 +72,7 @@ export class SpriteResizer {
   }
 
   readonly #onResizeMove = (e: PointerEvent) => {
-    if (!this.#resizing) {
+    if (this.#resizing == null) {
       return;
     }
 
@@ -92,7 +92,12 @@ export class SpriteResizer {
   };
 
   readonly #onResizeEnd = () => {
+    if (this.#resizing == null) {
+      return;
+    }
+
     this.#resizing = null;
     this.#sprite.canvas.style.cursor = "grab";
+    this.#sprite.history.saveState();
   };
 }
