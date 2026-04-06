@@ -5,6 +5,7 @@ import styles from "#sprite-editor/sprite/styles.css?raw";
 import template from "#sprite-editor/sprite/template.html?raw";
 import type { SpriteOptions } from "#sprite-editor/sprite/types";
 
+import { SpriteHistory } from "#sprite-editor/sprite/history";
 import { SpriteResizer } from "#sprite-editor/sprite/resizer";
 import { SpriteDragger } from "#sprite-editor/sprite/dragger";
 import { ActionHandlers } from "#sprite-editor/sprite/actions";
@@ -14,6 +15,7 @@ export type { SpriteOptions };
 export class Sprite extends HTMLElement {
   readonly file: File;
   readonly options: Required<SpriteOptions>;
+  readonly history = new SpriteHistory(this);
 
   get host(): this {
     return this.shadowRoot!.host as this;
