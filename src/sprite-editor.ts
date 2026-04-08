@@ -9,7 +9,7 @@ import { EditorHistory } from "#sprite-editor/history";
 import { ActionHandlers } from "#sprite-editor/actions";
 
 export class SpriteEditor extends HTMLElement {
-  readonly history = new EditorHistory(this);
+  history!: EditorHistory;
 
   @cache
   get settings(): HTMLFormElement {
@@ -60,6 +60,8 @@ export class SpriteEditor extends HTMLElement {
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
     this.#actionHandlers = new ActionHandlers(this);
+
+    this.history = new EditorHistory(this);
   }
 }
 

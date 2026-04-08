@@ -19,10 +19,10 @@ export class ActionHandlers extends Handlers<Sprite> {
 
   deleteCurrent() {
     const { host } = this.parent;
-
     host.style.opacity = "0";
 
     host.addEventListener("transitionend", () => {
+      host.style.opacity = "";
       this.parent.remove();
     }, {
       once: true,

@@ -197,6 +197,7 @@ export class Sprite extends HTMLElement {
 
   connectedCallback() {
     if (this.#image != null) {
+      this.#initHandlers();
       return;
     }
 
@@ -283,6 +284,12 @@ export class Sprite extends HTMLElement {
     this.ctx.stroke();
   }
 
+  #initHandlers() {
+    this.#spriteResizer = new SpriteResizer(this);
+    this.#spriteDragger = new SpriteDragger(this);
+    this.#actionHandlers = new ActionHandlers(this);
+  }
+
   #render() {
     if (this.shadowRoot == null) {
       throw new Error("ShadowRoot element not found");
@@ -308,9 +315,7 @@ export class Sprite extends HTMLElement {
       cursor: "grab",
     });
 
-    this.#spriteResizer = new SpriteResizer(this);
-    this.#spriteDragger = new SpriteDragger(this);
-    this.#actionHandlers = new ActionHandlers(this);
+    this.#initHandlers();
   }
 }
 

@@ -4,9 +4,10 @@ import { SpriteEditor } from "#/sprite-editor";
 export class EditorHistory {
   readonly #editor: SpriteEditor;
 
-  #history: State[] = [];
-
+  #history: Pick<State, "undo" | "redo">[] = [];
   #historyIndex = -1;
+
+  #gridObserver: MutationObserver | null = null;
 
   constructor(editor: SpriteEditor) {
     this.#editor = editor;
@@ -16,6 +17,7 @@ export class EditorHistory {
   destroy(): void {
     this.#editor.removeEventListener("stateChange", this.#onStateChange);
     document.removeEventListener("keydown", this.#onKeyboardUndoRedo);
+    this.#gridObserver?.disconnect();
   }
 
   undo(): boolean {
@@ -54,8 +56,82 @@ export class EditorHistory {
   }
 
   #initHandlers() {
+    this.#initGridObserver();
     this.#editor.addEventListener("stateChange", this.#onStateChange);
     document.addEventListener("keydown", this.#onKeyboardUndoRedo);
+  }
+
+  #initGridObserver() {
+    const { grid } = this.#editor;
+
+    let mute = false;
+
+    this.#gridObserver = new MutationObserver((mutations) => {
+      if (mute) {
+        mute = false;
+        return;
+      }
+
+      const actions = mutations.flatMap((mut) => {
+        const added = Array.from(mut.addedNodes ?? []).map((node) => ({
+          type: "add",
+          node: node,
+          previous: mut.previousSibling,
+          next: mut.nextSibling
+        }));
+
+        const removed = Array.from(mut.removedNodes ?? []).map((node) => ({
+          type: "remove",
+          node,
+          previous: mut.previousSibling,
+          next: mut.nextSibling
+        }));
+
+        return [...added, ...removed];
+      });
+
+      if (actions.length > 0) {
+        this.#history.push({
+          undo() {
+            mute = true;
+
+            actions.forEach((action) => {
+              const { node } = action;
+
+              if (action.type === "add") {
+                node.parentNode?.removeChild(node);
+
+              } else {
+                grid.insertBefore(node, action.next);
+              }
+            });
+
+            return true;
+          },
+
+          redo() {
+            mute = true;
+
+            actions.forEach((action) => {
+              const { node } = action;
+
+              if (action.type === "add") {
+                grid.insertBefore(node, action.next);
+
+              } else {
+                node.parentNode?.removeChild(node);
+              }
+            });
+
+            return true;
+          }
+        });
+
+        this.#historyIndex++;
+      }
+    });
+
+    this.#gridObserver.observe(grid, { childList: true });
   }
 
   readonly #onStateChange = (e: Event) => {
