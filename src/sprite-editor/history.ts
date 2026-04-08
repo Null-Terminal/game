@@ -1,10 +1,12 @@
 import { State, type StateEvent } from "#sprite-editor/state";
 import { SpriteEditor } from "#/sprite-editor";
 
+export type Stateable = Pick<State, "undo" | "redo">;
+
 export class EditorHistory {
   readonly #editor: SpriteEditor;
 
-  #history: Pick<State, "undo" | "redo">[] = [];
+  #history: Stateable[] = [];
   #historyIndex = -1;
 
   #gridObserver: MutationObserver | null = null;
@@ -95,7 +97,7 @@ export class EditorHistory {
       }
 
       if (actions.size > 0) {
-        this.#history.push({
+        this.#pushState({
           undo() {
             mute = true;
 
@@ -130,18 +132,20 @@ export class EditorHistory {
             return true;
           }
         });
-
-        this.#historyIndex++;
       }
     });
 
     this.#gridObserver.observe(grid, { childList: true });
   }
 
-  readonly #onStateChange = (e: Event) => {
+  readonly #pushState = (state: Stateable) => {
     this.#history = this.#history.slice(0, this.#historyIndex + 1);
-    this.#history.push((e as StateEvent).detail);
+    this.#history.push(state);
     this.#historyIndex++;
+  };
+
+  readonly #onStateChange = (e: Event) => {
+    this.#pushState((e as StateEvent).detail);
   };
 
   readonly #onKeyboardUndoRedo = (e: KeyboardEvent) => {
