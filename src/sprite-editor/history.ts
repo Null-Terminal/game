@@ -67,7 +67,7 @@ export class EditorHistory {
   readonly #onKeyboardUndoRedo = (e: KeyboardEvent) => {
     const isCtrlPressed = e.ctrlKey || e.metaKey;
 
-    if (isCtrlPressed && e.key.toLowerCase() === "z") {
+    if (isCtrlPressed && e.code === "KeyZ") {
       e.preventDefault();
 
       if (e.shiftKey) {
