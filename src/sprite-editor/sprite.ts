@@ -279,8 +279,8 @@ export class Sprite extends HTMLElement {
     this.width = this.options.width;
     this.height = this.options.height;
 
-    this.#spriteIdInput.value = this.options.spriteId.toString();
-    this.#animationDelayInput.value = this.options.animationDelay.toString();
+    this.spriteId = this.options.spriteId;
+    this.animationDelay = this.options.animationDelay;
 
     Object.assign(this.canvas.style, {
       borderWidth: "1px",
