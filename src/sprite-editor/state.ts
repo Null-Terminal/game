@@ -11,7 +11,7 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
     this.parent = parent;
   }
 
-  abstract saveState(): void;
+  abstract saveState(dispatchEvent?: boolean): void;
 
   undo(): boolean {
     if (!this.canUndo()) {
@@ -48,7 +48,7 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
     this.historyIndex = -1;
   }
 
-  protected pushState(state: State): void {
+  protected pushState(state: State, dispatchEvent = true): void {
     this.history = this.history.slice(0, this.historyIndex + 1);
 
     // Состояния в истории не должны быть подряд одинаковыми
@@ -56,11 +56,13 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
       this.history.push(state);
       this.historyIndex++;
 
-      this.parent.dispatchEvent(new CustomEvent("stateChange", {
-        bubbles: true,
-        composed: true,
-        detail: this
-      }));
+      if (dispatchEvent) {
+        this.parent.dispatchEvent(new CustomEvent("stateChange", {
+          bubbles: true,
+          composed: true,
+          detail: this
+        }));
+      }
     }
   }
 

@@ -282,7 +282,7 @@ export class Sprite extends HTMLElement {
     this.spriteId = this.options.spriteId;
     this.animationDelay = this.options.animationDelay;
 
-    this.history.saveState();
+    this.history.saveState(false);
 
     Object.assign(this.canvas.style, {
       borderWidth: "1px",
