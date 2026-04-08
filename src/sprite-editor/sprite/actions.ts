@@ -39,6 +39,7 @@ export class ActionHandlers extends Handlers<Sprite> {
 
       if (leftSprite instanceof (currentSprite.constructor as typeof Sprite)) {
         currentSprite.resize(leftSprite.canvas.width, leftSprite.canvas.height);
+        currentSprite.history.saveState();
         break;
       }
 
@@ -55,6 +56,7 @@ export class ActionHandlers extends Handlers<Sprite> {
 
       if (rightSprite instanceof (currentSprite.constructor as typeof Sprite)) {
         currentSprite.resize(rightSprite.canvas.width, rightSprite.canvas.height);
+        currentSprite.history.saveState();
         break;
       }
 
