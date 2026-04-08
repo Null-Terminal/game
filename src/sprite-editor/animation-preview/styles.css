@@ -1,14 +1,15 @@
 :host {
-  padding: 10px;
+  margin: 10px;
   color: #CCC;
 }
 
 .box {
   background: #333;
+  padding: 10px;
 }
 
-.row {
-  padding: 10px;
+.row + .row {
+  margin-top: 10px;
 }
 
 button {

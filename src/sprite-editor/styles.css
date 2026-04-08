@@ -10,7 +10,7 @@
 }
 
 .preview {
-  width: 30%;
+  min-width: 500px;
 }
 
 .grid {
