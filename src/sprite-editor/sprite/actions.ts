@@ -12,7 +12,12 @@ export class ActionHandlers extends Handlers<Sprite> {
     this.parent.controls.removeEventListener("input", this.onAction);
   }
 
-  deleteSprite() {
+  addNew() {
+    const currentSprite = this.parent;
+    currentSprite.insertAdjacentElement("afterend", currentSprite.copy());
+  }
+
+  deleteCurrent() {
     const { host } = this.parent;
 
     host.style.opacity = "0";
@@ -54,6 +59,16 @@ export class ActionHandlers extends Handlers<Sprite> {
       }
 
     } while (rightSprite !== null);
+  }
+
+  moveLeft() {
+    const currentSprite = this.parent;
+    currentSprite.previousElementSibling?.insertAdjacentElement("beforebegin", currentSprite);
+  }
+
+  moveRight() {
+    const currentSprite = this.parent;
+    currentSprite.nextElementSibling?.insertAdjacentElement("afterend", currentSprite);
   }
 
   setX(e: Event) {
