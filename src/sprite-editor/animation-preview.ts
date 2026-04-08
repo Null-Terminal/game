@@ -69,6 +69,7 @@ export class AnimationPreview extends HTMLElement {
     }
 
     let lastFrameTime = 0;
+    let spriteIndex = this.spriteIndex;
 
     cancelAnimationFrame(this.#animationId);
 
@@ -79,12 +80,13 @@ export class AnimationPreview extends HTMLElement {
         return;
       }
 
-      this.spriteIndex %= mergedSprite.data.size;
-      const sprite = mergedSprite.data.at(this.spriteIndex)!;
+      spriteIndex %= mergedSprite.data.size;
+      const sprite = mergedSprite.data.at(spriteIndex)!;
 
       if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
+        this.spriteIndex = spriteIndex;
         this.renderSprite(this.spriteIndex, mergedSprite);
-        this.spriteIndex++;
+        spriteIndex++;
         lastFrameTime = now;
       }
     };
