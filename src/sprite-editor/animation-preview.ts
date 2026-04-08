@@ -17,7 +17,7 @@ export class AnimationPreview extends HTMLElement {
 
   speed = 1;
   spriteIndex = 0;
-  backgroundColor = "#FFF";
+  backgroundColor = "#333";
 
   @cache
   get #ctx() {
@@ -62,6 +62,8 @@ export class AnimationPreview extends HTMLElement {
   }
 
   play() {
+    this.clear();
+
     const mergedSprite = this.#renderSprite();
 
     if (mergedSprite.data.size === 0) {
