@@ -1,9 +1,7 @@
-@import url("https://fonts.cdnfonts.com/css/helvetica-255");
-
 :host {
   padding: 10px;
   transition: opacity 0.3s ease;
-  font-family: "Helvetica", sans-serif;
+  font-family: Arial, sans-serif;
   color: #CCC;
 }
 

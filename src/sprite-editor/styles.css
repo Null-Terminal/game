@@ -1,7 +1,5 @@
-@import url("https://fonts.cdnfonts.com/css/helvetica-255");
-
 :host {
-  font-family: "Helvetica", sans-serif;
+  font-family: Arial, sans-serif;
 }
 
 .editor {
