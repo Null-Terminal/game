@@ -212,12 +212,10 @@ export class Sprite extends HTMLElement {
   }
 
   disconnectedCallback() {
-    if (!this.isConnected) {
-      cancelAnimationFrame(this.#drawTask);
-      this.#spriteResizer.destroy();
-      this.#spriteDragger.destroy();
-      this.#actionHandlers.destroy();
-    }
+    cancelAnimationFrame(this.#drawTask);
+    this.#spriteResizer.destroy();
+    this.#spriteDragger.destroy();
+    this.#actionHandlers.destroy();
   }
 
   copy() {
