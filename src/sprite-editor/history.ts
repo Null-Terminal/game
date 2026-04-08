@@ -72,39 +72,43 @@ export class EditorHistory {
         return;
       }
 
-      const actions = mutations.flatMap((mut) => {
-        const added = Array.from(mut.addedNodes ?? []).map((node) => ({
-          type: "add",
-          node: node,
-          previous: mut.previousSibling,
-          next: mut.nextSibling
-        }));
+      const actions = new Map();
 
-        const removed = Array.from(mut.removedNodes ?? []).map((node) => ({
-          type: "remove",
-          node,
-          previous: mut.previousSibling,
-          next: mut.nextSibling
-        }));
+      for (const mut of mutations) {
+        for (const node of mut.addedNodes) {
+          actions.set(node, {
+            type: actions.get(node)?.type === "remove" ? "move" : "add",
+            node: node,
+            previous: mut.previousSibling,
+            next: mut.nextSibling
+          });
+        }
 
-        return [...added, ...removed];
-      });
+        for (const node of mut.removedNodes) {
+          actions.set(node, {
+            type: "remove",
+            node,
+            previous: mut.previousSibling,
+            next: mut.nextSibling
+          });
+        }
+      }
 
-      if (actions.length > 0) {
+      if (actions.size > 0) {
         this.#history.push({
           undo() {
             mute = true;
 
-            actions.forEach((action) => {
-              const { node } = action;
+            for (const action of actions.values()) {
+              const { type, node } = action;
 
-              if (action.type === "add") {
+              if (type === "add") {
                 node.parentNode?.removeChild(node);
 
               } else {
-                grid.insertBefore(node, action.next);
+                grid.insertBefore(node, type === "move" ? action.previous : action.next);
               }
-            });
+            }
 
             return true;
           },
@@ -112,16 +116,16 @@ export class EditorHistory {
           redo() {
             mute = true;
 
-            actions.forEach((action) => {
+            for (const action of actions.values()) {
               const { node } = action;
 
-              if (action.type === "add") {
-                grid.insertBefore(node, action.next);
+              if (action.type === "remove") {
+                node.parentNode?.removeChild(node);
 
               } else {
-                node.parentNode?.removeChild(node);
+                grid.insertBefore(node, action.next);
               }
-            });
+            }
 
             return true;
           }
