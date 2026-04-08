@@ -18,8 +18,13 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     settings.removeEventListener("submit", this.#onSubmit);
   }
 
-  clearGrid() {
-    this.parent.grid.innerHTML = "";
+  reset() {
+    const editor = this.parent;
+    editor.grid.innerHTML = "";
+
+    queueMicrotask(() => {
+      editor.history.clearHistory();
+    });
   }
 
   async addToGrid() {
