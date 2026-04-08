@@ -1,9 +1,9 @@
-export abstract class Handlers<T> {
-  protected readonly parent: T;
+export abstract class Handlers<Parent> {
+  protected readonly parent: Parent;
 
   readonly attr: string = "action";
 
-  protected constructor(parent: T) {
+  protected constructor(parent: Parent) {
     this.parent = parent;
 
     queueMicrotask(() => {
