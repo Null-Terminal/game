@@ -196,6 +196,10 @@ export class Sprite extends HTMLElement {
   }
 
   connectedCallback() {
+    if (this.#image != null) {
+      return;
+    }
+
     this.#render();
 
     loadImage(this.file).then((i) => {
@@ -207,10 +211,23 @@ export class Sprite extends HTMLElement {
   }
 
   disconnectedCallback() {
-    cancelAnimationFrame(this.#drawTask);
-    this.#spriteResizer.destroy();
-    this.#spriteDragger.destroy();
-    this.#actionHandlers.destroy();
+    if (!this.isConnected) {
+      cancelAnimationFrame(this.#drawTask);
+      this.#spriteResizer.destroy();
+      this.#spriteDragger.destroy();
+      this.#actionHandlers.destroy();
+    }
+  }
+
+  copy() {
+    return new Sprite(this.file, {
+      ...this.options,
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      animationDelay: this.animationDelay
+    });
   }
 
   resize(width: number, height: number) {
