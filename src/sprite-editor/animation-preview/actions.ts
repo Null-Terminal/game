@@ -15,6 +15,10 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
     this.parent.speed *= 0.5;
   }
 
+  speedReset(): void {
+    this.parent.speed = 1;
+  }
+
   speedDown(): void {
     this.parent.speed *= 1.5;
   }
