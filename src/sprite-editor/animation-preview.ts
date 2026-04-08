@@ -64,6 +64,10 @@ export class AnimationPreview extends HTMLElement {
   play() {
     const mergedSprite = this.#renderSprite();
 
+    if (mergedSprite.data.size === 0) {
+      return;
+    }
+
     let lastFrameTime = 0;
 
     cancelAnimationFrame(this.#animationId);
@@ -89,6 +93,10 @@ export class AnimationPreview extends HTMLElement {
   }
 
   renderSprite(spriteIndex: number, { canvas, data } = this.#renderSprite()) {
+    if (data.size === 0) {
+      return;
+    }
+
     this.clear();
 
     spriteIndex %= data.size;
