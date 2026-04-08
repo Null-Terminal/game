@@ -17,7 +17,6 @@ export class AnimationPreview extends HTMLElement {
 
   speed = 1;
   spriteIndex = 0;
-  backgroundColor = "#333";
 
   @cache
   get #ctx() {
@@ -31,6 +30,8 @@ export class AnimationPreview extends HTMLElement {
 
   #editor!: SpriteEditor;
   #actionHandlers!: ActionHandlers;
+
+  #backgroundColor: string | null = null;
   #animationId = 0;
 
   constructor() {
@@ -143,7 +144,8 @@ export class AnimationPreview extends HTMLElement {
   }
 
   clear() {
-    this.#ctx.fillStyle = this.backgroundColor;
+    this.#backgroundColor ??= getComputedStyle(this).backgroundColor ?? "#333";
+    this.#ctx.fillStyle = this.#backgroundColor;
     this.#ctx.fillRect(0, 0, this.#player.width, this.#player.height);
   }
 
