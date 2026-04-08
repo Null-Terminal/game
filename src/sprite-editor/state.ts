@@ -66,5 +66,5 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
     }
   }
 
-  protected abstract restoreFromState(state: State | undefined): void
+  protected abstract restoreFromState(state: State | undefined): void;
 }
