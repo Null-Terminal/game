@@ -5,9 +5,12 @@ import "#sprite-editor/animation-preview";
 import styles from "#sprite-editor/styles.css?raw";
 import template from "#sprite-editor/template.html?raw";
 
+import { EditorHistory } from "#sprite-editor/history";
 import { ActionHandlers } from "#sprite-editor/actions";
 
 export class SpriteEditor extends HTMLElement {
+  history!: EditorHistory;
+
   @cache
   get settings(): HTMLFormElement {
     return this.shadowRoot!.getElementById("settings") as HTMLFormElement;
@@ -31,6 +34,7 @@ export class SpriteEditor extends HTMLElement {
 
   disconnectedCallback() {
     this.#actionHandlers.destroy();
+    this.history.destroy();
   }
 
   getSetting<T extends HTMLInputElement>(name: string): T {
@@ -55,6 +59,8 @@ export class SpriteEditor extends HTMLElement {
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
+
+    this.history = new EditorHistory(this);
     this.#actionHandlers = new ActionHandlers(this);
   }
 }

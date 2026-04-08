@@ -1,22 +1,17 @@
 import type { SpriteDescriptor } from "#/sprite-buffer";
 
+import { State } from "#sprite-editor/state";
 import type { Sprite } from "#sprite-editor/sprite";
 
-export class SpriteHistory {
-  readonly #sprite: Sprite;
-
-  #history: SpriteDescriptor[] = [];
-
-  #historyIndex = -1;
-
+export class SpriteHistory extends State<Sprite, SpriteDescriptor> {
   constructor(sprite: Sprite) {
-    this.#sprite = sprite;
+    super(sprite);
   }
 
   saveState() {
-    const sprite = this.#sprite;
+    const sprite = this.parent;
 
-    this.#history.push({
+    this.pushState({
       x: sprite.x,
       y: sprite.y,
       width: sprite.width,
@@ -24,54 +19,14 @@ export class SpriteHistory {
       spriteId: sprite.spriteId,
       animationDelay: sprite.animationDelay,
     });
-
-    sprite.dispatchEvent(new CustomEvent("stateChange", {
-      bubbles: true,
-      composed: true
-    }));
   }
 
-  undo(): boolean {
-    if (!this.canUndo) {
-      return false;
-    }
-
-    this.#historyIndex--;
-    this.#restoreFromState(this.#history[this.#historyIndex]);
-
-    return true;
-  }
-
-  redo(): boolean {
-    if (!this.canRedo) {
-      return false;
-    }
-
-    this.#historyIndex++;
-    this.#restoreFromState(this.#history[this.#historyIndex]);
-
-    return true;
-  }
-
-  canUndo() {
-    return this.#historyIndex > 0;
-  }
-
-  canRedo() {
-    return this.#historyIndex < this.#history.length - 1;
-  }
-
-  clearHistory() {
-    this.#history = [];
-    this.#historyIndex = -1;
-  }
-
-  #restoreFromState(state: SpriteDescriptor | undefined) {
+  protected restoreFromState(state: SpriteDescriptor | undefined) {
     if (state == null) {
       return;
     }
 
-    const sprite = this.#sprite;
+    const sprite = this.parent;
 
     sprite.x = state.x;
     sprite.y = state.y;
@@ -79,7 +34,5 @@ export class SpriteHistory {
     sprite.height = state.height;
     sprite.spriteId = state.spriteId;
     sprite.animationDelay = state.animationDelay;
-
-    this.saveState();
   }
 }
