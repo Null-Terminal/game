@@ -7,19 +7,19 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
     super(parent);
   }
 
-  destroy(): void {
+  destroy() {
     this.parent.controls.removeEventListener("click", this.onAction);
   }
 
-  speedUp(): void {
+  speedUp() {
     this.parent.speed *= 0.5;
   }
 
-  speedReset(): void {
+  speedReset() {
     this.parent.speed = 1;
   }
 
-  speedDown(): void {
+  speedDown() {
     this.parent.speed *= 1.5;
   }
 

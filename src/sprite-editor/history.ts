@@ -16,7 +16,7 @@ export class EditorHistory {
     this.#initHandlers();
   }
 
-  destroy(): void {
+  destroy() {
     this.#editor.removeEventListener("stateChange", this.#onStateChange);
     document.removeEventListener("keydown", this.#onKeyboardUndoRedo);
     this.#gridObserver?.disconnect();
