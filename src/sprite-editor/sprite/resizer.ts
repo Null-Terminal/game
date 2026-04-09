@@ -98,6 +98,6 @@ export class SpriteResizer {
 
     this.#resizing = null;
     this.#sprite.canvas.style.cursor = "grab";
-    this.#sprite.history.saveState();
+    this.#sprite.history.save();
   };
 }

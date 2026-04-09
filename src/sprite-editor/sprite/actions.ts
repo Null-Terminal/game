@@ -39,7 +39,7 @@ export class ActionHandlers extends Handlers<Sprite> {
 
       if (leftSprite instanceof (currentSprite.constructor as typeof Sprite)) {
         currentSprite.resize(leftSprite.canvas.width, leftSprite.canvas.height);
-        currentSprite.history.saveState();
+        currentSprite.history.save();
         break;
       }
 
@@ -56,7 +56,7 @@ export class ActionHandlers extends Handlers<Sprite> {
 
       if (rightSprite instanceof (currentSprite.constructor as typeof Sprite)) {
         currentSprite.resize(rightSprite.canvas.width, rightSprite.canvas.height);
-        currentSprite.history.saveState();
+        currentSprite.history.save();
         break;
       }
 
@@ -75,32 +75,32 @@ export class ActionHandlers extends Handlers<Sprite> {
 
   setX(e: Event) {
     this.parent.x = parseInt((e.target as HTMLInputElement).value, 10);
-    this.parent.history.saveState();
+    this.parent.history.save();
   }
 
   setY(e: Event) {
     this.parent.y = parseInt((e.target as HTMLInputElement).value, 10);
-    this.parent.history.saveState();
+    this.parent.history.save();
   }
 
   setWidth(e: Event) {
     this.parent.width = parseInt((e.target as HTMLInputElement).value, 10);
-    this.parent.history.saveState();
+    this.parent.history.save();
   }
 
   setHeight(e: Event) {
     this.parent.width = parseInt((e.target as HTMLInputElement).value, 10);
-    this.parent.history.saveState();
+    this.parent.history.save();
   }
 
   setId(e: Event) {
     this.parent.spriteId = (e.target as HTMLInputElement).value;
-    this.parent.history.saveState();
+    this.parent.history.save();
   }
 
   setAnimationDelay(e: Event) {
     this.parent.animationDelay = parseInt((e.target as HTMLInputElement).value, 10);
-    this.parent.history.saveState();
+    this.parent.history.save();
   }
 
   protected initHandlers() {

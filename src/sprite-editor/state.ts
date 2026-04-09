@@ -11,7 +11,7 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
     this.parent = parent;
   }
 
-  abstract saveState(dispatchEvent?: boolean): void;
+  abstract save(dispatchEvent?: boolean): void;
 
   undo(): boolean {
     if (!this.canUndo()) {

@@ -8,7 +8,7 @@ export class SpriteHistory extends State<Sprite, SpriteDescriptor> {
     super(sprite);
   }
 
-  saveState(dispatchEvent = true) {
+  save(dispatchEvent = true) {
     const sprite = this.parent;
 
     this.pushState({

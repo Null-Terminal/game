@@ -1,12 +1,12 @@
 import { State, type StateEvent } from "#sprite-editor/state";
 import { SpriteEditor } from "#/sprite-editor";
 
-export type Stateable = Pick<State, "undo" | "redo">;
+export type Command = Pick<State, "undo" | "redo">;
 
 export class EditorHistory {
   readonly #editor: SpriteEditor;
 
-  #history: Stateable[] = [];
+  #history: Command[] = [];
   #historyIndex = -1;
 
   #gridObserver: MutationObserver | null = null;
@@ -138,7 +138,7 @@ export class EditorHistory {
     this.#gridObserver.observe(grid, { childList: true });
   }
 
-  readonly #pushState = (state: Stateable) => {
+  readonly #pushState = (state: Command) => {
     this.#history = this.#history.slice(0, this.#historyIndex + 1);
     this.#history.push(state);
     this.#historyIndex++;
