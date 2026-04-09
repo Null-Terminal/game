@@ -111,7 +111,6 @@ export class AnimationPreview extends HTMLElement {
       this.#player.height = canvas.height;
       this.#player.width = sprite.width;
 
-      this.clear();
       this.#editor.focusSprite(spriteIndex, { preventScroll: true });
 
       this.#ctx.drawImage(
@@ -144,7 +143,16 @@ export class AnimationPreview extends HTMLElement {
   }
 
   clear() {
-    this.#backgroundColor ??= getComputedStyle(this).backgroundColor ?? "#333";
+    if (this.#backgroundColor == null) {
+      const playerBox = this.#player.parentNode;
+
+      if (playerBox instanceof Element) {
+        this.#backgroundColor = getComputedStyle(playerBox).backgroundColor;
+      }
+
+      this.#backgroundColor ??= "#333";
+    }
+
     this.#ctx.fillStyle = this.#backgroundColor;
     this.#ctx.fillRect(0, 0, this.#player.width, this.#player.height);
   }
