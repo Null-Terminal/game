@@ -13,26 +13,23 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
 
   abstract save(dispatchEvent?: boolean): void;
 
-  undo(): boolean {
-    if (!this.canUndo()) {
-      return false;
-    }
-
-    this.historyIndex--;
-    this.restoreFromState(this.history[this.historyIndex]);
-
-    return true;
+  clear() {
+    this.history = [];
+    this.historyIndex = -1;
   }
 
-  redo(): boolean {
-    if (!this.canRedo()) {
-      return false;
+  undo() {
+    if (this.canUndo()) {
+      this.historyIndex--;
+      this.restoreFromState(this.history[this.historyIndex]);
     }
+  }
 
-    this.historyIndex++;
-    this.restoreFromState(this.history[this.historyIndex]);
-
-    return true;
+  redo() {
+    if (this.canRedo()) {
+      this.historyIndex++;
+      this.restoreFromState(this.history[this.historyIndex]);
+    }
   }
 
   canUndo() {
@@ -41,11 +38,6 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
 
   canRedo() {
     return this.historyIndex < this.history.length - 1;
-  }
-
-  clearHistory() {
-    this.history = [];
-    this.historyIndex = -1;
   }
 
   protected pushState(state: State, dispatchEvent = true): void {

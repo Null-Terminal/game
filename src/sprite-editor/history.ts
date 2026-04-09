@@ -22,26 +22,23 @@ export class EditorHistory {
     this.#gridObserver?.disconnect();
   }
 
-  undo(): boolean {
-    if (!this.canUndo()) {
-      return false;
-    }
-
-    this.#history[this.#historyIndex]?.undo();
-    this.#historyIndex--;
-
-    return true;
+  clear() {
+    this.#history = [];
+    this.#historyIndex = -1;
   }
 
-  redo(): boolean {
-    if (!this.canRedo()) {
-      return false;
+  undo() {
+    if (this.canUndo()) {
+      this.#history[this.#historyIndex]?.undo();
+      this.#historyIndex--;
     }
+  }
 
-    this.#historyIndex++;
-    this.#history[this.#historyIndex]?.redo();
-
-    return true;
+  redo() {
+    if (this.canRedo()) {
+      this.#historyIndex++;
+      this.#history[this.#historyIndex]?.redo();
+    }
   }
 
   canUndo() {
@@ -50,11 +47,6 @@ export class EditorHistory {
 
   canRedo() {
     return this.#historyIndex < this.#history.length - 1;
-  }
-
-  clearHistory() {
-    this.#history = [];
-    this.#historyIndex = -1;
   }
 
   #initHandlers() {
@@ -111,8 +103,6 @@ export class EditorHistory {
                 grid.insertBefore(node, type === "move" ? action.previous : action.next);
               }
             }
-
-            return true;
           },
 
           redo() {
@@ -128,8 +118,6 @@ export class EditorHistory {
                 grid.insertBefore(node, action.next);
               }
             }
-
-            return true;
           }
         });
       }

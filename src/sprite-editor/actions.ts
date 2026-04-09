@@ -23,7 +23,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     editor.grid.innerHTML = "";
 
     queueMicrotask(() => {
-      editor.history.clearHistory();
+      editor.history.clear();
     });
   }
 
