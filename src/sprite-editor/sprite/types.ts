@@ -1,4 +1,4 @@
-import type { SpriteDescriptor } from "#/sprite-buffer";
+import type { SpriteDescriptor } from "#/sprite-animation";
 
 export interface SpriteOptions extends Partial<SpriteDescriptor> {
   width: number;

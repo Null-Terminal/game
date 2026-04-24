@@ -1,5 +1,5 @@
 import { cache } from "#decorators/cache";
-import { RenderedSpriteBuffer } from "#/sprite-buffer";
+import { SpriteAnimation } from "#/sprite-animation";
 
 import styles from "#sprite-editor/animation-preview/styles.css?raw";
 import template from "#sprite-editor/animation-preview/template.html?raw";
@@ -67,7 +67,7 @@ export class AnimationPreview extends HTMLElement {
 
     const mergedSprite = this.#renderSprite();
 
-    if (mergedSprite.data.size === 0) {
+    if (mergedSprite.data.length === 0) {
       return;
     }
 
@@ -83,7 +83,7 @@ export class AnimationPreview extends HTMLElement {
         return;
       }
 
-      spriteIndex %= mergedSprite.data.size;
+      spriteIndex %= mergedSprite.data.length;
       const sprite = mergedSprite.data.at(spriteIndex)!;
 
       if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
@@ -98,13 +98,13 @@ export class AnimationPreview extends HTMLElement {
   }
 
   renderSprite(spriteIndex: number, { canvas, data } = this.#renderSprite()) {
-    if (data.size === 0) {
+    if (data.length === 0) {
       return;
     }
 
     this.clear();
 
-    spriteIndex %= data.size;
+    spriteIndex %= data.length;
     const sprite = data.at(spriteIndex);
 
     if (sprite != null) {
@@ -158,7 +158,7 @@ export class AnimationPreview extends HTMLElement {
   }
 
   #renderSprite() {
-    return RenderedSpriteBuffer.mergeSprites(
+    return SpriteAnimation.mergeSprites(
       Array.from(this.#editor.grid.querySelectorAll("sprite-item")) as Sprite[]
     );
   }

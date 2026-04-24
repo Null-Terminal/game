@@ -1,6 +1,6 @@
-import { loadBuffer } from "#/file-loader";
+import { loadText } from "#/file-loader";
 
-import { RenderedSpriteBuffer } from "#/sprite-buffer";
+import { SpriteAnimation } from "#/sprite-animation";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
@@ -53,21 +53,20 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         }
 
       } else {
-        const data = new RenderedSpriteBuffer(sprite.data);
+        const animation = SpriteAnimation.fromJSON(sprite.data);
 
-        for (let i = 0; i < data.size; i++) {
-          const desc = data.at(i)!.getDescriptor();
+        for (const spriteDescriptor of animation) {
           editor.grid?.append(new Sprite(sprite.image, {
-            ...desc,
-            x: -desc.x,
-            y: -desc.y,
+            ...spriteDescriptor,
+            x: -spriteDescriptor.x,
+            y: -spriteDescriptor.y,
           }));
         }
       }
     }
 
     async function groupSprites() {
-      const sprites = new Map<string, {image?: File, data?: Uint8Array}>;
+      const sprites = new Map<string, {image?: File, data?: string}>;
 
       const fileExt =  /\.[^.]*$/;
 
@@ -78,8 +77,8 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         const groupKey = fileName.replace(fileExt, "");
         const group = sprites.get(groupKey) ?? {};
 
-        if (ext === ".buffer") {
-          group.data = await loadBuffer(file);
+        if (ext === ".json") {
+          group.data = await loadText(file);
 
         } else {
           group.image = file;
@@ -99,7 +98,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const { canvas, data } = RenderedSpriteBuffer.mergeSprites(
+    const { canvas, data } = SpriteAnimation.mergeSprites(
       Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[]
     );
 
@@ -111,7 +110,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
 
     const buffer = document.createElement("a");
 
-    buffer.download = `${image.download}.buffer`;
+    buffer.download = `${image.download}.json`;
     buffer.href = data.toDataURL();
     buffer.click();
   }
