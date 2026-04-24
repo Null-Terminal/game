@@ -1,14 +1,19 @@
 import { cache } from "#decorators/cache";
-
-export type RedrawHandler = (now: number, ctx: CanvasRenderingContext2D) => void;
+import { EventEmitter, handler } from "#/event-emitter";
 
 export class RenderCanvas {
   canvas: HTMLCanvasElement;
 
+  readonly emitter = new EventEmitter({
+    redraw: handler<[now: number, ctx: CanvasRenderingContext2D]>()
+  });
+
+  @cache
+  get events() {
+    return this.emitter.events;
+  }
+
   #paused = false;
-
-  #redrawHandlers = new Set<RedrawHandler>();
-
   #redrawId = 0;
 
   @cache
@@ -48,7 +53,7 @@ export class RenderCanvas {
       }
 
       this.clear();
-      this.#redrawHandlers.forEach((handler) => handler(now, this.#ctx));
+      this.emitter.emit(this.events.redraw, [now, this.#ctx]);
     };
 
     animate();
@@ -56,11 +61,6 @@ export class RenderCanvas {
 
   stop() {
     cancelAnimationFrame(this.#redrawId);
-  }
-
-  requestRedrawHandler(handler: RedrawHandler) {
-    this.#redrawHandlers.add(handler);
-    return () => this.#redrawHandlers.delete(handler);
   }
 
   clear() {

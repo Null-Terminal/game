@@ -1,5 +1,6 @@
 import { cache } from "#decorators/cache";
 import { SpriteAnimation } from "#/sprite-animation";
+import { EventEmitter } from "#/event-emitter";
 
 import runAnimation from "#/sprites/run.animation.json";
 import run from "#/sprites/run.png";
@@ -18,6 +19,13 @@ class GameObject {
 
   speed = 1;
   canvas: RenderCanvas;
+
+  readonly emitter = new EventEmitter({});
+
+  @cache
+  get events() {
+    return this.emitter.events;
+  }
 
   @cache
   get animations() {
@@ -75,7 +83,9 @@ class GameObject {
 
     this.#cancelRedrawHandler?.();
 
-    this.#cancelRedrawHandler = this.canvas.requestRedrawHandler((now, ctx) => {
+    const { emitter, events } = this.canvas;
+
+    this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
       this.#width = sprite.width;
