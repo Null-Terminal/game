@@ -1,2 +1,0 @@
-export { RenderedSpriteBuffer } from "#sprite-buffer/rendered-sprite-buffer";
-export type * from "#sprite-buffer/types";

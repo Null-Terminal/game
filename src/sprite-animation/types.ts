@@ -1,4 +1,4 @@
-import type { RenderedSpriteBuffer } from "#sprite-buffer/rendered-sprite-buffer";
+import type { SpriteAnimation } from "#/sprite-animation";
 
 export interface SpriteDescriptor {
   x: number;
@@ -11,5 +11,5 @@ export interface SpriteDescriptor {
 
 export interface MergedSprite {
   canvas: HTMLCanvasElement;
-  data: RenderedSpriteBuffer;
+  data: SpriteAnimation;
 }

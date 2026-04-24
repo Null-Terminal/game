@@ -1,15 +1,17 @@
-import type { Sprite } from "#sprite-editor/sprite";
-import type { MergedSprite, SpriteDescriptor } from "#sprite-buffer/types";
+export type * from "#/sprite-animation/types";
 
-export class RenderedSpriteBuffer {
-  static fromJSON(json: string): RenderedSpriteBuffer {
+import type { Sprite } from "#sprite-editor/sprite";
+import type { MergedSprite, SpriteDescriptor } from "#/sprite-animation/types";
+
+export class SpriteAnimation {
+  static fromJSON(json: string): SpriteAnimation {
     const data = JSON.parse(json);
 
     if (typeof data !== "object" || !("sprites" in data) || !Array.isArray(data.sprites)) {
       throw new TypeError("Invalid data type");
     }
 
-    return new RenderedSpriteBuffer(data.sprites);
+    return new SpriteAnimation(data.sprites);
   }
 
   static mergeSprites(sprites: Sprite[]): MergedSprite {
@@ -53,7 +55,7 @@ export class RenderedSpriteBuffer {
       currentX += sprite.canvas.width;
     }
 
-    return { canvas: resultCanvas, data: new RenderedSpriteBuffer(spriteDescriptors) } as MergedSprite;
+    return { canvas: resultCanvas, data: new SpriteAnimation(spriteDescriptors) } as MergedSprite;
   }
 
   get length(): number {
