@@ -1,33 +1,18 @@
 import type { Sprite } from "#sprite-editor/sprite";
-
-import { SpriteBuffer } from "#sprite-buffer/sprite-buffer";
-import type { MergedSprite } from "#sprite-buffer/types";
-
-const U8 = Uint8Array.BYTES_PER_ELEMENT;
+import type { MergedSprite, SpriteDescriptor } from "#sprite-buffer/types";
 
 export class RenderedSpriteBuffer {
-  static readonly SCHEME = new Map([
-    ["length", U8],
-    ["repeat", U8],
-    ["sprite", SpriteBuffer.BYTES_PER_ELEMENT],
-  ] as const);
+  static fromJSON(json: string): RenderedSpriteBuffer {
+    const data = JSON.parse(json);
 
-  static readonly HEADER_SIZE = this.SCHEME.entries()
-    .flatMap(([key, size]) => key === "sprite" ? [] : [size])
-    .reduce((acc, size) => acc + size, 0);
+    if (typeof data !== "object" || !("sprites" in data) || !Array.isArray(data.sprites)) {
+      throw new TypeError("Invalid data type");
+    }
 
-  readonly HEADER_SIZE = RenderedSpriteBuffer.HEADER_SIZE;
-
-  static newBlank(size: number, repeat: number = 0xFF): RenderedSpriteBuffer {
-    const buffer = new RenderedSpriteBuffer(new Uint8Array(size * SpriteBuffer.BYTES_PER_ELEMENT + this.HEADER_SIZE));
-
-    buffer.size = size;
-    buffer.repeat = repeat;
-
-    return buffer;
+    return new RenderedSpriteBuffer(data.sprites);
   }
 
-  static mergeSprites(sprites: Sprite[], repeat?: number): MergedSprite {
+  static mergeSprites(sprites: Sprite[]): MergedSprite {
     // Вычисляем общую ширину и максимальную высоту
     let totalWidth = 0;
     let maxHeight = 0;
@@ -44,7 +29,7 @@ export class RenderedSpriteBuffer {
     resultCanvas.width = totalWidth;
     resultCanvas.height = maxHeight;
 
-    const data = this.newBlank(sprites.length, repeat);
+    const spriteDescriptors = new Array(sprites.length).fill(undefined);
 
     let currentX = 0;
 
@@ -56,62 +41,41 @@ export class RenderedSpriteBuffer {
       sprite.draw(image.getContext("2d")!);
       resultCtx.drawImage(image, currentX, 0);
 
-      const spriteBuffer = data.at(i)!;
-
-      spriteBuffer.x = currentX;
-      spriteBuffer.y = 0;
-      spriteBuffer.width = image.width;
-      spriteBuffer.height = image.height;
-      spriteBuffer.animationDelay = sprite.animationDelay;
-      spriteBuffer.spriteId = sprite.spriteId;
+      spriteDescriptors[i] = {
+        x: currentX,
+        y: 0,
+        width: image.width,
+        height: image.height,
+        animationDelay: sprite.animationDelay,
+        spriteId: sprite.spriteId
+      };
 
       currentX += sprite.canvas.width;
     }
 
-    return { canvas: resultCanvas, data };
+    return { canvas: resultCanvas, data: new RenderedSpriteBuffer(spriteDescriptors) } as MergedSprite;
   }
 
-  get buffer() {
-    return this.#bytes.buffer;
+  get length(): number {
+    return this.sprites.length;
   }
 
-  get byteLength() {
-    return this.#bytes.byteLength;
+  protected readonly sprites: SpriteDescriptor[];
+
+  constructor(sprites: SpriteDescriptor[]) {
+    this.sprites = sprites;
   }
 
-  #bytes;
-
-  constructor(bytes: Uint8Array) {
-    this.#bytes = bytes;
-  }
-
-  get size() {
-    return this.#bytes[0]!;
-  }
-
-  set size(value: number) {
-    this.#bytes[0] = value;
-  }
-
-  get repeat() {
-    return this.#bytes[1]!;
-  }
-
-  set repeat(value: number) {
-    this.#bytes[1] = value;
-  }
-
-  at(index: number): SpriteBuffer | null {
-    const normalizedIndex = index < 0 ? this.size - index : index;
-
-    if (normalizedIndex < 0 || normalizedIndex >= this.size) {
-      return null;
-    }
-
-    return new SpriteBuffer(this.#bytes, this.HEADER_SIZE + index * SpriteBuffer.BYTES_PER_ELEMENT);
+  at(index: number): Readonly<SpriteDescriptor> | undefined {
+    return this.sprites.at(index);
   }
 
   toDataURL() {
-    return `data:application/octet-stream;base64,${this.#bytes.toBase64()}`;
+    const data = encodeURIComponent(JSON.stringify({ sprites: this.sprites }));
+    return `data:application/json,${data}`;
+  }
+
+  [Symbol.iterator]() {
+    return this.sprites.values();
   }
 }
