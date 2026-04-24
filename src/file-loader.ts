@@ -55,16 +55,16 @@ export function loadImage(file: File): Promise<LoadedImage> {
   return promise;
 }
 
-const bufferCache = new WeakMap<File, Promise<Uint8Array>>();
+const bufferCache = new WeakMap<File, Promise<string>>();
 
-export function loadBuffer(file: File): Promise<Uint8Array> {
+export function loadText(file: File): Promise<string> {
   const fromCache = bufferCache.get(file);
 
   if (fromCache != null) {
     return fromCache;
   }
 
-  const { promise, resolve, reject } = Promise.withResolvers<Uint8Array>();
+  const { promise, resolve, reject } = Promise.withResolvers<string>();
 
   bufferCache.set(file, promise);
 
@@ -73,19 +73,19 @@ export function loadBuffer(file: File): Promise<Uint8Array> {
   reader.onload = (e) => {
     const result = e.target?.result;
 
-    if (!(result instanceof ArrayBuffer)) {
-      reject(new Error("Failed to load file"));
+    if (typeof result !== "string") {
+      reject(new Error("Failed to load JSON"));
       return;
     }
 
-    resolve(new Uint8Array(result));
+    resolve(result);
   };
 
   reader.onerror = () => {
     reject(reader.error);
   };
 
-  reader.readAsArrayBuffer(file);
+  reader.readAsText(file);
 
   return promise;
 }
