@@ -68,7 +68,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     async function groupSprites() {
       const sprites = new Map<string, {image?: File, animation?: string}>;
 
-      const fileExt =  /\.[^.]*$/;
+      const fileExt =  /\..*/;
 
       for (const file of sprite.files!) {
         const fileName = file.name;
@@ -77,7 +77,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         const groupKey = fileName.replace(fileExt, "");
         const group = sprites.get(groupKey) ?? {};
 
-        if (ext === ".json") {
+        if (ext === ".animation.json") {
           group.animation = await loadText(file);
 
         } else {
