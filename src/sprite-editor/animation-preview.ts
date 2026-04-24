@@ -102,8 +102,6 @@ export class AnimationPreview extends HTMLElement {
       return;
     }
 
-    this.clear();
-
     spriteIndex %= animation.length;
     const sprite = animation.at(spriteIndex);
 
@@ -112,6 +110,8 @@ export class AnimationPreview extends HTMLElement {
       this.#player.width = sprite.width;
 
       this.#editor.focusSprite(spriteIndex, { preventScroll: true });
+
+      this.clear();
 
       this.#ctx.drawImage(
         canvas,
@@ -124,6 +124,9 @@ export class AnimationPreview extends HTMLElement {
         sprite.width,
         sprite.height
       );
+
+    } else {
+      this.clear();
     }
   }
 
