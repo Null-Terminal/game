@@ -67,7 +67,7 @@ export class AnimationPreview extends HTMLElement {
 
     const mergedSprite = this.#renderSprite();
 
-    if (mergedSprite.data.length === 0) {
+    if (mergedSprite.animation.isEmpty()) {
       return;
     }
 
@@ -83,8 +83,8 @@ export class AnimationPreview extends HTMLElement {
         return;
       }
 
-      spriteIndex %= mergedSprite.data.length;
-      const sprite = mergedSprite.data.at(spriteIndex)!;
+      spriteIndex %= mergedSprite.animation.length;
+      const sprite = mergedSprite.animation.at(spriteIndex)!;
 
       if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
         this.spriteIndex = spriteIndex;
@@ -97,15 +97,15 @@ export class AnimationPreview extends HTMLElement {
     animate();
   }
 
-  renderSprite(spriteIndex: number, { canvas, data } = this.#renderSprite()) {
-    if (data.length === 0) {
+  renderSprite(spriteIndex: number, { canvas, animation } = this.#renderSprite()) {
+    if (animation.isEmpty()) {
       return;
     }
 
     this.clear();
 
-    spriteIndex %= data.length;
-    const sprite = data.at(spriteIndex);
+    spriteIndex %= animation.length;
+    const sprite = animation.at(spriteIndex);
 
     if (sprite != null) {
       this.#player.height = canvas.height;

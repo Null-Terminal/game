@@ -47,13 +47,13 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         continue;
       }
 
-      if (sprite.data == null) {
+      if (sprite.animation == null) {
         for (let i = 0; i < length; i++) {
           editor.grid?.append(new Sprite(sprite.image, { width, height }));
         }
 
       } else {
-        const animation = SpriteAnimation.fromJSON(sprite.data);
+        const animation = SpriteAnimation.fromJSON(sprite.animation);
 
         for (const spriteDescriptor of animation) {
           editor.grid?.append(new Sprite(sprite.image, {
@@ -66,7 +66,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     }
 
     async function groupSprites() {
-      const sprites = new Map<string, {image?: File, data?: string}>;
+      const sprites = new Map<string, {image?: File, animation?: string}>;
 
       const fileExt =  /\.[^.]*$/;
 
@@ -78,7 +78,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         const group = sprites.get(groupKey) ?? {};
 
         if (ext === ".json") {
-          group.data = await loadText(file);
+          group.animation = await loadText(file);
 
         } else {
           group.image = file;
@@ -98,7 +98,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const { canvas, data } = SpriteAnimation.mergeSprites(
+    const { canvas, animation } = SpriteAnimation.mergeSprites(
       Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[]
     );
 
@@ -110,8 +110,8 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
 
     const buffer = document.createElement("a");
 
-    buffer.download = `${image.download}.json`;
-    buffer.href = data.toDataURL();
+    buffer.download = `${image.download}.animation.json`;
+    buffer.href = animation.toDataURL();
     buffer.click();
   }
 

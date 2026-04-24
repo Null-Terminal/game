@@ -55,7 +55,7 @@ export class SpriteAnimation {
       currentX += sprite.canvas.width;
     }
 
-    return { canvas: resultCanvas, data: new SpriteAnimation(spriteDescriptors) } as MergedSprite;
+    return { canvas: resultCanvas, animation: new SpriteAnimation(spriteDescriptors) } as MergedSprite;
   }
 
   get length(): number {
@@ -66,6 +66,10 @@ export class SpriteAnimation {
 
   constructor(sprites: SpriteDescriptor[]) {
     this.sprites = sprites;
+  }
+
+  isEmpty() {
+    return this.sprites.length === 0;
   }
 
   at(index: number): Readonly<SpriteDescriptor> | undefined {

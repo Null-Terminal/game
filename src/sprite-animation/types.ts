@@ -11,5 +11,5 @@ export interface SpriteDescriptor {
 
 export interface MergedSprite {
   canvas: HTMLCanvasElement;
-  data: SpriteAnimation;
+  animation: SpriteAnimation;
 }
