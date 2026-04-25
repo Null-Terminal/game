@@ -1,8 +1,13 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
+import type { RenderCanvasOptions } from "#engine/render-canvas/types";
+
+export * from "#engine/render-canvas/types";
+
 export class RenderCanvas {
-  canvas: HTMLCanvasElement;
+  readonly canvas: HTMLCanvasElement;
+  readonly options: Required<RenderCanvasOptions>;
 
   readonly emitter = new EventEmitter({
     redraw: handler<[now: number, ctx: CanvasRenderingContext2D]>()
@@ -21,13 +26,24 @@ export class RenderCanvas {
     return this.canvas.getContext("2d")!;
   }
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, opts?: RenderCanvasOptions) {
     this.canvas = canvas;
+    this.options = {
+      backgroundColor: "#FFF",
+      width: 1024,
+      height: 768,
+      ...opts
+    };
+
+    this.canvas.width = this.options.width;
+    this.canvas.height = this.options.height;
+
     this.start();
   }
 
   destroy() {
     this.stop();
+    this.emitter.off();
   }
 
   isPaused() {
@@ -64,7 +80,7 @@ export class RenderCanvas {
   }
 
   clear() {
-    this.#ctx.fillStyle = "RGBA(255, 255, 255, 1)";
+    this.#ctx.fillStyle = this.options.backgroundColor;
     this.#ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
