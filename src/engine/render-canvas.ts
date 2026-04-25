@@ -116,7 +116,7 @@ export class RenderCanvas {
 
   protected drawFPS() {
     this.#ctx.font = "16px monospace";
-    this.#ctx.fillStyle = "#00ff00";
+    this.#ctx.fillStyle = "#00FF00";
     this.#ctx.shadowBlur = 0;
     this.#ctx.fillText(`FPS: ${this.#fps}`, 10, 30);
   }
