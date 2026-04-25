@@ -4,10 +4,19 @@ export function cache<This, Value>(target: (this: This) => Value) {
   return function (this: This) {
     const store = this as Record<symbol, Value>;
 
-    if (key in store) {
+    if (Object.hasOwn(store, key)) {
       return store[key];
     }
 
-    return store[key] = target.call(this);
+    const result = target.call(this);
+
+    Object.defineProperty(store, key, {
+      value: result,
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
+
+    return result;
   };
 }
