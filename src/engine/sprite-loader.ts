@@ -1,10 +1,10 @@
-const spriteCache = new Map<string, Promise<OffscreenCanvas>>();
+const spriteCache = new Map<string, Promise<ImageBitmap>>();
 
 export interface LoadSpriteOptions {
   tolerance?: number;
 }
 
-export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<OffscreenCanvas> {
+export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
   const { tolerance = 0 } = options ?? {};
 
   const cacheKey = [url, removeBackground, tolerance].join("_");
@@ -15,7 +15,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
     return fromCache;
   }
 
-  const { promise, resolve, reject } = Promise.withResolvers<OffscreenCanvas>();
+  const { promise, resolve, reject } = Promise.withResolvers<ImageBitmap>();
 
   spriteCache.set(cacheKey, promise);
 
@@ -29,7 +29,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
       ctx.drawImage(img, 0, 0);
 
       removeBackground(canvas, tolerance);
-      resolve(canvas);
+      resolve(createImageBitmap(canvas));
 
     } catch (err) {
       reject(err);
