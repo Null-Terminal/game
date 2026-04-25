@@ -1,29 +1,31 @@
 import { cache } from "#decorators/cache";
-import { EventEmitter } from "#/event-emitter";
+import { EventEmitter, handler, type Handlers } from "#/event-emitter";
 
 import { type RenderCanvas } from "#engine/render-canvas";
-import type { GameObjectAnimations, GameObjectOptions } from "#engine/game-object/types";
+import type { Animations, GameObjectOptions } from "#engine/game-object/types";
 
 export * from "#engine/game-object/types";
 
 export class GameObject {
-  static animations: GameObjectAnimations = {};
+  static animations: Animations = {};
+  declare readonly Animations: Record<string, Handlers>;
 
   readonly canvas: RenderCanvas;
   readonly options: Required<GameObjectOptions>;
-  readonly emitter = new EventEmitter({});
+
+  readonly animation: EventEmitter<this["Animations"]> = new EventEmitter({
+    ...Object.entries(this.animations).reduce((map, [name]) => {
+      map[name] = handler<string>();
+      return map;
+    }, {} as Record<string, Handlers>)
+  });
 
   x: number;
   y: number;
   speed = 1;
 
   @cache
-  get events() {
-    return this.emitter.events;
-  }
-
-  @cache
-  get animations() {
+  get animations(): Animations {
     return (this.constructor as typeof GameObject).animations;
   }
 
@@ -88,6 +90,8 @@ export class GameObject {
 
     const { emitter, events } = this.canvas;
 
+    let rendered = false;
+
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
@@ -105,6 +109,13 @@ export class GameObject {
         sprite.width,
         sprite.height
       );
+
+      const shouldEmit = (!rendered || sprite.spriteId !== "");
+      rendered = true;
+
+      if (shouldEmit && (animationName in this.animation.events)) {
+        this.animation.emit(this.animation.events[animationName]!, sprite.spriteId);
+      }
 
       if (!this.isPaused() && (now - lastFrameTime >= sprite.animationDelay / this.speed)) {
         spriteIndex = (spriteIndex + 1) % animation.length;
