@@ -1,7 +1,7 @@
-export type * from "#/sprite-animation/types";
-
 import type { Sprite } from "#sprite-editor/sprite";
 import type { MergedSprite, SpriteDescriptor } from "#/sprite-animation/types";
+
+export type * from "#/sprite-animation/types";
 
 export class SpriteAnimation {
   static fromJSON(json: string): SpriteAnimation {
