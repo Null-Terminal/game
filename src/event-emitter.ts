@@ -74,7 +74,7 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     }
   }
 
-  emit<E extends Handlers>(event: E, ...payload: E["PayloadType"] extends void ? [] : [E["PayloadType"]]): void;
+  emit<E extends Handlers>(event: E, ...payload: E["PayloadType"] extends void ? any : [E["PayloadType"]]): void;
   emit<E extends Handlers>(event: E, payload: E["PayloadType"]) {
     event.forEach((handler) => handler(payload));
   }
