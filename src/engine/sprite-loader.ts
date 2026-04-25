@@ -7,7 +7,7 @@ export interface LoadSpriteOptions {
 export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
   const { tolerance = 0 } = options ?? {};
 
-  const cacheKey = [url, removeBackground, tolerance].join("_");
+  const cacheKey = [url, tolerance].join("_");
 
   const fromCache = spriteCache.get(cacheKey);
 
