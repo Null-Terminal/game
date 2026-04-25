@@ -5,7 +5,7 @@
     "paths": {
       "#decorators/*": ["./src/decorators/*"],
       "#sprite-editor/*": ["./src/sprite-editor/*"],
-      "#sprite-buffer/*": ["./src/sprite-buffer/*"],
+      "#engine/*": ["./src/engine/*"],
       "#/*": ["./src/*"]
     },
 
