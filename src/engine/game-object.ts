@@ -1,23 +1,38 @@
 import { cache } from "#decorators/cache";
-import { EventEmitter, handler, type Handlers } from "#/event-emitter";
+import { EventEmitter, handler } from "#/event-emitter";
 
 import { type RenderCanvas } from "#engine/render-canvas";
-import type { Animations, GameObjectOptions } from "#engine/game-object/types";
+import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game-object/types";
 
 export * from "#engine/game-object/types";
 
-export class GameObject {
+export abstract class GameObject {
   static animations: Animations = {};
-  declare readonly Animations: Record<string, Handlers>;
+
+  @cache
+  static get animationEntries(){
+    const entries = Object.entries(this.animations);
+
+    entries.forEach(([name, value]) => {
+      // Сохраняем имя связанного события
+      if (!Object.hasOwn(value, "eventName")) {
+        Object.defineProperty(value, "eventName", { value: name });
+      }
+    });
+
+    return entries;
+  }
+
+  declare readonly Animations: (typeof GameObject)["animations"];
 
   readonly canvas: RenderCanvas;
   readonly options: Required<GameObjectOptions>;
 
-  readonly animation: EventEmitter<this["Animations"]> = new EventEmitter({
-    ...Object.entries(this.animations).reduce((map, [name]) => {
+  readonly animation: EventEmitter<AnimationEvents<this["Animations"]>> = new EventEmitter({
+    ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
       map[name] = handler<string>();
       return map;
-    }, {} as Record<string, Handlers>)
+    }, {} as any /* WTF TS? */)
   });
 
   x: number;
@@ -25,7 +40,7 @@ export class GameObject {
   speed = 1;
 
   @cache
-  get animations(): Animations {
+  get animations(): this["Animations"] {
     return (this.constructor as typeof GameObject).animations;
   }
 
@@ -56,7 +71,11 @@ export class GameObject {
     this.x = this.options.x;
     this.y = this.options.y;
     this.speed = this.options.speed;
+
+    this.init();
   }
+
+  abstract init(): void;
 
   destroy() {
     this.#cancelRedrawHandler?.();
@@ -74,13 +93,7 @@ export class GameObject {
     this.#paused = false;
   }
 
-  play(animationName: string) {
-    const selectedAnimation = this.animations[animationName];
-
-    if (selectedAnimation == null) {
-      throw new Error(`Animation ${animationName} not found`);
-    }
-
+  play(selectedAnimation: Animations[keyof Animations]) {
     const [image, animation] = selectedAnimation;
 
     let lastFrameTime = 0;
@@ -110,10 +123,14 @@ export class GameObject {
         sprite.height
       );
 
-      const shouldEmit = (!rendered || sprite.spriteId !== "");
-      rendered = true;
+      const animationName = selectedAnimation.eventName;
 
-      if (shouldEmit && (animationName in this.animation.events)) {
+      const shouldEmitAnimationEvent =
+        (!rendered || sprite.spriteId !== "")
+        && animationName != null
+        && (animationName in this.animation.events);
+
+      if (shouldEmitAnimationEvent) {
         this.animation.emit(this.animation.events[animationName]!, sprite.spriteId);
       }
 
@@ -121,6 +138,8 @@ export class GameObject {
         spriteIndex = (spriteIndex + 1) % animation.length;
         lastFrameTime = now;
       }
+
+      rendered = true;
     });
   }
 }

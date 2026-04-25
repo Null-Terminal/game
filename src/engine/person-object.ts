@@ -8,7 +8,7 @@ import run from "#/sprites/run.png";
 import { renderCanvas } from "#engine/render-canvas";
 import { loadSprite } from "#engine/sprite-loader";
 
-import type { Animations, AnimationEvents } from "#engine/game-object/types";
+import type { Animations } from "#engine/game-object/types";
 
 export * from "#engine/game-object/types";
 
@@ -19,16 +19,16 @@ export class PersonObject extends GameObject {
     run: [image, new SpriteAnimation(runAnimation.sprites)],
   } satisfies Animations;
 
-  declare readonly Animations: AnimationEvents<(typeof PersonObject)["animations"]>;
+  declare readonly Animations: (typeof PersonObject)["animations"];
+
+  init() {
+    this.play(this.animations.run);
+  }
 }
 
 const a = new PersonObject(renderCanvas, { x: 0, y: 100 });
 const b = new PersonObject(renderCanvas, { x: 200, y: 100, speed: 2 });
 const c = new PersonObject(renderCanvas, { x: 400, y: 100, speed: 3 });
-
-a.play("run");
-b.play("run");
-c.play("run");
 
 for (let i = 0; i < 100; i++) {
   await new Promise(resolve => setTimeout(resolve, 100));
