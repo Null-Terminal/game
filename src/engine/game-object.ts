@@ -1,26 +1,21 @@
 import { cache } from "#decorators/cache";
-import { SpriteAnimation } from "#/sprite-animation";
 import { EventEmitter } from "#/event-emitter";
 
-import runAnimation from "#/sprites/run.animation.json";
-import run from "#/sprites/run.png";
+import { type RenderCanvas } from "#engine/render-canvas";
+import type { GameObjectAnimations, GameObjectOptions } from "#engine/game-object/types";
 
-import { renderCanvas, type RenderCanvas } from "#/engine/render-canvas";
-import { loadSprite } from "#/engine/sprite-loader";
+export * from "#engine/game-object/types";
 
-const image = await loadSprite(run);
+export class GameObject {
+  static animations: GameObjectAnimations = {};
 
-export type GameObjectAnimations = Record<string, [HTMLCanvasElement, SpriteAnimation]>;
-
-class GameObject {
-  static animations: GameObjectAnimations = {
-    run: [image, new SpriteAnimation(runAnimation.sprites)],
-  };
-
-  speed = 1;
-  canvas: RenderCanvas;
-
+  readonly canvas: RenderCanvas;
+  readonly options: Required<GameObjectOptions>;
   readonly emitter = new EventEmitter({});
+
+  x: number;
+  y: number;
+  speed = 1;
 
   @cache
   get events() {
@@ -31,9 +26,6 @@ class GameObject {
   get animations() {
     return (this.constructor as typeof GameObject).animations;
   }
-
-  x = 0;
-  y = 0;
 
   get width() {
     return this.#width;
@@ -49,8 +41,19 @@ class GameObject {
   #paused = false;
   #cancelRedrawHandler: Function | null = null;
 
-  constructor(canvas: RenderCanvas) {
+  constructor(canvas: RenderCanvas, opts?: GameObjectOptions) {
     this.canvas = canvas;
+
+    this.options = {
+      x: 0,
+      y: 0,
+      speed: 1,
+      ...opts
+    };
+
+    this.x = this.options.x;
+    this.y = this.options.y;
+    this.speed = this.options.speed;
   }
 
   destroy() {
@@ -110,5 +113,3 @@ class GameObject {
     });
   }
 }
-
-new GameObject(renderCanvas).play("run");
