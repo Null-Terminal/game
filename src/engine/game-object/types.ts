@@ -9,4 +9,5 @@ export interface GameObjectOptions {
   x?: number;
   y?: number;
   speed?: number;
+  scale?: number;
 }

@@ -37,7 +37,9 @@ export abstract class GameObject {
 
   x: number;
   y: number;
-  speed = 1;
+
+  speed: number;
+  scale: number;
 
   @cache
   get animations(): this["Animations"] {
@@ -65,12 +67,15 @@ export abstract class GameObject {
       x: 0,
       y: 0,
       speed: 1,
+      scale: 1,
       ...opts
     };
 
     this.x = this.options.x;
     this.y = this.options.y;
+
     this.speed = this.options.speed;
+    this.scale = this.options.scale;
 
     this.init();
   }
@@ -108,8 +113,8 @@ export abstract class GameObject {
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
-      this.#width = sprite.width;
-      this.#height = sprite.height;
+      this.#width = sprite.width * this.scale;
+      this.#height = sprite.height * this.scale;
 
       ctx.drawImage(
         image,
@@ -119,8 +124,8 @@ export abstract class GameObject {
         sprite.height,
         this.x,
         this.y,
-        sprite.width,
-        sprite.height
+        this.#width,
+        this.#height,
       );
 
       const animationName = selectedAnimation.eventName!;
