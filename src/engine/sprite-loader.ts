@@ -1,10 +1,10 @@
-const spriteCache = new Map<string, Promise<HTMLCanvasElement>>();
+const spriteCache = new Map<string, Promise<OffscreenCanvas>>();
 
 export interface LoadSpriteOptions {
   tolerance?: number;
 }
 
-export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<HTMLCanvasElement> {
+export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<OffscreenCanvas> {
   const { tolerance = 0 } = options ?? {};
 
   const cacheKey = [url, removeBackground, tolerance].join("_");
@@ -15,7 +15,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
     return fromCache;
   }
 
-  const { promise, resolve, reject } = Promise.withResolvers<HTMLCanvasElement>();
+  const { promise, resolve, reject } = Promise.withResolvers<OffscreenCanvas>();
 
   spriteCache.set(cacheKey, promise);
 
@@ -23,9 +23,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
 
   img.onload = () => {
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
+      const canvas = new OffscreenCanvas(img.width, img.height);
 
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0);
@@ -47,7 +45,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
   return promise;
 }
 
-function removeBackground(canvas: HTMLCanvasElement, tolerance = 30) {
+function removeBackground(canvas: OffscreenCanvas, tolerance = 30) {
   const ctx = canvas.getContext("2d")!;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

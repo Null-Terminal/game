@@ -22,4 +22,19 @@ export class PersonObject extends GameObject {
   declare readonly Animations: AnimationEvents<(typeof PersonObject)["animations"]>;
 }
 
-new PersonObject(renderCanvas).play("run");
+const a = new PersonObject(renderCanvas, { x: 0, y: 100 });
+const b = new PersonObject(renderCanvas, { x: 200, y: 100, speed: 2 });
+const c = new PersonObject(renderCanvas, { x: 400, y: 100, speed: 3 });
+
+a.play("run");
+b.play("run");
+c.play("run");
+
+for (let i = 0; i < 100; i++) {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  a.x += 1;
+  b.x += 2;
+  c.x += 3;
+}
+
+
