@@ -103,7 +103,7 @@ export abstract class GameObject {
 
     const { emitter, events } = this.canvas;
 
-    let shouldEmitEvent = true;
+    let rendered = false;
 
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
@@ -125,18 +125,16 @@ export abstract class GameObject {
 
       const animationName = selectedAnimation.eventName!;
 
-      if ((shouldEmitEvent || sprite.spriteId !== "") && animationName in this.animation.events) {
+      if ((!rendered || sprite.spriteId !== "") && animationName in this.animation.events) {
         this.animation.emit(this.animation.events[animationName]!, sprite.spriteId);
       }
 
       if (!this.isPaused() && (now - lastFrameTime >= sprite.animationDelay / this.speed)) {
         spriteIndex = (spriteIndex + 1) % animation.length;
         lastFrameTime = now;
-        shouldEmitEvent = animation.length > 1;
-
-      } else {
-        shouldEmitEvent = false;
       }
+
+      rendered = true;
     });
   }
 }
