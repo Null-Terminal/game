@@ -8,8 +8,9 @@ export function handler<P>(): Handlers<P> {
   return [] as any;
 }
 
-export class EventEmitter<T extends Record<string, Handlers>> {
-  events: T;
+export class EventEmitter<T extends Readonly<Record<string, Handlers>>> {
+  readonly events: T;
+  values: Handlers[] | null = null;
 
   constructor(events: T) {
     this.events = events;
@@ -59,8 +60,17 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     return destructor;
   }
 
-  off<E extends Handlers>(event: E) {
-    event.length = 0;
+  off<E extends Handlers>(event?: E) {
+    if (event == null) {
+      this.values ??= Object.values(this.events);
+
+      this.values.forEach((event) => {
+        event.length = 0;
+      });
+
+    } else {
+      event.length = 0;
+    }
   }
 
   emit<E extends Handlers>(event: E, payload: E["PayloadType"]) {
