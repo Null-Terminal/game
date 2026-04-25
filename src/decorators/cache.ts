@@ -5,18 +5,18 @@ export function cache<This, Value>(target: (this: This) => Value) {
     const store = this as Record<symbol, Value>;
 
     if (Object.hasOwn(store, key)) {
-      return store[key];
+      return store[key]!;
     }
 
-    const result = target.call(this);
+    const value = target.call(this);
 
     Object.defineProperty(store, key, {
-      value: result,
+      value,
       enumerable: false,
       configurable: true,
       writable: true
     });
 
-    return result;
+    return value;
   };
 }
