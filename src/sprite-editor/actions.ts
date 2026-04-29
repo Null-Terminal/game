@@ -1,6 +1,6 @@
-import { loadBuffer } from "#/file-loader";
+import { loadText } from "#/file-loader";
 
-import { RenderedSpriteBuffer } from "#/sprite-buffer";
+import { SpriteAnimation } from "#/sprite-animation";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
@@ -47,29 +47,28 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         continue;
       }
 
-      if (sprite.data == null) {
+      if (sprite.animation == null) {
         for (let i = 0; i < length; i++) {
           editor.grid?.append(new Sprite(sprite.image, { width, height }));
         }
 
       } else {
-        const data = new RenderedSpriteBuffer(sprite.data);
+        const animation = SpriteAnimation.fromJSON(sprite.animation);
 
-        for (let i = 0; i < data.size; i++) {
-          const desc = data.at(i)!.getDescriptor();
+        for (const spriteDescriptor of animation) {
           editor.grid?.append(new Sprite(sprite.image, {
-            ...desc,
-            x: -desc.x,
-            y: -desc.y,
+            ...spriteDescriptor,
+            x: -spriteDescriptor.x,
+            y: -spriteDescriptor.y,
           }));
         }
       }
     }
 
     async function groupSprites() {
-      const sprites = new Map<string, {image?: File, data?: Uint8Array}>;
+      const sprites = new Map<string, {image?: File, animation?: string}>;
 
-      const fileExt =  /\.[^.]*$/;
+      const fileExt =  /\..*/;
 
       for (const file of sprite.files!) {
         const fileName = file.name;
@@ -78,8 +77,8 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         const groupKey = fileName.replace(fileExt, "");
         const group = sprites.get(groupKey) ?? {};
 
-        if (ext === ".buffer") {
-          group.data = await loadBuffer(file);
+        if (ext === ".animation.json") {
+          group.animation = await loadText(file);
 
         } else {
           group.image = file;
@@ -99,7 +98,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const { canvas, data } = RenderedSpriteBuffer.mergeSprites(
+    const { canvas, animation } = SpriteAnimation.mergeSprites(
       Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[]
     );
 
@@ -111,8 +110,8 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
 
     const buffer = document.createElement("a");
 
-    buffer.download = `${image.download}.buffer`;
-    buffer.href = data.toDataURL();
+    buffer.download = `${image.download}.animation.json`;
+    buffer.href = animation.toDataURL();
     buffer.click();
   }
 

@@ -1,5 +1,5 @@
 import { cache } from "#decorators/cache";
-import { RenderedSpriteBuffer } from "#/sprite-buffer";
+import { SpriteAnimation } from "#/sprite-animation";
 
 import styles from "#sprite-editor/animation-preview/styles.css?raw";
 import template from "#sprite-editor/animation-preview/template.html?raw";
@@ -67,7 +67,7 @@ export class AnimationPreview extends HTMLElement {
 
     const mergedSprite = this.#renderSprite();
 
-    if (mergedSprite.data.size === 0) {
+    if (mergedSprite.animation.isEmpty()) {
       return;
     }
 
@@ -83,8 +83,8 @@ export class AnimationPreview extends HTMLElement {
         return;
       }
 
-      spriteIndex %= mergedSprite.data.size;
-      const sprite = mergedSprite.data.at(spriteIndex)!;
+      spriteIndex %= mergedSprite.animation.length;
+      const sprite = mergedSprite.animation.at(spriteIndex)!;
 
       if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
         this.spriteIndex = spriteIndex;
@@ -97,21 +97,21 @@ export class AnimationPreview extends HTMLElement {
     animate();
   }
 
-  renderSprite(spriteIndex: number, { canvas, data } = this.#renderSprite()) {
-    if (data.size === 0) {
+  renderSprite(spriteIndex: number, { canvas, animation } = this.#renderSprite()) {
+    if (animation.isEmpty()) {
       return;
     }
 
-    this.clear();
-
-    spriteIndex %= data.size;
-    const sprite = data.at(spriteIndex);
+    spriteIndex %= animation.length;
+    const sprite = animation.at(spriteIndex);
 
     if (sprite != null) {
       this.#player.height = canvas.height;
       this.#player.width = sprite.width;
 
       this.#editor.focusSprite(spriteIndex, { preventScroll: true });
+
+      this.clear();
 
       this.#ctx.drawImage(
         canvas,
@@ -124,6 +124,9 @@ export class AnimationPreview extends HTMLElement {
         sprite.width,
         sprite.height
       );
+
+    } else {
+      this.clear();
     }
   }
 
@@ -158,7 +161,7 @@ export class AnimationPreview extends HTMLElement {
   }
 
   #renderSprite() {
-    return RenderedSpriteBuffer.mergeSprites(
+    return SpriteAnimation.mergeSprites(
       Array.from(this.#editor.grid.querySelectorAll("sprite-item")) as Sprite[]
     );
   }

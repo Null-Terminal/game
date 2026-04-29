@@ -1,4 +1,4 @@
-import type { SpriteDescriptor } from "#/sprite-buffer";
+import type { SpriteDescriptor } from "#/sprite-animation";
 
 import { State } from "#sprite-editor/state";
 import type { Sprite } from "#sprite-editor/sprite";

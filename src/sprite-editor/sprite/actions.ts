@@ -89,7 +89,7 @@ export class ActionHandlers extends Handlers<Sprite> {
   }
 
   setHeight(e: Event) {
-    this.parent.width = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.height = parseInt((e.target as HTMLInputElement).value, 10);
     this.parent.history.save();
   }
 
