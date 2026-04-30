@@ -1,6 +1,6 @@
 import { alias, tuple, f32 } from "#/bindata";
 
-export const bbox = tuple("BBox", [
+export const bbox = tuple("bbox", [
   alias("minX", f32),
   alias("minY", f32),
   alias("maxX", f32),
