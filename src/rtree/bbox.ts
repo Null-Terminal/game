@@ -1,6 +1,6 @@
 import { alias, tuple, f32 } from "#/bindata";
 
-const SCHEME = tuple("BBox", [
+export const bbox = tuple("BBox", [
   alias("minX", f32),
   alias("minY", f32),
   alias("maxX", f32),
@@ -8,46 +8,46 @@ const SCHEME = tuple("BBox", [
 ]);
 
 export class BBox {
-  static SCHEME = SCHEME;
-  static BYTES_PER_ELEMENT = SCHEME.size;
+  static Type = bbox;
+  static BYTES_PER_ELEMENT = bbox.size;
 
   static getMinX(data: Float32Array, offset: number) {
     offset >>>= 0;
-    return data[offset + SCHEME.at.minX];
+    return data[offset + bbox.at.minX];
   }
 
   static setMinX(data: Float32Array, offset: number, value: number) {
     offset >>>= 0;
-    data[offset + SCHEME.at.minX] = value;
+    data[offset + bbox.at.minX] = value;
   }
 
   static getMinY(data: Float32Array, offset: number) {
     offset >>>= 0;
-    return data[offset + SCHEME.at.minY];
+    return data[offset + bbox.at.minY];
   }
 
   static setMinY(data: Float32Array, offset: number, value: number) {
     offset >>>= 0;
-    data[offset + SCHEME.at.minY] = value;
+    data[offset + bbox.at.minY] = value;
   }
 
   static getMaxX(data: Float32Array, offset: number) {
     offset >>>= 0;
-    return data[offset + SCHEME.at.maxX];
+    return data[offset + bbox.at.maxX];
   }
 
   static setMaxX(data: Float32Array, offset: number, value: number) {
     offset >>>= 0;
-    data[offset + SCHEME.at.maxX] = value;
+    data[offset + bbox.at.maxX] = value;
   }
 
   static getMaxY(data: Float32Array, offset: number) {
     offset >>>= 0;
-    return data[offset + SCHEME.at.maxY];
+    return data[offset + bbox.at.maxY];
   }
 
   static setMaxY(data: Float32Array, offset: number, value: number) {
     offset >>>= 0;
-    data[offset + SCHEME.at.maxY] = value;
+    data[offset + bbox.at.maxY] = value;
   }
 }
