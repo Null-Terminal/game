@@ -11,4 +11,4 @@ export type Aliases<
   R = {}
 > = Elems["length"] extends 0 ?
   R :
-  Aliases<Tb.Tail<Elems>, R & { [K in Exclude<Tb.Head<Elems>["alias"], null | undefined>]: number }>
+  Aliases<Tb.Tail<Elems>, R & { [K in Tb.Head<Elems>["alias"]]: number }>
