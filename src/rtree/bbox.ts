@@ -7,31 +7,26 @@ export const bbox = tuple("bbox", [
   alias("maxY", f32),
 ]);
 
-export interface BBoxObject {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-}
+export type BBoxTuple = [minX: number, minY: number, maxX: number, maxY: number];
 
 export class BBox {
   static readonly Type = bbox;
   static readonly BYTES_PER_ELEMENT = bbox.size;
 
-  static get(data: Float32Array, offset: number): BBoxObject {
-    return {
-      minX: data[offset + bbox.at.minX]!,
-      minY: data[offset + bbox.at.minY]!,
-      maxX: data[offset + bbox.at.maxX]!,
-      maxY: data[offset + bbox.at.maxY]!
-    };
+  static get(data: Float32Array, offset: number): BBoxTuple {
+    return [
+      data[offset + bbox.at.minX]!,
+      data[offset + bbox.at.minY]!,
+      data[offset + bbox.at.maxX]!,
+      data[offset + bbox.at.maxY]!
+    ];
   }
 
-  static set(data: Float32Array, offset: number, value: BBoxObject) {
-    data[offset + bbox.at.minX] = value.minX;
-    data[offset + bbox.at.minY] = value.minY;
-    data[offset + bbox.at.maxX] = value.maxX;
-    data[offset + bbox.at.maxY] = value.maxY;
+  static set(data: Float32Array, offset: number, minX: number, minY: number, maxX: number, maxY: number) {
+    data[offset + bbox.at.minX] = minX;
+    data[offset + bbox.at.minY] = minY;
+    data[offset + bbox.at.maxX] = maxX;
+    data[offset + bbox.at.maxY] = maxY;
   }
 
   get BYTES_PER_ELEMENT() {
