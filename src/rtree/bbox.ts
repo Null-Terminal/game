@@ -7,13 +7,11 @@ export const bbox = tuple("bbox", [
   alias("maxY", f32),
 ]);
 
-export type BBoxTuple = [minX: number, minY: number, maxX: number, maxY: number];
-
 export class BBox {
   static readonly Type = bbox;
   static readonly BYTES_PER_ELEMENT = bbox.size;
 
-  static get(data: Float32Array, offset: number): BBoxTuple {
+  static get(data: Float32Array, offset: number): [minX: number, minY: number, maxX: number, maxY: number] {
     return [
       data[offset + bbox.at.minX]!,
       data[offset + bbox.at.minY]!,
