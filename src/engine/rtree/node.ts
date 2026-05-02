@@ -1,6 +1,6 @@
 import { alias, array, tuple, bintype, usize2, u8, bool } from "#/bindata";
 
-import { bbox, BBox } from "#/rtree/bbox";
+import { bbox, BBox } from "#engine/rtree/bbox";
 
 const node = tuple("RTreeNode", [
   bbox,
