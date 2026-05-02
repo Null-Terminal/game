@@ -1,6 +1,6 @@
 export interface BinType<
-  Type extends string = any,
-  Size extends number = any,
+  Type extends string = string,
+  Size extends number = number,
   Alias extends string = Type
 > {
   type: Type;

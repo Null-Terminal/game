@@ -12,3 +12,11 @@ export type Aliases<
 > = Elems["length"] extends 0 ?
   R :
   Aliases<Tb.Tail<Elems>, R & { [K in Tb.Head<Elems>["alias"]]: number }>
+
+export type Offsets<
+  Elems extends BinType[],
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  R = {}
+> = Elems["length"] extends 0 ?
+  R :
+  Offsets<Tb.Tail<Elems>, R & { [K in Tb.Head<Elems>["alias"]]: number } & { [key: number]: number }>;
