@@ -27,8 +27,10 @@ export class BBox {
     data[offset + bbox.at.maxY] = maxY;
   }
 
-  get BYTES_PER_ELEMENT() {
-    return bbox.size;
+  readonly BYTES_PER_ELEMENT = BBox.BYTES_PER_ELEMENT;
+
+  get buffer() {
+    return this.#data.buffer;
   }
 
   get byteLength() {
