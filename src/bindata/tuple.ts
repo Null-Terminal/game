@@ -1,60 +1,61 @@
 import { cast } from "#/tstools";
 
 import type { BinType } from "#/bindata/bintype";
-import type { Size, Aliases, Offsets } from "#/bindata/types";
+import type { Tuple, IndexedBinType } from "#/bindata/tuple/types";
 
-export interface Tuple<
-  Type extends string = string,
-  Elems extends BinType[] = [],
-  Alias extends string = Type
-> extends BinType<Type, Size<Elems>, Alias> {
-  at: Aliases<Elems> & { [K in keyof Elems]?: Elems[K] };
-  offset8: Offsets<Elems>;
-  offset32: Offsets<Elems>;
-  offset32Bit: Offsets<Elems>;
-}
+export type { Tuple, IndexedBinType } from "#/bindata/tuple/types";
 
 export function tuple<const T extends string, const E extends BinType[]>(
-  type: T,
+  name: T,
   elements: E
 ): Tuple<T, E> {
-  type Offsets = Record<string | number, number>;
+  type SizesOrOffsets = Record<string | number, number>;
 
-  const offset8: Offsets = {};
-  const offset32: Offsets = {};
-  const offset32Bit: Offsets = {};
+  const at: Record<string | number, IndexedBinType<BinType>> = {};
+  const sizes: SizesOrOffsets = {};
 
-  const at: Record<string | number, number | BinType> = {};
+  const offsets8: SizesOrOffsets = {};
+  const offsets32: SizesOrOffsets = {};
+  const offsets32Bit: SizesOrOffsets = {};
 
   let size = 0;
 
   for (const [i, elem] of elements.entries()) {
-    offset8[elem.alias] = size;
-    offset8[i] = size;
+    at[i] = { ...elem, index: i };
+    at[elem.alias] = { ...elem, index: i };
 
-    const offset32Value = Math.floor(size / 32);
+    sizes[i] = elem.size;
+    sizes[elem.alias] = elem.size;
 
-    offset32[elem.alias] = offset32Value;
-    offset32[i] = offset32Value;
+    offsets8[i] = size;
+    offsets8[elem.alias] = size;
 
-    const offset32BitValue = size % 32;
+    offsets8[i] = size;
+    offsets8[elem.alias] = size;
 
-    offset32Bit[elem.alias] = offset32BitValue;
-    offset32Bit[i] = offset32BitValue;
+    const offset32 = Math.floor(size / 32);
 
-    at[elem.alias] = i;
-    at[i] = elem;
+    offsets32[i] = offset32;
+    offsets32[elem.alias] = offset32;
+
+    const offset32Bit = size % 32;
+
+    offsets32Bit[i] = offset32Bit;
+    offsets32Bit[elem.alias] = offset32Bit;
 
     size += elem.size;
   }
 
   return {
-    type,
-    alias: type,
+    name,
     size: cast(size),
-    offset8: cast(offset8),
-    offset32: cast(offset32),
-    offset32Bit: cast(offset32Bit),
+    alias: name,
+
     at: cast(at),
+    sizes: cast(sizes),
+
+    offsets8: cast(offsets8),
+    offsets32: cast(offsets32),
+    offsets32Bit: cast(offsets32Bit),
   };
 }
