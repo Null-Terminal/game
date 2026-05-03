@@ -1,4 +1,4 @@
-import { createMask } from "#/bindata/createMask";
+import { createMask } from "#/bindata/mask";
 
 export function encodeToSmi(value: number | boolean, size: number, bitOffset: number): number {
   switch (typeof value) {
