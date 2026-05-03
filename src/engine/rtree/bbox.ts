@@ -29,7 +29,7 @@ export class BBox extends BinView {
   }
 
   isNull(ptr32: number): boolean {
-    return this.getMaxX(ptr32) === 0 || this.getMaxY(ptr32) === 0;
+    return this.getMaxX(ptr32) === 0 && this.getMaxY(ptr32) === 0;
   }
 
   set(ptr32: number, minX: number, minY: number, maxX: number, maxY: number) {
