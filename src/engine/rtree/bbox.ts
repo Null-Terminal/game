@@ -29,6 +29,8 @@ export class BBox extends BinView {
   }
 
   isNull(ptr32: number): boolean {
+    // Bbox считается null, если оба max-а равны 0.
+    // При этом min-ы всегда тоже 0 (гарантируется логикой вставки/обновления).
     return this.getMaxX(ptr32) === 0 && this.getMaxY(ptr32) === 0;
   }
 
