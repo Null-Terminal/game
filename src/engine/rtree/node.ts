@@ -63,12 +63,12 @@ export class RTreeNode extends BinView {
   forEachChild(ptr32: number, cb: (ptr32: number, i: number) => void) {
     const { blocks } = this.view;
 
-    const start = ptr32 + node.offsets32.children;
-    const end = start + node.sizes.children;
-
     const BYTES_PER_CHILD = node.at.children.element.size;
     const BITS_PER_CHILD = BYTES_PER_CHILD * 8;
     const CHILD_MASK = createMask(BYTES_PER_CHILD);
+
+    const start = ptr32 + node.offsets32.children;
+    const end = start + node.sizes.children;
 
     for (let i = 0, offset = start; offset < end; i++, offset += BYTES_PER_CHILD) {
       const shift = i % 2 !== 0 ? BITS_PER_CHILD : 0;
