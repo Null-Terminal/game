@@ -3,7 +3,7 @@ export interface BinType<
   Size extends number = number,
   Alias extends string = Name
 > {
-  name: Name;
-  size: Size;
-  alias: Alias;
+  readonly name: Name;
+  readonly size: Size;
+  readonly alias: Alias;
 }

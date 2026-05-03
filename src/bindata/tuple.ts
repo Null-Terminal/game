@@ -5,10 +5,10 @@ import type { Tuple, IndexedBinType } from "#/bindata/tuple/types";
 
 export type { Tuple, IndexedBinType } from "#/bindata/tuple/types";
 
-export function tuple<const T extends string, const E extends BinType[]>(
-  name: T,
+export function tuple<const N extends string, const E extends BinType[]>(
+  name: N,
   elements: E
-): Tuple<T, E> {
+): Tuple<N, E> {
   type SizesOrOffsets = Record<string | number, number>;
 
   const at: Record<string | number, IndexedBinType<BinType>> = {};
