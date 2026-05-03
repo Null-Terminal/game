@@ -3,15 +3,15 @@ import type { RtreeView } from "#engine/rtree/types";
 export class BinView {
   static readonly BYTES_PER_ELEMENT: number = 0;
 
-  get buffer(): ArrayBufferLike {
+  get buffer() {
     return this.view.blocks.buffer;
   }
 
-  get byteLength(): number {
+  get byteLength() {
     return this.view.blocks.byteLength;
   }
 
-  get byteOffset(): number {
+  get byteOffset() {
     return this.view.blocks.byteOffset;
   }
 

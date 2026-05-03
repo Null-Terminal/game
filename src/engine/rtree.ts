@@ -17,15 +17,15 @@ export class RTree {
   readonly minEntries: number;
   readonly maxEntries: number;
 
-  get buffer(): ArrayBufferLike {
+  get buffer() {
     return this.#buffer;
   }
 
-  get byteLength(): number {
+  get byteLength() {
     return this.buffer.byteLength;
   }
 
-  get size(): number {
+  get size() {
     return this.#size;
   }
 
