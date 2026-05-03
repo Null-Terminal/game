@@ -35,19 +35,19 @@ export class RTreeNode extends BinView {
   }
 
   hasBBox(ptr32: number): boolean {
-    return !this.#bbox.isNull(ptr32);
+    return !this.#bbox.isNull(this.#getBBoxPtr(ptr32));
   }
 
   setBBox(ptr32: number, minX: number, minY: number, maxX: number, maxY: number) {
-    this.#bbox.set(ptr32 + node.offsets32.bbox, minX, minY, maxX, maxY);
+    this.#bbox.set(this.#getBBoxPtr(ptr32), minX, minY, maxX, maxY);
   }
 
   calcBBoxArea(ptr32: number): number {
-    return this.#bbox.calcArea(ptr32);
+    return this.#bbox.calcArea(this.#getBBoxPtr(ptr32));
   }
 
   calcBBoxEnlargement(ptr32: number, minX: number, minY: number, maxX: number, maxY: number): number {
-    return this.#bbox.calcEnlargement(ptr32, minX, minY, maxX, maxY);
+    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr32), minX, minY, maxX, maxY);
   }
 
   isLeaf(ptr32: number): boolean {
@@ -66,14 +66,17 @@ export class RTreeNode extends BinView {
     const start = ptr32 + node.offsets32.children;
     const end = start + node.sizes.children;
 
-    const BYTES_PER_ELEMENT = node.at.children.element.size;
-    const BITS_PER_ELEMENT = BYTES_PER_ELEMENT * 8;
+    const BYTES_PER_CHILD = node.at.children.element.size;
+    const BITS_PER_CHILD = BYTES_PER_CHILD * 8;
+    const CHILD_MASK = createMask(BYTES_PER_CHILD);
 
-    const mask = createMask(BYTES_PER_ELEMENT);
-
-    for (let i = 0, offset = start; offset < end; i++, offset += BYTES_PER_ELEMENT) {
-      const shift = i % 2 !== 0 ? BITS_PER_ELEMENT : 0;
-      cb((blocks[offset]! >> shift) & mask, i);
+    for (let i = 0, offset = start; offset < end; i++, offset += BYTES_PER_CHILD) {
+      const shift = i % 2 !== 0 ? BITS_PER_CHILD : 0;
+      cb((blocks[offset]! >> shift) & CHILD_MASK, i);
     }
+  }
+
+  #getBBoxPtr(ptr32: number): number {
+    return ptr32 + node.offsets32.bbox;
   }
 }
