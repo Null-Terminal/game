@@ -1,6 +1,8 @@
 import { bintype } from "#/bindata/bintype";
 
 export { mask } from "#/bindata/mask";
+export { encodeToSmi } from "#/bindata/encode";
+
 export { array } from "#/bindata/array";
 export { tuple, type Tuple } from "#/bindata/tuple";
 export { bintype, alias, type BinType } from "#/bindata/bintype";
