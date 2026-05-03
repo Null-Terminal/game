@@ -1,15 +1,12 @@
-import { mask } from "#/bindata/mask";
+import { createMask } from "#/bindata/createMask";
 
-export function encodeToSmi<T extends number | bigint | boolean>(
-  value: T,
-  size: number,
-  bitOffset: number
-): T extends boolean ? number : T;
-
-export function encodeToSmi(value: number | bigint | boolean, size: number, bitOffset: number): number | bigint {
+export function encodeToSmi(value: number | boolean, size: number, bitOffset: number): number {
   switch (typeof value) {
-    case "number": return value & mask(size) << bitOffset;
-    case "bigint": return value & BigInt(mask(size)) << BigInt(bitOffset);
-    case "boolean": return Number(value) & mask(size) << bitOffset;
+    case "number": return value & createMask(size) << bitOffset;
+    case "boolean": return Number(value) & createMask(size) << bitOffset;
   }
+}
+
+export function decodeFromSmi(value: number, size: number, bitOffset: number): number {
+  return (value >> bitOffset) & createMask(size);
 }
