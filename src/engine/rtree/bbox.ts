@@ -22,6 +22,17 @@ export class BBox extends BinView {
     return this.getMaxX(ptr) === 0 && this.getMaxY(ptr) === 0;
   }
 
+  hasIntersection(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
+    if (this.isNull(ptr)) {
+      return false;
+    }
+
+    return this.getMaxX(ptr) >= minX &&
+      this.getMinX(ptr) <= maxX &&
+      this.getMaxY(ptr) >= minY &&
+      this.getMinY(ptr) <= maxY;
+  }
+
   getMinX(ptr: Ptr32): number {
     return this.view.floats32[ptr + offsets32.minX]!;
   }

@@ -39,6 +39,10 @@ export class RTreeNode extends BinView {
     }
   }
 
+  hasIntersection(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
+    return this.#bbox.hasIntersection(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
   hasBBox(ptr: Ptr32): boolean {
     return !this.#bbox.isNull(this.#getBBoxPtr(ptr));
   }
