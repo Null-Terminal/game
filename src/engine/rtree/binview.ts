@@ -4,15 +4,15 @@ export class BinView {
   static readonly BYTES_PER_ELEMENT: number = 0;
 
   get buffer() {
-    return this.view.blocks.buffer;
+    return this.view.uints32.buffer;
   }
 
   get byteLength() {
-    return this.view.blocks.byteLength;
+    return this.view.uints32.byteLength;
   }
 
   get byteOffset() {
-    return this.view.blocks.byteOffset;
+    return this.view.uints32.byteOffset;
   }
 
   readonly BYTES_PER_ELEMENT: number;

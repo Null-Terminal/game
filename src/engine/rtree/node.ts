@@ -1,20 +1,20 @@
-import { encodeToSmi, decodeFromSmi, createMask } from "#/bindata";
-import { alias, array, tuple, bintype, usize2, u8, bool } from "#/bindata";
+import { alias, array, tuple, bintype, usize2, u8 } from "#/bindata";
 
 import { BinView } from "#engine/rtree/binview";
 
 import { bbox, BBox } from "#engine/rtree/bbox";
-import type { RtreeView } from "#engine/rtree/types";
+import type { RtreeView, Ptr32, Ptr16 } from "#engine/rtree/types";
 
-const node = tuple("RTreeNode", [
+export const node = tuple("RTreeNode", [
   bbox,
-  alias("size", u8),
-  array("children", usize2, 16),
   alias("parent", usize2),
   alias("level", u8),
-  alias("leaf", bool),
-  bintype("data", 11),
+  alias("size", u8),
+  array("children", usize2, 16),
+  bintype("data", 12),
 ]);
+
+const { at, offsets8, offsets16, offsets32 } = node;
 
 export class RTreeNode extends BinView {
   static readonly Scheme = node;
@@ -27,56 +27,188 @@ export class RTreeNode extends BinView {
     this.#bbox = new BBox(view);
   }
 
-  create(ptr32: number, leaf: boolean, level: number) {
-    const { blocks } = this.view;
+  createEmpty(ptr: Ptr32, leaf = false, level = 0) {
+    this.#clearMemory(ptr);
 
-    blocks[ptr32 + node.offsets32.leaf]! |= encodeToSmi(leaf, node.sizes.leaf, node.offsets32Bit.leaf);
-    blocks[ptr32 + node.offsets32.level]! |= encodeToSmi(level, node.sizes.level, node.offsets32Bit.level);
-  }
+    if (leaf) {
+      this.markLeaf(ptr, leaf);
+    }
 
-  hasBBox(ptr32: number): boolean {
-    return !this.#bbox.isNull(this.#getBBoxPtr(ptr32));
-  }
-
-  setBBox(ptr32: number, minX: number, minY: number, maxX: number, maxY: number) {
-    this.#bbox.set(this.#getBBoxPtr(ptr32), minX, minY, maxX, maxY);
-  }
-
-  calcBBoxArea(ptr32: number): number {
-    return this.#bbox.calcArea(this.#getBBoxPtr(ptr32));
-  }
-
-  calcBBoxEnlargement(ptr32: number, minX: number, minY: number, maxX: number, maxY: number): number {
-    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr32), minX, minY, maxX, maxY);
-  }
-
-  isLeaf(ptr32: number): boolean {
-    return Boolean(
-      decodeFromSmi(this.view.blocks[ptr32 + node.offsets32.leaf]!, node.sizes.leaf, node.offsets32Bit.leaf)
-    );
-  }
-
-  getSize(ptr32: number): number {
-    return decodeFromSmi(this.view.blocks[ptr32 + node.offsets32.size]!, node.sizes.size, node.offsets32Bit.size);
-  }
-
-  forEachChild(ptr32: number, cb: (ptr32: number, i: number) => void) {
-    const { blocks } = this.view;
-
-    const BYTES_PER_CHILD = node.at.children.element.size;
-    const BITS_PER_CHILD = BYTES_PER_CHILD * 8;
-    const CHILD_MASK = createMask(BYTES_PER_CHILD);
-
-    const start = ptr32 + node.offsets32.children;
-    const end = start + node.sizes.children;
-
-    for (let i = 0, offset = start; offset < end; i++, offset += BYTES_PER_CHILD) {
-      const shift = i % 2 !== 0 ? BITS_PER_CHILD : 0;
-      cb((blocks[offset]! >> shift) & CHILD_MASK, i);
+    if (level > 0) {
+      this.setLevel(ptr, level);
     }
   }
 
-  #getBBoxPtr(ptr32: number): number {
-    return ptr32 + node.offsets32.bbox;
+  hasBBox(ptr: Ptr32): boolean {
+    return !this.#bbox.isNull(this.#getBBoxPtr(ptr));
+  }
+
+  setBBox(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
+    this.#bbox.set(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  enlargeBBoxFrom(ptr: Ptr32, enlargerPtr: Ptr32) {
+    const bbox = this.#bbox;
+
+    const minX = bbox.getMinX(enlargerPtr);
+    const minY = bbox.getMinY(enlargerPtr);
+    const maxX = bbox.getMaxX(enlargerPtr);
+    const maxY = bbox.getMaxY(enlargerPtr);
+
+    this.#bbox.enlarge(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxEnlargementFrom(ptr: Ptr32, enlargerPtr: Ptr32): number {
+    const bbox = this.#bbox;
+
+    const minX = bbox.getMinX(enlargerPtr);
+    const minY = bbox.getMinY(enlargerPtr);
+    const maxX = bbox.getMaxX(enlargerPtr);
+    const maxY = bbox.getMaxY(enlargerPtr);
+
+    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxEnlargement(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
+    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxArea(ptr: Ptr32): number {
+    return this.#bbox.calcArea(this.#getBBoxPtr(ptr));
+  }
+
+  calcUnionBBoxArea(ptr1: Ptr32, ptr2: Ptr32): number {
+    const bbox = this.#bbox;
+
+    const unionMinX = Math.min(bbox.getMinX(ptr1), bbox.getMinX(ptr2));
+    const unionMinY = Math.min(bbox.getMinY(ptr1), bbox.getMinY(ptr2));
+    const unionMaxX = Math.max(bbox.getMaxX(ptr1), bbox.getMaxX(ptr2));
+    const unionMaxY = Math.max(bbox.getMaxY(ptr1), bbox.getMaxY(ptr2));
+
+    return (unionMaxX - unionMinX) * (unionMaxY - unionMinY);
+  }
+
+  getParent(ptr: Ptr32): Ptr16 {
+      return this.view.uints16[ptr * 2 + offsets16.parent]!;
+  }
+
+  setParent(ptr: Ptr32, parentPtr: Ptr16) {
+    this.view.uints16[ptr * 2 + offsets16.parent]! = parentPtr;
+  }
+
+  isLeaf(ptr: Ptr32): boolean {
+    return Boolean(this.view.uints8[ptr * 4 + offsets8.level]! & 1);
+  }
+
+  markLeaf(ptr: Ptr32, leaf: boolean) {
+    this.view.uints8[ptr * 4 + offsets8.level]! |= Number(leaf);
+  }
+
+  getLevel(ptr: Ptr32): number {
+    return this.view.uints16[ptr * 4 + offsets16.level]! >>> 1;
+  }
+
+  setLevel(ptr: Ptr32, level: number) {
+    if (level >= 128) {
+      throw new Error(`Level overflow: ${level} >= 128 (max 7-bit value)`);
+    }
+
+    this.view.uints16[ptr * 4 + offsets16.level]! = level << 1;
+  }
+
+  getSize(ptr: Ptr32): number {
+    return this.view.uints8[ptr * 4 + offsets8.size]!;
+  }
+
+  setSize(ptr: Ptr32, size: number) {
+    if (size >= at.children.length) {
+      throw new Error(`Children array overflow: size=${size}, max=${at.children.length}`);
+    }
+
+    this.view.uints8[ptr * 4 + offsets8.size]! = size;
+  }
+
+  getChild(ptr: Ptr32, index: number): Ptr16 {
+    if (index >= this.getSize(ptr)) {
+      throw new Error(`Child index ${index} out of bounds: size=${this.getSize(ptr)}`);
+    }
+
+    return this.view.uints16[ptr * 2 + offsets16.children + index]!;
+  }
+
+  pushChild(ptr: Ptr32, childPtr: Ptr16) {
+    const childIndex = this.getSize(ptr);
+
+    this.setSize(ptr, childIndex + 1);
+
+    this.view.uints16[ptr * 2 + offsets16.children + childIndex]! = childPtr;
+  }
+
+  removeChild(ptr: Ptr32, childPtr: Ptr16): boolean {
+    const children = this.view.uints16;
+
+    const start = ptr * 2 + offsets16.children;
+    const size = this.getSize(ptr);
+
+    // Ищем индекс ребёнка
+    let indexToRemove = -1;
+
+    for (let i = 0; i < size; i++) {
+      if (children[start + i] === childPtr) {
+        indexToRemove = i;
+        break;
+      }
+    }
+
+    if (indexToRemove === -1) {
+      return false;
+    }
+
+    const lastIndex = size - 1;
+
+    // Если удаляем не последний, то заменяем последним
+    if (indexToRemove !== lastIndex) {
+      children[start + indexToRemove] = children[start + lastIndex]!;
+    }
+
+    children[start + lastIndex] = 0;
+    this.setSize(ptr, lastIndex);
+
+    return true;
+  }
+
+  forEachChild(ptr: Ptr32, cb: (ptr: Ptr16, i: number) => void) {
+    const children = this.view.uints16;
+
+    const start = ptr * 2 + offsets16.children;
+    const end = start + this.getSize(ptr);
+
+    for (let i = 0, offset = start; offset < end; offset++, i++) {
+      cb(children[offset]!, i);
+    }
+  }
+
+  forEachChildFrom(ptr: Ptr32, from: number, cb: (ptr: Ptr16, i: number) => void) {
+    const children = this.view.uints16;
+
+    const start = ptr * 2 + from + offsets16.children;
+    const end = start + this.getSize(ptr);
+
+    for (let i = from, offset = start; offset < end; offset++, i++) {
+      cb(children[offset]!, i);
+    }
+  }
+
+  #clearMemory(ptr: Ptr32) {
+    const start = ptr * 4;
+    const end = start + node.size;
+
+    for (let i = start; i < end; i++) {
+      this.view.uints8[i] = 0;
+    }
+  }
+
+  #getBBoxPtr(ptr: Ptr32): number {
+    return ptr + offsets32.bbox;
   }
 }
