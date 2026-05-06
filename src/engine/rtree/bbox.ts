@@ -21,28 +21,28 @@ export class BBox extends BinView {
   }
 
   getMinX(ptr32: number): number {
-    return this.view.floats[ptr32 + offsets32.minX]!;
+    return this.view.floats32[ptr32 + offsets32.minX]!;
   }
 
   getMinY(ptr32: number): number {
-    return this.view.floats[ptr32 + offsets32.minY]!;
+    return this.view.floats32[ptr32 + offsets32.minY]!;
   }
 
   getMaxX(ptr32: number): number {
-    return this.view.floats[ptr32 + offsets32.maxX]!;
+    return this.view.floats32[ptr32 + offsets32.maxX]!;
   }
 
   getMaxY(ptr32: number): number {
-    return this.view.floats[ptr32 + offsets32.maxY]!;
+    return this.view.floats32[ptr32 + offsets32.maxY]!;
   }
 
   set(ptr32: number, minX: number, minY: number, maxX: number, maxY: number) {
-    const { floats } = this.view;
+    const { floats32 } = this.view;
 
-    floats[ptr32 + offsets32.minX] = minX;
-    floats[ptr32 + offsets32.minY] = minY;
-    floats[ptr32 + offsets32.maxX] = maxX;
-    floats[ptr32 + offsets32.maxY] = maxY;
+    floats32[ptr32 + offsets32.minX] = minX;
+    floats32[ptr32 + offsets32.minY] = minY;
+    floats32[ptr32 + offsets32.maxX] = maxX;
+    floats32[ptr32 + offsets32.maxY] = maxY;
   }
 
   calcArea(ptr32: number): number {
