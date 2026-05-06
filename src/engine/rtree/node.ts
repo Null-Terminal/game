@@ -43,55 +43,6 @@ export class RTreeNode extends BinView {
     return this.#bbox.hasIntersection(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
   }
 
-  hasBBox(ptr: Ptr32): boolean {
-    return !this.#bbox.isNull(this.#getBBoxPtr(ptr));
-  }
-
-  setBBox(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
-    this.#bbox.set(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
-  }
-
-  enlargeBBoxFrom(ptr: Ptr32, enlargerPtr: Ptr32) {
-    const bbox = this.#bbox;
-
-    const minX = bbox.getMinX(enlargerPtr);
-    const minY = bbox.getMinY(enlargerPtr);
-    const maxX = bbox.getMaxX(enlargerPtr);
-    const maxY = bbox.getMaxY(enlargerPtr);
-
-    this.#bbox.enlarge(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
-  }
-
-  calcBBoxEnlargementFrom(ptr: Ptr32, enlargerPtr: Ptr32): number {
-    const bbox = this.#bbox;
-
-    const minX = bbox.getMinX(enlargerPtr);
-    const minY = bbox.getMinY(enlargerPtr);
-    const maxX = bbox.getMaxX(enlargerPtr);
-    const maxY = bbox.getMaxY(enlargerPtr);
-
-    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
-  }
-
-  calcBBoxEnlargement(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
-    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
-  }
-
-  calcBBoxArea(ptr: Ptr32): number {
-    return this.#bbox.calcArea(this.#getBBoxPtr(ptr));
-  }
-
-  calcUnionBBoxArea(ptr1: Ptr32, ptr2: Ptr32): number {
-    const bbox = this.#bbox;
-
-    const unionMinX = Math.min(bbox.getMinX(ptr1), bbox.getMinX(ptr2));
-    const unionMinY = Math.min(bbox.getMinY(ptr1), bbox.getMinY(ptr2));
-    const unionMaxX = Math.max(bbox.getMaxX(ptr1), bbox.getMaxX(ptr2));
-    const unionMaxY = Math.max(bbox.getMaxY(ptr1), bbox.getMaxY(ptr2));
-
-    return (unionMaxX - unionMinX) * (unionMaxY - unionMinY);
-  }
-
   getParent(ptr: Ptr32): Ptr16 {
       return this.view.uints16[ptr * 2 + offsets16.parent]!;
   }
@@ -201,6 +152,55 @@ export class RTreeNode extends BinView {
     for (let i = from, offset = start; offset < end; offset++, i++) {
       cb(children[offset]!, i);
     }
+  }
+
+  hasBBox(ptr: Ptr32): boolean {
+    return !this.#bbox.isNull(this.#getBBoxPtr(ptr));
+  }
+
+  setBBox(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
+    this.#bbox.set(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  enlargeBBoxFrom(ptr: Ptr32, enlargerPtr: Ptr32) {
+    const bbox = this.#bbox;
+
+    const minX = bbox.getMinX(enlargerPtr);
+    const minY = bbox.getMinY(enlargerPtr);
+    const maxX = bbox.getMaxX(enlargerPtr);
+    const maxY = bbox.getMaxY(enlargerPtr);
+
+    this.#bbox.enlarge(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxEnlargementFrom(ptr: Ptr32, enlargerPtr: Ptr32): number {
+    const bbox = this.#bbox;
+
+    const minX = bbox.getMinX(enlargerPtr);
+    const minY = bbox.getMinY(enlargerPtr);
+    const maxX = bbox.getMaxX(enlargerPtr);
+    const maxY = bbox.getMaxY(enlargerPtr);
+
+    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxEnlargement(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
+    return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxArea(ptr: Ptr32): number {
+    return this.#bbox.calcArea(this.#getBBoxPtr(ptr));
+  }
+
+  calcUnionBBoxArea(ptr1: Ptr32, ptr2: Ptr32): number {
+    const bbox = this.#bbox;
+
+    const unionMinX = Math.min(bbox.getMinX(ptr1), bbox.getMinX(ptr2));
+    const unionMinY = Math.min(bbox.getMinY(ptr1), bbox.getMinY(ptr2));
+    const unionMaxX = Math.max(bbox.getMaxX(ptr1), bbox.getMaxX(ptr2));
+    const unionMaxY = Math.max(bbox.getMaxY(ptr1), bbox.getMaxY(ptr2));
+
+    return (unionMaxX - unionMinX) * (unionMaxY - unionMinY);
   }
 
   #clearMemory(ptr: Ptr32) {
