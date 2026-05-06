@@ -15,8 +15,8 @@ export function tuple<const N extends string, const E extends BinType[]>(
   const sizes: SizesOrOffsets = {};
 
   const offsets8: SizesOrOffsets = {};
+  const offsets16: SizesOrOffsets = {};
   const offsets32: SizesOrOffsets = {};
-  const offsets32Bit: SizesOrOffsets = {};
 
   let size = 0;
 
@@ -33,29 +33,29 @@ export function tuple<const N extends string, const E extends BinType[]>(
     offsets8[i] = size;
     offsets8[elem.alias] = size;
 
+    const offset16 = Math.floor(size / 16);
+
+    offsets16[i] = offset16;
+    offsets16[elem.alias] = offset16;
+
     const offset32 = Math.floor(size / 32);
 
     offsets32[i] = offset32;
     offsets32[elem.alias] = offset32;
-
-    const offset32Bit = size % 32;
-
-    offsets32Bit[i] = offset32Bit;
-    offsets32Bit[elem.alias] = offset32Bit;
 
     size += elem.size;
   }
 
   return {
     name,
-    size: cast(size),
     alias: name,
+    size: cast(size),
 
     at: cast(at),
     sizes: cast(sizes),
 
     offsets8: cast(offsets8),
+    offsets16: cast(offsets8),
     offsets32: cast(offsets32),
-    offsets32Bit: cast(offsets32Bit),
   };
 }

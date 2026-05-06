@@ -5,15 +5,20 @@ import type { Array } from "#/bindata/array/types";
 
 export type { Array } from "#/bindata/array/types";
 
-export function array<const N extends string, const S extends number, E extends BinType>(
+export function array<const N extends string, const L extends number, E extends BinType>(
   name: N,
   element: E,
-  size: S,
-): Array<N, E, S> {
+  length: L,
+): Array<N, E, L> {
+  const size = element.size * length;
+
   return {
     name,
+    alias: name,
+
     element,
-    size: cast(element.size * size),
-    alias: name
+    length,
+
+    size: cast(size)
   };
 }

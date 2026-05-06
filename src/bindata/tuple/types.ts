@@ -10,8 +10,8 @@ export interface Tuple<
   readonly at: Aliases<Elems> & { [K in keyof Elems]?: IndexedBinType<Elems[K]> };
   readonly sizes: SizesOrOffsets<Elems>;
   readonly offsets8: SizesOrOffsets<Elems>;
+  readonly offsets16: SizesOrOffsets<Elems>;
   readonly offsets32: SizesOrOffsets<Elems>;
-  readonly offsets32Bit: SizesOrOffsets<Elems>;
 }
 
 type Size<T extends readonly BinType[], Acc extends number = 0> =

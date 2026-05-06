@@ -4,6 +4,6 @@ export interface BinType<
   Alias extends string = Name
 > {
   readonly name: Name;
-  readonly size: Size;
   readonly alias: Alias;
+  readonly size: Size;
 }
