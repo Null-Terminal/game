@@ -13,7 +13,9 @@ export class RTree {
   static readonly Header = header;
   static readonly BYTES_PER_ELEMENT = RTreeNode.BYTES_PER_ELEMENT;
 
-  readonly BYTES_PER_ELEMENT: number;
+  readonly BYTES_PER_ELEMENT = RTree.BYTES_PER_ELEMENT;
+  readonly byteOffset: number = 0;
+
   readonly minEntries: number;
   readonly maxEntries: number;
 
@@ -31,54 +33,58 @@ export class RTree {
 
   set size(value: number) {
     this.#size = value;
-    this.header[header.at.size.index] = value;
+    this.#header[header.at.size.index] = value;
   }
 
-  get freePtr32(): Ptr32 {
-    return this.size * this.BYTES_PER_ELEMENT + this.#dataOffset32;
-  }
-
-  protected readonly view: RtreeView;
-  protected readonly node: RTreeNode;
-  protected readonly header: Uint16Array;
-  protected root: Ptr32;
+  readonly #view: RtreeView;
+  readonly #node: RTreeNode;
+  readonly #header: Uint16Array;
+  readonly #root: Ptr32;
 
   readonly #buffer;
   readonly #dataOffset32: Ptr32;
 
   #size;
 
-  constructor(maxEntries = 9, buffer?: ArrayBufferLike) {
-    this.BYTES_PER_ELEMENT = (this.constructor as typeof RTree).BYTES_PER_ELEMENT;
+  get #freePtr32(): Ptr32 {
+    return this.size * this.BYTES_PER_ELEMENT + this.#dataOffset32;
+  }
 
+  constructor(maxEntries = 9, buffer?: ArrayBufferLike) {
     this.maxEntries = Math.max(4, maxEntries);
     this.minEntries = Math.max(2, Math.ceil(maxEntries * 0.4));
 
     this.#buffer = buffer ?? new ArrayBuffer(2 ** 16);
 
-    this.view = {
+    this.#view = {
       uints8: new Uint8Array(this.#buffer, header.size),
       uints16: new Uint16Array(this.#buffer, header.size),
       uints32: new Uint32Array(this.#buffer, header.size),
       floats32: new Float32Array(this.#buffer, header.size)
     };
 
-    this.node = new RTreeNode(this.view);
-    this.header = new Uint16Array(this.#buffer, 0, header.size / 2);
+    this.#node = new RTreeNode(this.#view);
+    this.#header = new Uint16Array(this.#buffer, 0, header.size / 2);
 
     this.#dataOffset32 = Math.ceil(header.size / 4);
-    this.#size = this.header[header.at.size.index]!;
+    this.#size = this.#header[header.at.size.index]!;
 
-    this.root = this.#createEmptyNode(true);
+    this.#root = this.#createEmptyNode(true);
+  }
+
+  search(minX: number, minY: number, maxX: number, maxY: number): Ptr16[] {
+    const results: Ptr16[] = [];
+    this.#searchNode(this.#root, minX, minY, maxX, maxY, results);
+    return results;
   }
 
   insert(minX: number, minY: number, maxX: number, maxY: number) {
-    const { node } = this;
+    const node = this.#node;
 
     const ptr = this.#createEmptyNode();
     node.setBBox(ptr, minX, minY, maxX, maxY);
 
-    const leaf = this.#chooseLeaf(this.root, minX, minY, maxX, maxY);
+    const leaf = this.#chooseLeaf(this.#root, minX, minY, maxX, maxY);
     node.pushChild(leaf, ptr);
 
     // Обновляем bounding box'ы на пути к корню
@@ -92,23 +98,17 @@ export class RTree {
     return ptr;
   }
 
-  search(minX: number, minY: number, maxX: number, maxY: number): Ptr16[] {
-    const results: Ptr16[] = [];
-    this.#searchNode(this.root, minX, minY, maxX, maxY, results);
-    return results;
-  }
-
   #createEmptyNode(leaf = false, level = 0): Ptr32 {
-    const newPtr = this.freePtr32;
+    const newPtr = this.#freePtr32;
 
-    this.node.createEmpty(newPtr, leaf, level);
+    this.#node.createEmpty(newPtr, leaf, level);
     this.size++;
 
     return newPtr;
   }
 
   #createEmptyNodeFrom(ptr: Ptr32): Ptr32 {
-    const { node } = this;
+    const node = this.#node;
 
     const newPtr = this.#createEmptyNode(node.isLeaf(ptr), node.getLevel(ptr));
 
@@ -118,7 +118,7 @@ export class RTree {
   }
 
   #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: Ptr16[]) {
-    const { node } = this;
+    const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
       return;
@@ -139,7 +139,7 @@ export class RTree {
   }
 
   #chooseLeaf(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
-    const { node } = this;
+    const node = this.#node;
 
     // Уже находимся в листе
     if (node.isLeaf(ptr)) {
@@ -179,8 +179,9 @@ export class RTree {
   }
 
   #splitNode(ptr: Ptr32) {
-    const { node } = this;
+    const node = this.#node;
 
+    const root = this.#root;
     const parent = node.getParent(ptr);
 
     // Выбираем два seed-элемента (максимально далекие)
@@ -260,7 +261,7 @@ export class RTree {
     });
 
     // Заменяем старый узел двумя новыми
-    if (parent !== this.root) {
+    if (parent !== root) {
       node.removeChild(parent, ptr);
       node.pushChild(parent, group1);
       node.pushChild(parent, group2);
@@ -272,21 +273,22 @@ export class RTree {
         this.#updateBBox(parent);
       }
 
+    // Если родитель - корень
     } else {
-      this.node.createEmpty(this.root, false, node.getLevel(ptr) + 1);
+      node.createEmpty(root, false, node.getLevel(ptr) + 1);
 
-      node.pushChild(this.root, group1);
-      node.pushChild(this.root, group2);
+      node.pushChild(root, group1);
+      node.pushChild(root, group2);
 
-      node.setParent(group1, this.root);
-      node.setParent(group2, this.root);
+      node.setParent(group1, root);
+      node.setParent(group2, root);
 
-      this.#updateBBox(this.root);
+      this.#updateBBox(root);
     }
   }
 
   #pickSeeds(ptr: Ptr32): { index1: number; index2: number; item1: Ptr32; item2: Ptr32 } {
-    const { node } = this;
+    const node = this.#node;
 
     let maxWaste = -Infinity;
 
@@ -322,12 +324,12 @@ export class RTree {
 
     while (currentNode !== 0) {
       this.#updateBBox(currentNode);
-      currentNode = this.node.getParent(currentNode);
+      currentNode = this.#node.getParent(currentNode);
     }
   }
 
   #updateBBox(ptr: Ptr32) {
-    const { node } = this;
+    const node = this.#node;
 
     if (node.getSize(ptr) === 0) {
       node.setBBox(ptr, 0, 0, 0, 0);
