@@ -2,7 +2,7 @@ import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
 
-import type { RtreeView, Ptr32 } from "#engine/rtree/types";
+import type { RtreeView, Ptr32, Ptr16 } from "#engine/rtree/types";
 
 export const header = tuple("header", [
   alias("size", usize2),
@@ -69,32 +69,13 @@ export class RTree {
     this.#dataOffset32 = Math.ceil(header.size / 4);
     this.#size = this.header[header.at.size.index]!;
 
-    this.root = this.createEmptyNode(true);
-  }
-
-  createEmptyNode(leaf = false, level = 0): Ptr32 {
-    const newPtr = this.freePtr32;
-
-    this.node.createEmpty(newPtr, leaf, level);
-    this.size++;
-
-    return newPtr;
-  }
-
-  createEmptyNodeFrom(ptr: Ptr32): Ptr32 {
-    const { node } = this;
-
-    const newPtr = this.createEmptyNode(node.isLeaf(ptr), node.getLevel(ptr));
-
-    node.setParent(newPtr, node.getParent(ptr));
-
-    return newPtr;
+    this.root = this.#createEmptyNode(true);
   }
 
   insert(minX: number, minY: number, maxX: number, maxY: number) {
     const { node } = this;
 
-    const ptr = this.createEmptyNode();
+    const ptr = this.#createEmptyNode();
     node.setBBox(ptr, minX, minY, maxX, maxY);
 
     const leaf = this.#chooseLeaf(this.root, minX, minY, maxX, maxY);
@@ -109,6 +90,52 @@ export class RTree {
     }
 
     return ptr;
+  }
+
+  search(minX: number, minY: number, maxX: number, maxY: number): Ptr16[] {
+    const results: Ptr16[] = [];
+    this.#searchNode(this.root, minX, minY, maxX, maxY, results);
+    return results;
+  }
+
+  #createEmptyNode(leaf = false, level = 0): Ptr32 {
+    const newPtr = this.freePtr32;
+
+    this.node.createEmpty(newPtr, leaf, level);
+    this.size++;
+
+    return newPtr;
+  }
+
+  #createEmptyNodeFrom(ptr: Ptr32): Ptr32 {
+    const { node } = this;
+
+    const newPtr = this.#createEmptyNode(node.isLeaf(ptr), node.getLevel(ptr));
+
+    node.setParent(newPtr, node.getParent(ptr));
+
+    return newPtr;
+  }
+
+  #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: Ptr16[]) {
+    const { node } = this;
+
+    if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
+      return;
+    }
+
+    if (node.isLeaf(ptr)) {
+      node.forEachChild(ptr, (childPtr) => {
+        if (node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
+          results.push(childPtr);
+        }
+      });
+
+    } else {
+      node.forEachChild(ptr, (childPtr) => {
+        this.#searchNode(childPtr, minX, minY, maxX, maxY, results);
+      });
+    }
   }
 
   #chooseLeaf(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
@@ -160,8 +187,8 @@ export class RTree {
     const seeds = this.#pickSeeds(ptr);
 
     // Создаем два новых узла
-    const group1 = this.createEmptyNodeFrom(ptr);
-    const group2 = this.createEmptyNodeFrom(ptr);
+    const group1 = this.#createEmptyNodeFrom(ptr);
+    const group2 = this.#createEmptyNodeFrom(ptr);
 
     node.pushChild(group1, seeds.item1);
     node.pushChild(group2, seeds.item1);
