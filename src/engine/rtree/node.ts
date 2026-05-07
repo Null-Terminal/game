@@ -115,6 +115,8 @@ export class RTreeNode extends BinView {
     this.setSize(ptr, childIndex + 1);
 
     this.view.uints16[ptr * 2 + offsets16.children + childIndex]! = childPtr;
+
+    this.setParent(childPtr, ptr);
   }
 
   removeChild(ptr: Ptr32, childPtr: Ptr16): boolean {
