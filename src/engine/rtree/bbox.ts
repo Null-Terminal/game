@@ -3,6 +3,8 @@ import { alias, tuple, f32 } from "#/bindata";
 import { BinView } from "#engine/rtree/binview";
 import type { Ptr32 } from "#engine/rtree/types";
 
+export type BBoxTuple = [minX: number, minY: number, maxX: number, maxY: number];
+
 export const bbox = tuple("bbox", [
   alias("minX", f32),
   alias("minY", f32),
@@ -47,6 +49,10 @@ export class BBox extends BinView {
 
   getMaxY(ptr: Ptr32): number {
     return this.view.floats32[ptr + offsets32.maxY]!;
+  }
+
+  get(ptr: Ptr32): BBoxTuple {
+    return [this.getMinX(ptr), this.getMinY(ptr), this.getMaxX(ptr), this.getMaxY(ptr)];
   }
 
   set(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
