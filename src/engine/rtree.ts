@@ -274,10 +274,11 @@ export class RTree {
     // Заменяем старый узел двумя новыми
     if (parent !== 0) {
       node.removeChild(parent, ptr);
+
       node.pushChild(parent, group1);
       node.pushChild(parent, group2);
 
-      if (node.getSize(parent) > this.maxEntries) {
+      if (node.getSize(parent) === this.maxEntries) {
         this.#splitNode(parent);
 
       } else {
@@ -290,9 +291,6 @@ export class RTree {
 
       node.pushChild(root, group1);
       node.pushChild(root, group2);
-
-      node.setParent(group1, root);
-      node.setParent(group2, root);
 
       this.#updateBBox(root);
     }
