@@ -2,7 +2,7 @@ import { alias, array, tuple, bintype, usize2, u8 } from "#/bindata";
 
 import { BinView } from "#engine/rtree/binview";
 
-import { bbox, BBox } from "#engine/rtree/bbox";
+import { bbox, BBox, type BBoxTuple } from "#engine/rtree/bbox";
 import type { RtreeView, Ptr32, Ptr16 } from "#engine/rtree/types";
 
 export const node = tuple("RTreeNode", [
@@ -41,6 +41,22 @@ export class RTreeNode extends BinView {
 
   hasIntersection(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
     return this.#bbox.hasIntersection(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  hasBBox(ptr: Ptr32): boolean {
+    return !this.#bbox.isNull(this.#getBBoxPtr(ptr));
+  }
+
+  getBBox(ptr: Ptr32): BBoxTuple {
+    return this.#bbox.get(this.#getBBoxPtr(ptr));
+  }
+
+  setBBox(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
+    this.#bbox.set(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
+  }
+
+  calcBBoxArea(ptr: Ptr32): number {
+    return this.#bbox.calcArea(this.#getBBoxPtr(ptr));
   }
 
   getParent(ptr: Ptr32): Ptr16 {
@@ -127,7 +143,8 @@ export class RTreeNode extends BinView {
     }
 
     children[start + lastIndex] = 0;
-    this.setSize(ptr, lastIndex);
+
+    this.setSize(ptr, size - 1);
 
     return true;
   }
@@ -154,14 +171,6 @@ export class RTreeNode extends BinView {
     }
   }
 
-  hasBBox(ptr: Ptr32): boolean {
-    return !this.#bbox.isNull(this.#getBBoxPtr(ptr));
-  }
-
-  setBBox(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
-    this.#bbox.set(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
-  }
-
   enlargeBBoxFrom(ptr: Ptr32, enlargerPtr: Ptr32) {
     const bbox = this.#bbox;
 
@@ -186,10 +195,6 @@ export class RTreeNode extends BinView {
 
   calcBBoxEnlargement(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
     return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
-  }
-
-  calcBBoxArea(ptr: Ptr32): number {
-    return this.#bbox.calcArea(this.#getBBoxPtr(ptr));
   }
 
   calcUnionBBoxArea(ptr1: Ptr32, ptr2: Ptr32): number {
