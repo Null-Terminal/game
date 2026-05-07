@@ -78,7 +78,7 @@ export class RTreeNode extends BinView {
   }
 
   getLevel(ptr: Ptr32): number {
-    return this.view.uints16[ptr * 4 + offsets16.level]! >>> 1;
+    return this.view.uints8[ptr * 4 + offsets8.level]! >>> 1;
   }
 
   setLevel(ptr: Ptr32, level: number) {
@@ -86,7 +86,7 @@ export class RTreeNode extends BinView {
       throw new Error(`Level overflow: ${level} >= 128 (max 7-bit value)`);
     }
 
-    this.view.uints16[ptr * 4 + offsets16.level]! = level << 1;
+    this.view.uints8[ptr * 4 + offsets8.level]! = level << 1;
   }
 
   getSize(ptr: Ptr32): number {
