@@ -261,7 +261,7 @@ export class RTree {
     });
 
     // Заменяем старый узел двумя новыми
-    if (parent !== root) {
+    if (parent !== 0) {
       node.removeChild(parent, ptr);
       node.pushChild(parent, group1);
       node.pushChild(parent, group2);
