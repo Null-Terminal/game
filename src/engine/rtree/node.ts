@@ -5,6 +5,8 @@ import { BinView } from "#engine/rtree/binview";
 import { bbox, BBox, type BBoxTuple } from "#engine/rtree/bbox";
 import type { RtreeView, Ptr32, Ptr16 } from "#engine/rtree/types";
 
+export type { BBoxTuple };
+
 export const node = tuple("RTreeNode", [
   bbox,
   alias("parent", usize2),

@@ -1,6 +1,6 @@
 import { alias, tuple, usize2 } from "#/bindata";
 
-import { RTreeNode } from "#engine/rtree/node";
+import { RTreeNode, type BBoxTuple } from "#engine/rtree/node";
 
 import type { RtreeView, Ptr32, Ptr16 } from "#engine/rtree/types";
 
@@ -96,6 +96,17 @@ export class RTree {
     }
 
     return ptr;
+  }
+
+  forEachBBox(cb: (ptr: Ptr32, bbox: BBoxTuple) => void) {
+    const node = this.#node;
+
+    function traverse(ptr: Ptr32) {
+      cb(ptr, node.getBBox(ptr));
+      node.forEachChild(ptr, traverse);
+    }
+
+    traverse(this.#root);
   }
 
   #createEmptyNode(leaf = false, level = 0): Ptr32 {
