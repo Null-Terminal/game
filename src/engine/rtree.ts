@@ -54,7 +54,7 @@ export class RTree {
     this.maxEntries = Math.max(4, maxEntries);
     this.minEntries = Math.max(2, Math.ceil(maxEntries * 0.4));
 
-    this.#buffer = buffer ?? new ArrayBuffer(2 ** 16);
+    this.#buffer = buffer ?? new ArrayBuffer((2 ** 16) * this.BYTES_PER_ELEMENT);
 
     this.#view = {
       uints8: new Uint8Array(this.#buffer, header.size),
