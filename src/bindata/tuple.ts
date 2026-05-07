@@ -55,7 +55,7 @@ export function tuple<const N extends string, const E extends BinType[]>(
     sizes: cast(sizes),
 
     offsets8: cast(offsets8),
-    offsets16: cast(offsets8),
+    offsets16: cast(offsets16),
     offsets32: cast(offsets32),
   };
 }
