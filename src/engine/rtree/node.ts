@@ -94,7 +94,7 @@ export class RTreeNode extends BinView {
   }
 
   setSize(ptr: Ptr32, size: number) {
-    if (size >= at.children.length) {
+    if (size > at.children.length) {
       throw new Error(`Children array overflow: size=${size}, max=${at.children.length}`);
     }
 
