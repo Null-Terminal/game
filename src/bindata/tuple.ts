@@ -33,12 +33,12 @@ export function tuple<const N extends string, const E extends BinType[]>(
     offsets8[i] = size;
     offsets8[elem.alias] = size;
 
-    const offset16 = Math.floor(size / 16);
+    const offset16 = Math.floor(size / 2);
 
     offsets16[i] = offset16;
     offsets16[elem.alias] = offset16;
 
-    const offset32 = Math.floor(size / 32);
+    const offset32 = Math.floor(size / 4);
 
     offsets32[i] = offset32;
     offsets32[elem.alias] = offset32;
