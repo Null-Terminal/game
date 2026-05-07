@@ -29,12 +29,8 @@ export class RTreeNode extends BinView {
     this.#bbox = new BBox(view);
   }
 
-  createEmpty(ptr: Ptr32, leaf = false, level = 0) {
+  createEmpty(ptr: Ptr32, level = 0) {
     this.#clearMemory(ptr);
-
-    if (leaf) {
-      this.markLeaf(ptr, leaf);
-    }
 
     if (level > 0) {
       this.setLevel(ptr, level);
@@ -70,23 +66,19 @@ export class RTreeNode extends BinView {
   }
 
   isLeaf(ptr: Ptr32): boolean {
-    return Boolean(this.view.uints8[ptr * 4 + offsets8.level]! & 1);
-  }
-
-  markLeaf(ptr: Ptr32, leaf: boolean) {
-    this.view.uints8[ptr * 4 + offsets8.level]! |= Number(leaf);
+    return this.view.uints8[ptr * 4 + offsets8.level]! === 0;
   }
 
   getLevel(ptr: Ptr32): number {
-    return this.view.uints8[ptr * 4 + offsets8.level]! >>> 1;
+    return this.view.uints8[ptr * 4 + offsets8.level]!;
   }
 
   setLevel(ptr: Ptr32, level: number) {
-    if (level >= 128) {
-      throw new Error(`Level overflow: ${level} >= 128 (max 7-bit value)`);
+    if (level >= 256) {
+      throw new Error(`Level overflow: ${level} >= 256 (max 8-bit value)`);
     }
 
-    this.view.uints8[ptr * 4 + offsets8.level]! = level << 1;
+    this.view.uints8[ptr * 4 + offsets8.level]! = level;
   }
 
   getSize(ptr: Ptr32): number {
@@ -200,22 +192,24 @@ export class RTreeNode extends BinView {
 
   enlargeBBoxFrom(ptr: Ptr32, enlargerPtr: Ptr32) {
     const bbox = this.#bbox;
+    const enlargerBBox = this.#getBBoxPtr(enlargerPtr);
 
-    const minX = bbox.getMinX(enlargerPtr);
-    const minY = bbox.getMinY(enlargerPtr);
-    const maxX = bbox.getMaxX(enlargerPtr);
-    const maxY = bbox.getMaxY(enlargerPtr);
+    const minX = bbox.getMinX(enlargerBBox);
+    const minY = bbox.getMinY(enlargerBBox);
+    const maxX = bbox.getMaxX(enlargerBBox);
+    const maxY = bbox.getMaxY(enlargerBBox);
 
     this.#bbox.enlarge(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
   }
 
   calcBBoxEnlargementFrom(ptr: Ptr32, enlargerPtr: Ptr32): number {
     const bbox = this.#bbox;
+    const enlargerBBox = this.#getBBoxPtr(enlargerPtr);
 
-    const minX = bbox.getMinX(enlargerPtr);
-    const minY = bbox.getMinY(enlargerPtr);
-    const maxX = bbox.getMaxX(enlargerPtr);
-    const maxY = bbox.getMaxY(enlargerPtr);
+    const minX = bbox.getMinX(enlargerBBox);
+    const minY = bbox.getMinY(enlargerBBox);
+    const maxX = bbox.getMaxX(enlargerBBox);
+    const maxY = bbox.getMaxY(enlargerBBox);
 
     return this.#bbox.calcEnlargement(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
   }

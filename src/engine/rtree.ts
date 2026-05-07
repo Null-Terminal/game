@@ -69,7 +69,7 @@ export class RTree {
     this.#dataOffset32 = Math.ceil(header.size / 4);
     this.#size = this.#header[header.at.size.index]!;
 
-    this.#root = this.#createEmptyNode(true);
+    this.#root = this.#createEmptyNode();
   }
 
   search(minX: number, minY: number, maxX: number, maxY: number): Ptr16[] {
@@ -109,10 +109,10 @@ export class RTree {
     traverse(this.#root);
   }
 
-  #createEmptyNode(leaf = false, level = 0): Ptr32 {
+  #createEmptyNode( level = 0): Ptr32 {
     const newPtr = this.#freePtr32;
 
-    this.#node.createEmpty(newPtr, leaf, level);
+    this.#node.createEmpty(newPtr, level);
     this.size++;
 
     return newPtr;
@@ -121,7 +121,7 @@ export class RTree {
   #createEmptyNodeFrom(ptr: Ptr32): Ptr32 {
     const node = this.#node;
 
-    const newPtr = this.#createEmptyNode(node.isLeaf(ptr), node.getLevel(ptr));
+    const newPtr = this.#createEmptyNode(node.getLevel(ptr));
 
     node.setParent(newPtr, node.getParent(ptr));
 
@@ -287,7 +287,7 @@ export class RTree {
 
     // Если родитель - корень
     } else {
-      node.createEmpty(root, false, node.getLevel(ptr) + 1);
+      node.createEmpty(root, node.getLevel(ptr) + 1);
 
       node.pushChild(root, group1);
       node.pushChild(root, group2);
