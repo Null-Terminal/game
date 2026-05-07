@@ -203,7 +203,7 @@ export class RTree {
     const group2 = this.#createEmptyNodeFrom(ptr);
 
     node.pushChild(group1, seeds.item1);
-    node.pushChild(group2, seeds.item1);
+    node.pushChild(group2, seeds.item2);
 
     this.#updateBBox(group1);
     this.#updateBBox(group2);
