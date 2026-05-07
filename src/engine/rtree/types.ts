@@ -7,4 +7,4 @@ export interface RtreeView {
 
 export type Ptr32 = number & {};
 
-export type Ptr16 = number & {};
+export type Ptr32To16 = number & {};

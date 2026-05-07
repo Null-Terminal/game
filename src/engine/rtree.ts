@@ -2,12 +2,15 @@ import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode, type BBoxTuple } from "#engine/rtree/node";
 
-import type { RtreeView, Ptr32, Ptr16 } from "#engine/rtree/types";
+import type { RtreeView, Ptr32, Ptr32To16 } from "#engine/rtree/types";
 
 export const header = tuple("header", [
   alias("size", usize2),
   alias("reserved", usize2),
 ]);
+
+const BLOCKS32_PER_ELEMENT = RTreeNode.BYTES_PER_ELEMENT / 4;
+const HEADER32_OFFSET = header.size / 4;
 
 export class RTree {
   static readonly Header = header;
@@ -42,12 +45,17 @@ export class RTree {
   readonly #root: Ptr32;
 
   readonly #buffer;
-  readonly #dataOffset32: Ptr32;
 
   #size;
 
   get #freePtr32(): Ptr32 {
-    return this.size * this.BYTES_PER_ELEMENT + this.#dataOffset32;
+    const ptr = this.size * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET;
+
+    if (ptr >= this.#view.uints32.length) {
+      throw new Error(`Out of memory - maximum nodes reached (${this.size})`);
+    }
+
+    return ptr;
   }
 
   constructor(maxEntries = 9, buffer?: ArrayBufferLike) {
@@ -66,14 +74,12 @@ export class RTree {
     this.#node = new RTreeNode(this.#view);
     this.#header = new Uint16Array(this.#buffer, 0, header.size / 2);
 
-    this.#dataOffset32 = Math.ceil(header.size / 4);
     this.#size = this.#header[header.at.size.index]!;
-
     this.#root = this.#createEmptyNode();
   }
 
-  search(minX: number, minY: number, maxX: number, maxY: number): Ptr16[] {
-    const results: Ptr16[] = [];
+  search(minX: number, minY: number, maxX: number, maxY: number): Ptr32To16[] {
+    const results: Ptr32To16[] = [];
     this.#searchNode(this.#root, minX, minY, maxX, maxY, results);
     return results;
   }
@@ -109,7 +115,7 @@ export class RTree {
     traverse(this.#root);
   }
 
-  #createEmptyNode( level = 0): Ptr32 {
+  #createEmptyNode(level = 0): Ptr32 {
     const newPtr = this.#freePtr32;
 
     this.#node.createEmpty(newPtr, level);
@@ -128,7 +134,7 @@ export class RTree {
     return newPtr;
   }
 
-  #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: Ptr16[]) {
+  #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: Ptr32To16[]) {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
@@ -221,12 +227,11 @@ export class RTree {
       if (i !== seeds.index1 && i !== seeds.index2) {
         const group1Size = node.getSize(group1);
         const group2Size = node.getSize(group2);
-        const currentRemaining = remaining--;
 
         // Если одна группа уже набрала минимум, добавляем всё в другую
         if (
           group1Size >= this.minEntries &&
-          group2Size + currentRemaining <= this.maxEntries
+          group2Size + remaining <= this.maxEntries
         ) {
           node.pushChild(group2, childPtr);
           this.#updateBBox(group2);
@@ -235,7 +240,7 @@ export class RTree {
 
         if (
           group2Size >= this.minEntries &&
-          group1Size + currentRemaining <= this.maxEntries
+          group1Size + remaining <= this.maxEntries
         ) {
           node.pushChild(group1, childPtr);
           this.#updateBBox(group1);
@@ -301,31 +306,31 @@ export class RTree {
 
     let maxWaste = -Infinity;
 
-    let seed1 = 0;
-    let seed2 = 0;
+    let index1 = 0;
+    let index2 = 0;
+
+    let item1 = 0;
+    let item2 = 0;
 
     node.forEachChild(ptr, (child1Ptr, i) => {
       node.forEachChildFrom(ptr, i + 1, (child2Ptr, j) => {
         const area1 = node.calcBBoxArea(child1Ptr);
         const area2 = node.calcBBoxArea(child2Ptr);
-        const unionArea = node.calcUnionBBoxArea(child1Ptr, child2Ptr);
 
+        const unionArea = node.calcUnionBBoxArea(child1Ptr, child2Ptr);
         const waste = unionArea - area1 - area2;
 
         if (waste > maxWaste) {
           maxWaste = waste;
-          seed1 = i;
-          seed2 = j;
+          index1 = i;
+          item1 = child1Ptr;
+          index2 = j;
+          item2 = child2Ptr;
         }
       });
     });
 
-    return {
-      index1: seed1,
-      index2: seed2,
-      item1: node.getChild(ptr, seed1),
-      item2: node.getChild(ptr, seed2)
-    };
+    return { index1, index2, item1, item2 };
   }
 
   #adjustTree(ptr: Ptr32) {
@@ -344,6 +349,8 @@ export class RTree {
       node.setBBox(ptr, 0, 0, 0, 0);
       return;
     }
+
+    node.setBBox(ptr, Infinity, Infinity, -Infinity, -Infinity);
 
     node.forEachChild(ptr, (childPtr) => {
       if (node.hasBBox(childPtr)) {
