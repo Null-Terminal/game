@@ -55,10 +55,10 @@ export function loadImage(file: File): Promise<LoadedImage> {
   return promise;
 }
 
-const bufferCache = new WeakMap<File, Promise<string>>();
+const textCache = new WeakMap<File, Promise<string>>();
 
 export function loadText(file: File): Promise<string> {
-  const fromCache = bufferCache.get(file);
+  const fromCache = textCache.get(file);
 
   if (fromCache != null) {
     return fromCache;
@@ -66,7 +66,7 @@ export function loadText(file: File): Promise<string> {
 
   const { promise, resolve, reject } = Promise.withResolvers<string>();
 
-  bufferCache.set(file, promise);
+  textCache.set(file, promise);
 
   const reader = new FileReader();
 
