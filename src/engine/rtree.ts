@@ -11,7 +11,6 @@ export const header = tuple("header", [
 
 const BLOCKS32_PER_ELEMENT = RTreeNode.BYTES_PER_ELEMENT / 4;
 const HEADER32_OFFSET = header.size / 4;
-const MAX_U16 = 2 ** 16 - 1;
 
 export class RTree {
   static readonly Header = header;
@@ -52,7 +51,7 @@ export class RTree {
   get #freePtr32(): Ptr32 {
     const ptr = this.size * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET;
 
-    if (ptr >= this.#view.uints32.length) {
+    if (ptr >= this.#view.uints32.length - 1) {
       throw new Error(`Out of memory - maximum nodes reached (${this.size})`);
     }
 
@@ -70,24 +69,8 @@ export class RTree {
       uints16: new Uint16Array(this.#buffer, header.size),
       uints32: new Uint32Array(this.#buffer, header.size),
       floats32: new Float32Array(this.#buffer, header.size),
-
-      unpackPtr(ptr) {
-        if (ptr === 0) {
-          return 0;
-        }
-
-        return (ptr - 1) * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET;
-      },
-
-      packPtr(ptr) {
-        const packedPtr = ((ptr - HEADER32_OFFSET) / BLOCKS32_PER_ELEMENT) + 1;
-
-        if (packedPtr > MAX_U16) {
-          throw new Error(`Packed pointer ${packedPtr} exceeds 16-bit limit (${MAX_U16})`);
-        }
-
-        return packedPtr;
-      }
+      unpackPtr: (ptr) => ptr === 0 ? 0 : (ptr - 1) * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET,
+      packPtr: (ptr) => ((ptr - HEADER32_OFFSET) / BLOCKS32_PER_ELEMENT) + 1
     };
 
     this.#node = new RTreeNode(this.#view);
