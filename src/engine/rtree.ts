@@ -87,7 +87,7 @@ export class RTree {
     return results;
   }
 
-  insert(minX: number, minY: number, maxX: number, maxY: number) {
+  insert(minX: number, minY: number, maxX: number, maxY: number): Ptr32 {
     const node = this.#node;
 
     const ptr = this.#createEmptyNode();
