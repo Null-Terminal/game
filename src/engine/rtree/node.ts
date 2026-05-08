@@ -19,7 +19,6 @@ export const node = tuple("RTreeNode", [
 const { at, offsets8, offsets16, offsets32 } = node;
 
 const MAX_U8 = 2 ** 8 - 1;
-const MAX_U16 = 2 ** 16 - 1;
 
 export class RTreeNode extends BinView {
   static readonly Scheme = node;
@@ -61,15 +60,11 @@ export class RTreeNode extends BinView {
   }
 
   getParent(ptr: Ptr32): Ptr32To16 {
-    return this.view.uints16[ptr * 2 + offsets16.parent]!;
+    return this.view.unpackPtr(this.view.uints16[ptr * 2 + offsets16.parent]!);
   }
 
   setParent(ptr: Ptr32, parentPtr: Ptr32To16) {
-    if (parentPtr > MAX_U16) {
-      throw new Error(`Parent pointer ${parentPtr} exceeds 16-bit limit (${MAX_U16})`);
-    }
-
-    this.view.uints16[ptr * 2 + offsets16.parent]! = parentPtr;
+    this.view.uints16[ptr * 2 + offsets16.parent]! = this.view.packPtr(parentPtr);
   }
 
   isLeaf(ptr: Ptr32): boolean {
@@ -105,34 +100,32 @@ export class RTreeNode extends BinView {
       throw new Error(`Child index ${index} out of bounds: size=${this.getSize(ptr)}`);
     }
 
-    return this.view.uints16[ptr * 2 + offsets16.children + index]!;
+    return this.view.unpackPtr(this.view.uints16[ptr * 2 + offsets16.children + index]!);
   }
 
   pushChild(ptr: Ptr32, childPtr: Ptr32To16) {
-    if (childPtr > MAX_U16) {
-      throw new Error(`Child pointer ${childPtr} exceeds 16-bit limit (${MAX_U16})`);
-    }
-
     const childIndex = this.getSize(ptr);
 
     this.setSize(ptr, childIndex + 1);
-
-    this.view.uints16[ptr * 2 + offsets16.children + childIndex]! = childPtr;
-
     this.setParent(childPtr, ptr);
+
+    this.view.uints16[ptr * 2 + offsets16.children + childIndex]! = this.view.packPtr(childPtr);
   }
 
   removeChild(ptr: Ptr32, childPtr: Ptr32To16): boolean {
-    const children = this.view.uints16;
+    const { view } = this;
 
     const start = ptr * 2 + offsets16.children;
     const size = this.getSize(ptr);
+
+    const children = view.uints16;
+    const packedPtr = view.packPtr(childPtr);
 
     // Ищем индекс ребёнка
     let indexToRemove = -1;
 
     for (let i = 0; i < size; i++) {
-      if (children[start + i] === childPtr) {
+      if (children[start + i]! === packedPtr) {
         indexToRemove = i;
         break;
       }
@@ -157,7 +150,8 @@ export class RTreeNode extends BinView {
   }
 
   children(ptr: Ptr32): IterableIterator<Ptr32To16> {
-    const children = this.view.uints16;
+    const { view } = this;
+    const children = view.uints16;
 
     const start = ptr * 2 + offsets16.children;
     const end = start + this.getSize(ptr);
@@ -169,46 +163,54 @@ export class RTreeNode extends BinView {
         return this;
       },
 
-      next() {
+      next: () => {
         if (offset >= end) {
           return { done: true, value: undefined };
         }
 
-        return { done: false, value: children[offset++]! };
+        return { done: false, value: view.unpackPtr(children[offset++]!) };
       }
     };
   }
 
   forEachChild(ptr: Ptr32, cb: (ptr: Ptr32To16, i: number) => void) {
-    const children = this.view.uints16;
+    const { view } = this;
+    const children = view.uints16;
 
     const start = ptr * 2 + offsets16.children;
     const end = start + this.getSize(ptr);
 
     for (let i = 0, offset = start; offset < end; offset++, i++) {
-      cb(children[offset]!, i);
+      cb(view.unpackPtr(children[offset]!), i);
     }
   }
 
   forEachChildFrom(ptr: Ptr32, from: number, cb: (ptr: Ptr32To16, i: number) => void) {
-    const children = this.view.uints16;
+    const { view } = this;
+    const children = view.uints16;
 
     const start = ptr * 2 + offsets16.children;
     const end = start + this.getSize(ptr);
 
     for (let i = from, offset = start + from; offset < end; offset++, i++) {
-      cb(children[offset]!, i);
+      cb(view.unpackPtr(children[offset]!), i);
     }
   }
 
   enlargeBBoxFrom(ptr: Ptr32, enlargerPtr: Ptr32) {
     const bbox = this.#bbox;
-    const enlargerBBox = this.#getBBoxPtr(enlargerPtr);
+    const bboxPtr = this.#getBBoxPtr(ptr);
 
-    const minX = bbox.getMinX(enlargerBBox);
-    const minY = bbox.getMinY(enlargerBBox);
-    const maxX = bbox.getMaxX(enlargerBBox);
-    const maxY = bbox.getMaxY(enlargerBBox);
+    if (bbox.isNull(bboxPtr)) {
+      return;
+    }
+
+    const enlargerBBoxPtr = this.#getBBoxPtr(enlargerPtr);
+
+    const minX = bbox.getMinX(enlargerBBoxPtr);
+    const minY = bbox.getMinY(enlargerBBoxPtr);
+    const maxX = bbox.getMaxX(enlargerBBoxPtr);
+    const maxY = bbox.getMaxY(enlargerBBoxPtr);
 
     this.#bbox.enlarge(this.#getBBoxPtr(ptr), minX, minY, maxX, maxY);
   }
