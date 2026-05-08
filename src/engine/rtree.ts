@@ -69,6 +69,7 @@ export class RTree {
       uints16: new Uint16Array(this.#buffer, header.size),
       uints32: new Uint32Array(this.#buffer, header.size),
       floats32: new Float32Array(this.#buffer, header.size),
+      // Добавление и вычитание единицы нужны, чтобы отличать значение от 0 (null)
       unpackPtr: (ptr) => ptr === 0 ? 0 : (ptr - 1) * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET,
       packPtr: (ptr) => ((ptr - HEADER32_OFFSET) / BLOCKS32_PER_ELEMENT) + 1
     };
