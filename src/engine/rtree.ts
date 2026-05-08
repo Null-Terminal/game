@@ -217,40 +217,10 @@ export class RTree {
     this.#updateBBox(group1);
     this.#updateBBox(group2);
 
-    let remaining = 0;
-
-    node.forEachChild(ptr, (_, i) => {
-      if (i !== seeds.index1 && i !== seeds.index2) {
-        remaining++;
-      }
-    });
-
     // Распределяем остальные элементы
     node.forEachChild(ptr, (childPtr, i) => {
       if (i !== seeds.index1 && i !== seeds.index2) {
-        const group1Size = node.getSize(group1);
-        const group2Size = node.getSize(group2);
-
-        // Если одна группа уже набрала минимум, добавляем всё в другую
-        if (
-          group1Size >= this.minEntries &&
-          group2Size + remaining <= this.maxEntries
-        ) {
-          node.pushChild(group2, childPtr);
-          this.#updateBBox(group2);
-          return;
-        }
-
-        if (
-          group2Size >= this.minEntries &&
-          group1Size + remaining <= this.maxEntries
-        ) {
-          node.pushChild(group1, childPtr);
-          this.#updateBBox(group1);
-          return;
-        }
-
-        // Иначе добавляем в группу с меньшим увеличением
+        // Добавляем в группу с меньшим увеличением
         const enlargement1 = node.calcBBoxEnlargementFrom(group1, childPtr);
         const enlargement2 = node.calcBBoxEnlargementFrom(group2, childPtr);
 
