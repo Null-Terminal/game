@@ -163,7 +163,7 @@ export class RTreeNode extends BinView {
         return this;
       },
 
-      next: () => {
+      next() {
         if (offset >= end) {
           return { done: true, value: undefined };
         }
