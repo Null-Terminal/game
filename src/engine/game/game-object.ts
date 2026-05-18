@@ -1,10 +1,10 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import { type RenderCanvas } from "#engine/render-canvas";
-import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game-object/types";
+import { type RenderCanvas } from "#engine/game/render-canvas";
+import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game/game-object/types";
 
-export * from "#engine/game-object/types";
+export * from "#engine/game/game-object/types";
 
 export abstract class GameObject {
   static animations: Animations = {};

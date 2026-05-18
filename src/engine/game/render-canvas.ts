@@ -1,9 +1,9 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import type { RenderCanvasOptions } from "#engine/render-canvas/types";
+import type { RenderCanvasOptions } from "#engine/game/render-canvas/types";
 
-export * from "#engine/render-canvas/types";
+export * from "#engine/game/render-canvas/types";
 
 export class RenderCanvas {
   readonly canvas: HTMLCanvasElement;
@@ -121,5 +121,3 @@ export class RenderCanvas {
     this.#ctx.fillText(`FPS: ${this.#fps}`, 10, 30);
   }
 }
-
-export const renderCanvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasElement, { showFPS: true });
