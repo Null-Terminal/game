@@ -1,12 +1,38 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import { type RenderCanvas } from "#engine/game/render-canvas";
-import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game/game-object/types";
+import { type Game } from "#engine/game";
+import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game-object/types";
 
-export * from "#engine/game/game-object/types";
+export * from "#engine/game-object/types";
+
+const kinds = new Map<number, string>();
 
 export abstract class GameObject {
+  @cache
+  static get kind() {
+    const name = this.name;
+
+    let hash = 0;
+
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash << 5) - hash + name.charCodeAt(i);
+      hash |= 0; // 32-битное усечение
+    }
+
+    hash = Math.abs(hash);
+
+    if (kinds.has(hash)) {
+      throw new Error(
+        `Kind collision: "${name}" and "${kinds.get(hash)}" both have kind ${hash}`
+      );
+    }
+
+    kinds.set(hash, name);
+
+    return hash;
+  }
+
   static animations: Animations = {};
 
   @cache
@@ -25,9 +51,6 @@ export abstract class GameObject {
 
   declare readonly Animations: (typeof GameObject)["animations"];
 
-  readonly canvas: RenderCanvas;
-  readonly options: Required<GameObjectOptions>;
-
   readonly animation: EventEmitter<AnimationEvents<this["Animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
       map[name] = handler<string>();
@@ -35,11 +58,22 @@ export abstract class GameObject {
     }, {} as any /* WTF TS? */)
   });
 
-  x: number;
-  y: number;
+  game!: Game;
+  options!: Required<GameObjectOptions>;
 
-  speed: number;
-  scale: number;
+  x!: number;
+  y!: number;
+
+  speed!: number;
+  scale!: number;
+
+  get canvas() {
+    return this.game.canvas;
+  }
+
+  get world() {
+    return this.game.world;
+  }
 
   @cache
   get animations(): this["Animations"] {
@@ -60,8 +94,14 @@ export abstract class GameObject {
   #paused = false;
   #cancelRedrawHandler: Function | null = null;
 
-  constructor(canvas: RenderCanvas, opts?: GameObjectOptions) {
-    this.canvas = canvas;
+  constructor(game: Game, opts?: GameObjectOptions) {
+    this.create(game, opts);
+  }
+
+  abstract init(): void;
+
+  create(game: Game, opts?: GameObjectOptions) {
+    this.game = game;
 
     this.options = {
       x: 0,
@@ -79,8 +119,6 @@ export abstract class GameObject {
 
     this.init();
   }
-
-  abstract init(): void;
 
   destroy() {
     this.#cancelRedrawHandler?.();
