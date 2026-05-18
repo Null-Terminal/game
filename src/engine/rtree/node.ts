@@ -149,30 +149,6 @@ export class RTreeNode extends BinView {
     return true;
   }
 
-  children(ptr: Ptr32): IterableIterator<Ptr32To16> {
-    const { view } = this;
-    const children = view.uints16;
-
-    const start = ptr * 2 + offsets16.children;
-    const end = start + this.getSize(ptr);
-
-    let offset = start;
-
-    return {
-      [Symbol.iterator]() {
-        return this;
-      },
-
-      next() {
-        if (offset >= end) {
-          return { done: true, value: undefined };
-        }
-
-        return { done: false, value: view.unpackPtr(children[offset++]!) };
-      }
-    };
-  }
-
   forEachChild(ptr: Ptr32, cb: (ptr: Ptr32To16, i: number) => void) {
     const { view } = this;
     const children = view.uints16;
