@@ -86,10 +86,19 @@ export class RTree {
     return results;
   }
 
-  insert(minX: number, minY: number, maxX: number, maxY: number): Ptr32 {
+  insert(
+    kind: number,
+    index: number,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  ): Ptr32 {
     const node = this.#node;
 
     const ptr = this.#createEmptyNode();
+
+    node.setData(ptr, kind, index);
     node.setBBox(ptr, minX, minY, maxX, maxY);
 
     const leaf = this.#chooseLeaf(this.#root, minX, minY, maxX, maxY);
