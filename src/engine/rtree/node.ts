@@ -64,11 +64,11 @@ export class RTreeNode extends BinView {
   }
 
   getData(ptr: Ptr32): DataPointer {
-    return this.#data.get(ptr);
+    return this.#data.get(ptr + offsets32.data);
   }
 
   setData(ptr: Ptr32, kind: number, index: number) {
-    this.#data.set(ptr, kind, index);
+    this.#data.set(ptr + offsets32.data, kind, index);
   }
 
   getParent(ptr: Ptr32): Ptr32To16 {

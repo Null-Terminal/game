@@ -3,6 +3,8 @@ import { alias, tuple, usize2 } from "#/bindata";
 import { RTreeNode } from "#engine/rtree/node";
 import type { RTreePublicNode, RTreeView, Ptr32 } from "#engine/rtree/types";
 
+export type { BBoxTuple } from "#engine/rtree/bbox";
+
 export const header = tuple("header", [
   alias("size", usize2),
   alias("reserved", usize2),
@@ -115,11 +117,11 @@ export class RTree {
     return ptr;
   }
 
-  forEach(cb: (ptr: Ptr32, bbox: RTreePublicNode) => void) {
+  forEach(cb: (node: RTreePublicNode) => void) {
     const node = this.#node;
 
     function traverse(ptr: Ptr32) {
-      cb(ptr, { bbox: node.getBBox(ptr), pointer: node.getData(ptr) });
+      cb({ bbox: node.getBBox(ptr), pointer: node.getData(ptr) });
       node.forEachChild(ptr, traverse);
     }
 
