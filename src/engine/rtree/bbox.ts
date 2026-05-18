@@ -16,7 +16,7 @@ const { offsets32 } = bbox;
 
 export class BBox extends BinView {
   static readonly Scheme = bbox;
-  static override readonly BYTES_PER_ELEMENT = BBox.Scheme.size;
+  static override readonly BYTES_PER_ELEMENT = this.Scheme.size;
 
   isNull(ptr: Ptr32): boolean {
     // Bbox считается null, если оба max-а равны 0.
