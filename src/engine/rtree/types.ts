@@ -1,4 +1,12 @@
-export interface RtreeView {
+import type { BBoxTuple } from "#engine/rtree/bbox";
+import type { DataPointer } from "#engine/rtree/data";
+
+export interface RTreePublicNode {
+  bbox: BBoxTuple;
+  pointer: DataPointer;
+}
+
+export interface RTreeView {
   uints8: Uint8Array;
   uints16: Uint16Array;
   uints32: Uint32Array;

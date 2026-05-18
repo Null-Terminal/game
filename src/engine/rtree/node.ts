@@ -1,9 +1,11 @@
-import { alias, array, tuple, bintype, usize2, u8 } from "#/bindata";
+import { alias, array, tuple, usize2, u8 } from "#/bindata";
 
 import { BinView } from "#engine/rtree/binview";
 
 import { bbox, BBox, type BBoxTuple } from "#engine/rtree/bbox";
-import type { RtreeView, Ptr32, Ptr32To16 } from "#engine/rtree/types";
+import { data, Data, type DataPointer } from "#engine/rtree/data";
+
+import type { RTreeView, Ptr32, Ptr32To16 } from "#engine/rtree/types";
 
 export type { BBoxTuple };
 
@@ -13,7 +15,7 @@ export const node = tuple("RTreeNode", [
   alias("level", u8),
   alias("size", u8),
   array("children", usize2, 16),
-  bintype("data", 12),
+  data,
 ]);
 
 const { at, offsets8, offsets16, offsets32 } = node;
@@ -22,13 +24,15 @@ const MAX_U8 = 2 ** 8 - 1;
 
 export class RTreeNode extends BinView {
   static readonly Scheme = node;
-  static override readonly BYTES_PER_ELEMENT: 64 = RTreeNode.Scheme.size;
+  static override readonly BYTES_PER_ELEMENT: 64 = this.Scheme.size;
 
   readonly #bbox;
+  readonly #data;
 
-  constructor(view: RtreeView) {
+  constructor(view: RTreeView) {
     super(view);
     this.#bbox = new BBox(view);
+    this.#data = new Data(view);
   }
 
   createEmpty(ptr: Ptr32, level = 0) {
@@ -57,6 +61,14 @@ export class RTreeNode extends BinView {
 
   calcBBoxArea(ptr: Ptr32): number {
     return this.#bbox.calcArea(this.#getBBoxPtr(ptr));
+  }
+
+  getData(ptr: Ptr32): DataPointer {
+    return this.#data.get(ptr);
+  }
+
+  setData(ptr: Ptr32, kind: number, index: number) {
+    this.#data.set(ptr, kind, index);
   }
 
   getParent(ptr: Ptr32): Ptr32To16 {

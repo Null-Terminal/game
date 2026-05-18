@@ -1,8 +1,7 @@
 import { alias, tuple, usize2 } from "#/bindata";
 
-import { RTreeNode, type BBoxTuple } from "#engine/rtree/node";
-
-import type { RtreeView, Ptr32, Ptr32To16 } from "#engine/rtree/types";
+import { RTreeNode } from "#engine/rtree/node";
+import type { RTreePublicNode, RTreeView, Ptr32 } from "#engine/rtree/types";
 
 export const header = tuple("header", [
   alias("size", usize2),
@@ -39,7 +38,7 @@ export class RTree {
     this.#header[header.at.size.index] = value;
   }
 
-  readonly #view: RtreeView;
+  readonly #view: RTreeView;
   readonly #node: RTreeNode;
   readonly #header: Uint16Array;
   readonly #root: Ptr32;
@@ -81,8 +80,8 @@ export class RTree {
     this.#root = this.#createEmptyNode();
   }
 
-  search(minX: number, minY: number, maxX: number, maxY: number): Ptr32To16[] {
-    const results: Ptr32To16[] = [];
+  search(minX: number, minY: number, maxX: number, maxY: number): RTreePublicNode[] {
+    const results: RTreePublicNode[] = [];
     this.#searchNode(this.#root, minX, minY, maxX, maxY, results);
     return results;
   }
@@ -107,11 +106,11 @@ export class RTree {
     return ptr;
   }
 
-  forEachBBox(cb: (ptr: Ptr32, bbox: BBoxTuple) => void) {
+  forEach(cb: (ptr: Ptr32, bbox: RTreePublicNode) => void) {
     const node = this.#node;
 
     function traverse(ptr: Ptr32) {
-      cb(ptr, node.getBBox(ptr));
+      cb(ptr, { bbox: node.getBBox(ptr), pointer: node.getData(ptr) });
       node.forEachChild(ptr, traverse);
     }
 
@@ -137,7 +136,7 @@ export class RTree {
     return newPtr;
   }
 
-  #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: Ptr32To16[]) {
+  #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: RTreePublicNode[]) {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
@@ -147,7 +146,7 @@ export class RTree {
     if (node.isLeaf(ptr)) {
       node.forEachChild(ptr, (childPtr) => {
         if (node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
-          results.push(childPtr);
+          results.push({ bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) });
         }
       });
 

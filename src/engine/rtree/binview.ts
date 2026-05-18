@@ -1,4 +1,4 @@
-import type { RtreeView } from "#engine/rtree/types";
+import type { RTreeView } from "#engine/rtree/types";
 
 export class BinView {
   static readonly BYTES_PER_ELEMENT: number = 0;
@@ -17,9 +17,9 @@ export class BinView {
 
   readonly BYTES_PER_ELEMENT: number;
 
-  protected readonly view: RtreeView;
+  protected readonly view: RTreeView;
 
-  constructor(view: RtreeView) {
+  constructor(view: RTreeView) {
     this.view = view;
     this.BYTES_PER_ELEMENT = (this.constructor as typeof BinView).BYTES_PER_ELEMENT;
   }
