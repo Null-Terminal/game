@@ -199,11 +199,6 @@ export abstract class GameObject {
         ctx.fillStyle = patterns[spriteIndex];
         ctx.fillRect(minX, minY, this.width, this.height);
 
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
-
-        ctx.strokeRect(minX, minY, this.width, this.height);
-
       } else {
         this.#width = spriteWidth * this.scale;
         this.#height = spriteHeight * this.scale;
