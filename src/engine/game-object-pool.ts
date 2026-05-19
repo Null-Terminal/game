@@ -1,12 +1,7 @@
 import type { GameObject } from "#engine/game-object";
-import type { GameObjectStore, PoolPointer } from "#engine/game-object-pool/types";
+import type { GameObjectStore, ConcreteGameObjectConstructor, PoolPointer } from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
-
-type ConcreteGameObjectConstructor<T extends typeof GameObject> = {
-  new (...args: any[]): InstanceType<T>;
-  get kind(): number;
-};
 
 export class GameObjectPool {
   readonly objects: Record<number, GameObjectStore> = {};
@@ -17,11 +12,11 @@ export class GameObjectPool {
   }
 
   add<T extends typeof GameObject, A extends ConstructorParameters<T>>(
-    GameObject: ConcreteGameObjectConstructor<T>,
+    GObject: ConcreteGameObjectConstructor<T>,
     game: A[0],
     opts: A[1]
   ): PoolPointer {
-    const kind = GameObject.kind;
+    const kind = GObject.kind;
 
     const init = kind in this.objects;
     const store = init ? this.objects[kind]! : { length: 0, buffer: [] };
@@ -36,7 +31,7 @@ export class GameObjectPool {
       buffer[length]!.create(game, opts);
 
     } else {
-      buffer.push(new GameObject(game, opts));
+      buffer.push(new GObject(game, opts));
     }
 
     return [kind, store.length++];
