@@ -1,7 +1,9 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import { type Game } from "#engine/game";
+import type { Game } from "#engine/game";
+import type { BBoxTuple } from "#engine/rtree";
+
 import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game-object/types";
 
 export * from "#engine/game-object/types";
@@ -59,13 +61,14 @@ export abstract class GameObject {
   });
 
   game!: Game;
-  options!: Required<GameObjectOptions>;
+  options!: GameObjectOptions;
 
-  x!: number;
-  y!: number;
+  x = 0;
+  y = 0;
+  bbox: BBoxTuple | null = null;
 
-  speed!: number;
-  scale!: number;
+  speed = 1;
+  scale = 1;
 
   get canvas() {
     return this.game.canvas;
@@ -102,20 +105,30 @@ export abstract class GameObject {
 
   create(game: Game, opts?: GameObjectOptions) {
     this.game = game;
+    this.options = { ...opts };
 
-    this.options = {
-      x: 0,
-      y: 0,
-      speed: 1,
-      scale: 1,
-      ...opts
-    };
+    if ("bbox" in this.options) {
+      this.bbox = this.options.bbox;
+      this.x = this.bbox[0];
+      this.y = this.bbox[1];
 
-    this.x = this.options.x;
-    this.y = this.options.y;
+    } else {
+      if ("x" in this.options) {
+        this.x = this.options.x;
+      }
 
-    this.speed = this.options.speed;
-    this.scale = this.options.scale;
+      if ("y" in this.options) {
+        this.y = this.options.y;
+      }
+    }
+
+    if ("speed" in this.options) {
+      this.speed = this.options.speed;
+    }
+
+    if ("scale" in this.options) {
+      this.scale = this.options.scale;
+    }
 
     this.init();
   }
@@ -137,7 +150,12 @@ export abstract class GameObject {
   }
 
   play(selectedAnimation: Animations[keyof Animations]) {
-    const [image, animation] = selectedAnimation;
+    const [image, animation, patterns = new Array(animation.length).fill(null)] = selectedAnimation;
+
+    // Добавляем кэш для текстур-шаблонов (CanvasPattern)
+    if (selectedAnimation.length === 2) {
+      selectedAnimation.push(patterns);
+    }
 
     let lastFrameTime = 0;
     let spriteIndex = 0;
@@ -151,20 +169,57 @@ export abstract class GameObject {
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
-      this.#width = sprite.width * this.scale;
-      this.#height = sprite.height * this.scale;
+      const spriteWidth = sprite.width;
+      const spriteHeight = sprite.height;
 
-      ctx.drawImage(
-        image,
-        sprite.x,
-        sprite.y,
-        sprite.width,
-        sprite.height,
-        this.x,
-        this.y,
-        this.#width,
-        this.#height,
-      );
+      if (this.bbox != null) {
+        if (patterns[spriteIndex] == null) {
+          const canvas = new OffscreenCanvas(spriteWidth, spriteHeight);
+
+          canvas.getContext("2d")!.drawImage(
+            image,
+            sprite.x,
+            sprite.y,
+            sprite.width,
+            sprite.height,
+            0,
+            0,
+            spriteWidth,
+            spriteHeight
+          );
+
+          patterns[spriteIndex] = ctx.createPattern(canvas, "repeat");
+        }
+
+        const [minX, minY, maxX, maxY] = this.bbox;
+
+        this.#width = (maxX - minX) * this.scale;
+        this.#height = (maxY - minY) * this.scale;
+
+        ctx.fillStyle = patterns[spriteIndex];
+        ctx.fillRect(minX, minY, this.width, this.height);
+
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+
+        ctx.strokeRect(minX, minY, this.width, this.height);
+
+      } else {
+        this.#width = spriteWidth * this.scale;
+        this.#height = spriteHeight * this.scale;
+
+        ctx.drawImage(
+          image,
+          sprite.x,
+          sprite.y,
+          sprite.width,
+          sprite.height,
+          this.x,
+          this.y,
+          this.#width,
+          this.#height
+        );
+      }
 
       const animationName = selectedAnimation.eventName!;
 
