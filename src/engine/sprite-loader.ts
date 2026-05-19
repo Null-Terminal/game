@@ -1,13 +1,14 @@
 const spriteCache = new Map<string, Promise<ImageBitmap>>();
 
 export interface LoadSpriteOptions {
+  removeBackground?: boolean;
   tolerance?: number;
 }
 
 export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
-  const { tolerance = 0 } = options ?? {};
+  const { removeBackground = false, tolerance = 0,  } = options ?? {};
 
-  const cacheKey = [url, tolerance].join("_");
+  const cacheKey = [url, removeBackground && tolerance].join("_");
 
   const fromCache = spriteCache.get(cacheKey);
 
@@ -28,7 +29,10 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0);
 
-      removeBackground(canvas, tolerance);
+      if (removeBackground) {
+        removeCanvasBackground(canvas, tolerance);
+      }
+
       resolve(createImageBitmap(canvas));
 
     } catch (err) {
@@ -45,7 +49,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
   return promise;
 }
 
-function removeBackground(canvas: OffscreenCanvas, tolerance = 30) {
+function removeCanvasBackground(canvas: OffscreenCanvas, tolerance = 30) {
   const ctx = canvas.getContext("2d")!;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
