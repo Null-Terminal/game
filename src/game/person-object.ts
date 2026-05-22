@@ -30,10 +30,22 @@ export class PersonObject extends MotionObject {
       Space: false
     };
 
+    const { canvas } = this;
+
     window.addEventListener("keydown", (e) => {
       const key = e.code;
 
-      if (e.code in keys) {
+      if (e.code === "Escape") {
+        e.preventDefault();
+
+        if (canvas.isPaused()) {
+          canvas.resume();
+
+        } else {
+          canvas.pause();
+        }
+
+      } else if (e.code in keys) {
         keys[key as keyof typeof keys] = true;
         e.preventDefault();
       }
@@ -50,7 +62,7 @@ export class PersonObject extends MotionObject {
 
     let lastTime = performance.now();
 
-    this.canvas.emitter.on(this.canvas.events.redraw, ([now]) => {
+    canvas.emitter.on(canvas.events.redraw, ([now]) => {
       const delta = Math.min(0.006, now - lastTime / 1000);
 
       lastTime = now;
