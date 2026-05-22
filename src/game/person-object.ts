@@ -81,9 +81,6 @@ export class PersonObject extends MotionObject {
         this.effects.flipX = false;
       }
 
-      // Гравитация
-      vy += GRAVITY * delta;
-
       const dy = vy * delta;
 
       // Запоминаем позицию до движения
@@ -92,11 +89,20 @@ export class PersonObject extends MotionObject {
       // Двигаем
       this.move(dx, dy);
 
+      // Врезались в потолок
       if (oldY + dy < this.y) {
         vy = 0;
       }
 
       isOnGround = dy > 0 && this.y === oldY;
+
+      if (isOnGround) {
+        vy = 0;
+
+      } else {
+        // Гравитация
+        vy += GRAVITY * delta;
+      }
     });
   }
 }
