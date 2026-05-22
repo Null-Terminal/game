@@ -4,7 +4,7 @@ import { EventEmitter, handler } from "#/event-emitter";
 import type { Game } from "#engine/game";
 import type { BBoxTuple } from "#engine/rtree";
 
-import type { Animations, AnimationEvents, GameObjectOptions } from "#engine/game-object/types";
+import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#engine/game-object/types";
 
 export * from "#engine/game-object/types";
 
@@ -61,14 +61,13 @@ export abstract class GameObject {
   });
 
   game!: Game;
+
   options!: GameObjectOptions;
+  effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
 
   x = 0;
   y = 0;
   bbox: BBoxTuple | null = null;
-
-  speed = 1;
-  scale = 1;
 
   get canvas() {
     return this.game.canvas;
@@ -122,14 +121,7 @@ export abstract class GameObject {
       }
     }
 
-    if ("speed" in this.options) {
-      this.speed = this.options.speed;
-    }
-
-    if ("scale" in this.options) {
-      this.scale = this.options.scale;
-    }
-
+    this.effects = { scale: 1, speed: 1, ...this.options.effects };
     this.init();
   }
 
@@ -162,15 +154,35 @@ export abstract class GameObject {
 
     this.#cancelRedrawHandler?.();
 
+    const { effects } = this;
     const { emitter, events } = this.canvas;
 
     let rendered = false;
 
+    // Для bbox жестко фиксируем геометрию
+    if (this.bbox != null) {
+      const [minX, minY, maxX, maxY] = this.bbox;
+      this.#width = maxX - minX;
+      this.#height = maxY - minY;
+
+    // Для объекта без bbox фиксируем ширину по самому широкому спрайту
+    } else {
+      let maxWidth = 0;
+
+      for (const sprite of animation) {
+        maxWidth = Math.max(maxWidth, sprite.width);
+      }
+
+      this.#width = maxWidth * effects.scale;
+    }
+
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
+      ctx.save();
+
       const sprite = animation.at(spriteIndex)!;
 
-      const spriteWidth = sprite.width;
-      const spriteHeight = sprite.height;
+      let spriteWidth = sprite.width;
+      let spriteHeight = sprite.height;
 
       if (this.bbox != null) {
         if (patterns[spriteIndex] == null) {
@@ -178,10 +190,12 @@ export abstract class GameObject {
 
           canvas.getContext("2d")!.drawImage(
             image,
+
             sprite.x,
             sprite.y,
             sprite.width,
             sprite.height,
+
             0,
             0,
             spriteWidth,
@@ -191,30 +205,46 @@ export abstract class GameObject {
           patterns[spriteIndex] = ctx.createPattern(canvas, "repeat");
         }
 
-        const [minX, minY, maxX, maxY] = this.bbox;
-
-        this.#width = (maxX - minX) * this.scale;
-        this.#height = (maxY - minY) * this.scale;
-
         ctx.fillStyle = patterns[spriteIndex];
-        ctx.fillRect(minX, minY, this.width, this.height);
+        ctx.fillRect(this.x, this.y, this.width, this.height);
 
       } else {
-        this.#width = spriteWidth * this.scale;
-        this.#height = spriteHeight * this.scale;
+        spriteWidth *= effects.scale;
+        spriteHeight *= effects.scale;
+
+        // Высота спрайта влияет на геометрию
+        this.y += this.#height - spriteHeight;
+        this.#height = spriteHeight;
+
+        let x = this.x;
+        let y = this.y;
+
+        ctx.scale(effects.flipX ? -1 : 1, effects.flipY ? -1 : 1);
+
+        if (effects.flipX) {
+          x = -x - spriteWidth;
+        }
+
+        if (effects.flipY) {
+          y = -y - spriteHeight;
+        }
 
         ctx.drawImage(
           image,
+
           sprite.x,
           sprite.y,
           sprite.width,
           sprite.height,
-          this.x,
-          this.y,
-          this.#width,
-          this.#height
+
+          x,
+          y,
+          spriteWidth,
+          spriteHeight
         );
       }
+
+      ctx.restore();
 
       const animationName = selectedAnimation.eventName!;
 
@@ -222,7 +252,7 @@ export abstract class GameObject {
         this.animation.emit(this.animation.events[animationName]!, sprite.spriteId);
       }
 
-      if (!this.isPaused() && (now - lastFrameTime >= sprite.animationDelay / this.speed)) {
+      if (!this.isPaused() && (now - lastFrameTime >= sprite.animationDelay / effects.speed)) {
         spriteIndex = (spriteIndex + 1) % animation.length;
         lastFrameTime = now;
       }
