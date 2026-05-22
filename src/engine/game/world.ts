@@ -24,16 +24,18 @@ export class World {
     for (const elem of opts.staticWorld) {
       const opts = elem.object[1];
 
-      if ("scale" in opts) {
+      if (opts.effects?.scale != null) {
+        const { scale } = opts.effects;
+
         for (let i = 0; i < elem.bbox.length; i++) {
-          elem.bbox[i]! *= opts.scale;
+          elem.bbox[i]! *= scale;
         }
       }
 
       const ptr = this.#objectPool.add(elem.object[0], game, {
         bbox: elem.bbox,
         ...elem.object[1]
-      });
+       });
 
       this.#staticWorld.insert(...ptr, ...elem.bbox);
     }
