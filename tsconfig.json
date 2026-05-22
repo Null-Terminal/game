@@ -6,6 +6,7 @@
       "#decorators/*": ["./src/decorators/*"],
       "#sprite-editor/*": ["./src/sprite-editor/*"],
       "#engine/*": ["./src/engine/*"],
+      "#game/*": ["./src/game/*"],
       "#/*": ["./src/*"]
     },
 
