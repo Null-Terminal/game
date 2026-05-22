@@ -162,18 +162,22 @@ export abstract class GameObject {
     // Для bbox жестко фиксируем геометрию
     if (this.bbox != null) {
       const [minX, minY, maxX, maxY] = this.bbox;
+
       this.#width = maxX - minX;
       this.#height = maxY - minY;
 
-    // Для объекта без bbox фиксируем ширину по самому широкому спрайту
+    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     } else {
       let maxWidth = 0;
+      let maxHeight = 0;
 
       for (const sprite of animation) {
         maxWidth = Math.max(maxWidth, sprite.width);
+        maxHeight = Math.max(maxHeight, sprite.height);
       }
 
       this.#width = maxWidth * effects.scale;
+      this.#height = maxHeight * effects.scale;
     }
 
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
@@ -211,10 +215,6 @@ export abstract class GameObject {
       } else {
         spriteWidth *= effects.scale;
         spriteHeight *= effects.scale;
-
-        // Высота спрайта влияет на геометрию
-        this.y += this.#height - spriteHeight;
-        this.#height = spriteHeight;
 
         let x = this.x;
         let y = this.y;
