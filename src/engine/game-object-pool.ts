@@ -11,6 +11,11 @@ export class GameObjectPool {
     return store != null && index < store.length;
   }
 
+  get(kind: number, index: number): GameObject | undefined {
+    const store = this.objects[kind];
+    return store?.buffer[index];
+  }
+
   add<T extends typeof GameObject, A extends ConstructorParameters<T>>(
     GObject: ConcreteGameObjectConstructor<T>,
     game: A[0],
