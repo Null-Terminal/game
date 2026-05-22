@@ -8,16 +8,21 @@ export type Animations = Record<string, Animation & {eventName?: string}>;
 
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
+export interface Effects {
+  scale?: number;
+  speed?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+}
+
 export type GameObjectOptions =
   {
     x?: number;
     y?: number;
-    speed?: number;
-    scale?: number;
+    effects?: Effects;
   } |
 
   {
     bbox?: BBoxTuple;
-    speed?: number;
-    scale?: number;
+    effects?: Effects;
   };
