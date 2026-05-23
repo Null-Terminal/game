@@ -1,8 +1,9 @@
 import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
-import type { RTreePublicNode, RTreeView, Ptr32 } from "#engine/rtree/types";
+import type { RTreePublicNode, RTreePred, RTreeView, Ptr32 } from "#engine/rtree/types";
 
+export type { RTreePublicNode, RTreePred };
 export type { BBoxTuple } from "#engine/rtree/bbox";
 
 export const header = tuple("header", [
@@ -82,10 +83,26 @@ export class RTree {
     this.#root = this.#createEmptyNode();
   }
 
-  search(minX: number, minY: number, maxX: number, maxY: number): RTreePublicNode[] {
+  search(
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    pred?: RTreePred
+  ): RTreePublicNode[] {
     const results: RTreePublicNode[] = [];
-    this.#searchNode(this.#root, minX, minY, maxX, maxY, results);
+    this.#searchNode(this.#root, minX, minY, maxX, maxY, results, pred);
     return results;
+  }
+
+  searchFirst(
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    pred?: RTreePred
+  ): RTreePublicNode | null {
+    return this.#searchFirstNode(this.#root, minX, minY, maxX, maxY, pred);
   }
 
   insert(
@@ -147,7 +164,15 @@ export class RTree {
     return newPtr;
   }
 
-  #searchNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, results: RTreePublicNode[]) {
+  #searchNode(
+    ptr: Ptr32,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    results: RTreePublicNode[],
+    pred?: RTreePred
+  ) {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
@@ -157,15 +182,50 @@ export class RTree {
     if (node.isLeaf(ptr)) {
       node.forEachChild(ptr, (childPtr) => {
         if (node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
-          results.push({ bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) });
+          const childNode = { bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) };
+
+          if (pred == null || pred(childNode)) {
+            results.push(childNode);
+          }
         }
       });
 
     } else {
       node.forEachChild(ptr, (childPtr) => {
-        this.#searchNode(childPtr, minX, minY, maxX, maxY, results);
+        this.#searchNode(childPtr, minX, minY, maxX, maxY, results, pred);
       });
     }
+  }
+
+  #searchFirstNode(
+    ptr: Ptr32,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    pred?: RTreePred
+  ): RTreePublicNode | null  {
+    const node = this.#node;
+
+    if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
+      return null;
+    }
+
+    if (node.isLeaf(ptr)) {
+      return node.firstChildResult(ptr, (childPtr) => {
+        if (node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
+          const childNode = { bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) };
+
+          if (pred == null || pred(childNode)) {
+            return childNode;
+          }
+        }
+
+        return null;
+      });
+    }
+
+    return node.firstChildResult(ptr, (childPtr) => this.#searchFirstNode(childPtr, minX, minY, maxX, maxY, pred));
   }
 
   #chooseLeaf(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
