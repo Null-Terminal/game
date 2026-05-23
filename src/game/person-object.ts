@@ -63,7 +63,7 @@ export class PersonObject extends MotionObject {
     let lastTime = performance.now();
 
     canvas.emitter.on(canvas.events.redraw, ([now]) => {
-      const delta = Math.min(0.006, now - lastTime / 1000);
+      const delta = Math.min(0.025, (now - lastTime) / 1000);
 
       lastTime = now;
 
