@@ -7,6 +7,10 @@ export abstract class MotionObject extends GameObject {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
 
+  findCollisions(x = this.x, y = this.y): GameObject[] {
+    return this.world.findCollisions(x, y, x + this.width, y + this.height);
+  }
+
   move(dx: number, dy: number) {
     if (dx !== 0) {
       const newX = this.x + dx;
