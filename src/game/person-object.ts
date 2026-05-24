@@ -26,7 +26,7 @@ export class PersonObject extends MotionObject {
     const JUMP_FORCE = -1000;
     const GRAVITY = 2500;
 
-     let vy = 0;
+    let vy = 0;
     let isOnGround = true;
 
     const keys = {
