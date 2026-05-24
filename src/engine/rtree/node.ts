@@ -9,7 +9,7 @@ import type { RTreeView, Ptr32, Ptr32To16 } from "#engine/rtree/types";
 
 export type { BBoxTuple };
 
-export const node = tuple("RTreeNode", [
+export const rTreeNode = tuple("RTreeNode", [
   bbox,
   alias("parent", usize2),
   alias("level", u8),
@@ -18,12 +18,12 @@ export const node = tuple("RTreeNode", [
   data,
 ]);
 
-const { at, offsets8, offsets16, offsets32 } = node;
+const { at, offsets8, offsets16, offsets32 } = rTreeNode;
 
 const MAX_U8 = 2 ** 8 - 1;
 
 export class RTreeNode extends BinView {
-  static readonly Scheme = node;
+  static readonly Scheme = rTreeNode;
   static override readonly BYTES_PER_ELEMENT: 64 = this.Scheme.size;
 
   readonly #bbox;
@@ -266,7 +266,7 @@ export class RTreeNode extends BinView {
 
   #clearMemory(ptr: Ptr32) {
     const start = ptr * 4;
-    const end = start + node.size;
+    const end = start + rTreeNode.size;
 
     for (let i = start; i < end; i++) {
       this.view.uints8[i] = 0;
