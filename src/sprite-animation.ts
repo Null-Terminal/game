@@ -41,47 +41,91 @@ export class SpriteAnimation {
   }
 
   static mergeSprites(sprites: Sprite[]): MergedSprite {
-    // Вычисляем общую ширину и максимальную высоту
-    let totalWidth = 0;
-    let maxHeight = 0;
+    // Максимальная ширина конечного спрайта
+    const MAX_WIDTH = 2048;
 
-    for (const { canvas } of sprites) {
-      totalWidth += canvas.width;
-      maxHeight = Math.max(maxHeight, canvas.height);
+    // Подготавливаем данные спрайтов с их размерами
+    const items = sprites.map((sprite, index) => ({
+      sprite,
+      width: sprite.canvas.width,
+      height: sprite.canvas.height,
+      index
+    }));
+
+    items.sort((a, b) => b.height - a.height);
+
+    interface Row {
+      x: number;
+      y: number;
+      height: number;
+      items: typeof items;
     }
 
-    // Создаем результирующий canvas
+    const rows: Row[] = [];
+
+    let currentRow = { x: 0, y: 0, height: 0, items: [] as typeof items };
+
+    for (const item of items) {
+      // Если элемент не помещается в текущую строку - начинаем новую
+      if (currentRow.x + item.width > MAX_WIDTH && currentRow.items.length > 0) {
+        rows.push(currentRow);
+
+        const y = currentRow.y + currentRow.height;
+        currentRow = { x: 0, y, height: 0, items: [] };
+      }
+
+      currentRow.items.push(item);
+      currentRow.x += item.width;
+      currentRow.height = Math.max(currentRow.height, item.height);
+    }
+
+    if (currentRow.items.length > 0) {
+      rows.push(currentRow);
+    }
+
+    // Вычисляем итоговые размеры атласа
+    const totalHeight = rows.reduce((sum, row) => sum + row.height, 0);
+    const totalWidth = Math.min(MAX_WIDTH, Math.max(...rows.map(r => r.x)));
+
+    // Создаём результирующий canvas
     const resultCanvas = document.createElement("canvas");
     const resultCtx = resultCanvas.getContext("2d")!;
 
     resultCanvas.width = totalWidth;
-    resultCanvas.height = maxHeight;
+    resultCanvas.height = totalHeight;
 
     const spriteDescriptors = new Array(sprites.length).fill(undefined);
 
-    let currentX = 0;
+    // Рисуем спрайты
+    let currentY = 0;
 
-    for (let i = 0; i < sprites.length; i++) {
-      const sprite = sprites[i]!;
+    for (const row of rows) {
+      let currentX = 0;
 
-      // Создаем временный canvas, чтобы отрисовать туда изображение без сетки
-      const image = sprite.canvas.cloneNode() as HTMLCanvasElement;
-      sprite.draw(image.getContext("2d")!);
-      resultCtx.drawImage(image, currentX, 0);
+      for (const item of row.items) {
+        const { width, height } = item;
 
-      spriteDescriptors[i] = {
-        x: currentX,
-        y: 0,
-        width: image.width,
-        height: image.height,
-        animationDelay: sprite.animationDelay,
-        spriteId: sprite.spriteId
-      };
+        // Создаём временный canvas с чистым спрайтом
+        const image = new OffscreenCanvas(width, height);
+        item.sprite.draw(image.getContext("2d")!);
+        resultCtx.drawImage(image, currentX, currentY);
 
-      currentX += sprite.canvas.width;
+        spriteDescriptors[item.index] = {
+          x: currentX,
+          y: currentY,
+          width,
+          height,
+          animationDelay: item.sprite.animationDelay,
+          spriteId: item.sprite.spriteId
+        };
+
+        currentX += width;
+      }
+
+      currentY += row.height;
     }
 
-    return { canvas: resultCanvas, animation: new SpriteAnimation(spriteDescriptors) } as MergedSprite;
+    return { canvas: resultCanvas, animation: new SpriteAnimation(spriteDescriptors) };
   }
 
   get length(): number {
