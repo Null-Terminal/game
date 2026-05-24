@@ -123,7 +123,7 @@ export class PersonObject extends MotionObject {
       }
 
       if (isOnGround) {
-        vy = 0;
+        vy = GRAVITY;
 
       } else {
         // Гравитация
