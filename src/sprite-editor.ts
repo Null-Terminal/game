@@ -41,7 +41,7 @@ export class SpriteEditor extends HTMLElement {
     const elem = this.settings.elements.namedItem(name);
 
     if (elem == null) {
-      throw new Error("Failed to find settings element");
+      throw new Error(`${this.constructor.name}: Failed to find settings element`);
     }
 
     return elem as T;
@@ -55,7 +55,7 @@ export class SpriteEditor extends HTMLElement {
 
   #render() {
     if (this.shadowRoot == null) {
-      throw new Error("ShadowRoot element not found");
+      throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;

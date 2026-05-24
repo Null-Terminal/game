@@ -26,7 +26,7 @@ export abstract class GameObject {
 
     if (kinds.has(hash)) {
       throw new Error(
-        `Kind collision: "${name}" and "${kinds.get(hash)}" both have kind ${hash}`
+        `${this.constructor.name}: Kind collision: "${name}" and "${kinds.get(hash)}" both have kind ${hash}`
       );
     }
 

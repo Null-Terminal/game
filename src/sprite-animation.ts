@@ -11,13 +11,14 @@ export class SpriteAnimation {
       try {
         data = this.fromTexturePacker(data);
 
-      } catch {
-        throw new TypeError("TexturePacker: failed to parse - invalid format or malformed JSON");
+      } catch (cause) {
+        throw new TypeError(`${this.constructor.name}: TexturePacker parse failed`, { cause });
       }
     }
 
     if (typeof data !== "object" || !("sprites" in data) || !Array.isArray(data.sprites)) {
-      throw new TypeError(`Expected object with "sprites" array, got ${typeof data}${Array.isArray(data) ? " (array)" : ""}`);
+      const got = data === null ? "null" : typeof data;
+      throw new TypeError(`${this.constructor.name}: expected object with "sprites" array, got ${got}`);
     }
 
     return new SpriteAnimation(data.sprites);

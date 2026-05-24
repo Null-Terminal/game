@@ -52,7 +52,7 @@ export class AnimationPreview extends HTMLElement {
     }
 
     if (this.#editor == null) {
-      throw new Error("Editor is not available");
+      throw new Error(`${this.constructor.name}: Editor is not available`);
     }
 
     this.#render();
@@ -168,7 +168,7 @@ export class AnimationPreview extends HTMLElement {
 
   #render() {
     if (this.shadowRoot == null) {
-      throw new Error("ShadowRoot element not found");
+      throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;

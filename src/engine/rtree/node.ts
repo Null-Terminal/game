@@ -89,7 +89,7 @@ export class RTreeNode extends BinView {
 
   setLevel(ptr: Ptr32, level: number) {
     if (level > MAX_U8) {
-      throw new Error(`Level overflow: ${level} >= ${MAX_U8} (max 8-bit value)`);
+      throw new Error(`${this.constructor.name}: Level overflow: ${level} >= ${MAX_U8} (max 8-bit value)`);
     }
 
     this.view.uints8[ptr * 4 + offsets8.level]! = level;
@@ -101,7 +101,7 @@ export class RTreeNode extends BinView {
 
   setSize(ptr: Ptr32, size: number) {
     if (size > at.children.length) {
-      throw new Error(`Children array overflow: size=${size}, max=${at.children.length}`);
+      throw new Error(`${this.constructor.name}: Children array overflow: size=${size}, max=${at.children.length}`);
     }
 
     this.view.uints8[ptr * 4 + offsets8.size]! = size;
@@ -109,7 +109,7 @@ export class RTreeNode extends BinView {
 
   getChild(ptr: Ptr32, index: number): Ptr32To16 {
     if (index >= this.getSize(ptr)) {
-      throw new Error(`Child index ${index} out of bounds: size=${this.getSize(ptr)}`);
+      throw new Error(`${this.constructor.name}: Child index ${index} out of bounds: size=${this.getSize(ptr)}`);
     }
 
     return this.view.unpackPtr(this.view.uints16[ptr * 2 + offsets16.children + index]!);

@@ -290,7 +290,7 @@ export class Sprite extends HTMLElement {
 
   #render() {
     if (this.shadowRoot == null) {
-      throw new Error("ShadowRoot element not found");
+      throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;

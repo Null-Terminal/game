@@ -54,7 +54,7 @@ export class RTree {
     const ptr = this.size * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET;
 
     if (ptr >= this.#view.uints32.length - 1) {
-      throw new Error(`Out of memory - maximum nodes reached (${this.size})`);
+      throw new Error(`${this.constructor.name}: Out of memory - maximum nodes reached (${this.size})`);
     }
 
     return ptr;
@@ -62,7 +62,7 @@ export class RTree {
 
   constructor(maxEntries = 9, buffer?: ArrayBufferLike) {
     if (maxEntries > 16) {
-      throw new Error(`maxEntries cannot exceed 16 (got ${maxEntries})`);
+      throw new Error(`${this.constructor.name}: maxEntries cannot exceed 16 (got ${maxEntries})`);
     }
 
     this.maxEntries = Math.max(4, maxEntries);
@@ -266,7 +266,7 @@ export class RTree {
     });
 
     if (bestChildPtr === 0) {
-      throw new Error("No child found in internal node");
+      throw new Error(`${this.constructor.name}: No child found in internal node`);
     }
 
     return this.#chooseLeaf(bestChildPtr, minX, minY, maxX, maxY);
