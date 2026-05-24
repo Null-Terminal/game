@@ -7,6 +7,8 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
   showFPS: true,
 });
 
-const game = new Game(canvas, { staticWorld });
+const game = new Game(canvas, { staticWorld } );
 
-new PersonObject(game, { effects: { scale: 0.3 } });
+for (let i = 0; i < 1; i++) {
+  new PersonObject(game, { effects: { scale: 0.2, speed: 2  } });
+}

@@ -5,11 +5,11 @@ import type { WorldObjects } from "#engine/game/world";
 export const staticWorld: WorldObjects = [
   { object: [WallObject, { effects: { scale: 2 } }], bbox: [0, 250, 1500, 300] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 85, 270, 90] },
+  { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 50, 250, 60] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [180, 150, 280, 170] },
+  { object: [WallObject, { effects: { scale: 2 } }], bbox: [180, 140, 280, 170] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [350, 140, 450, 150] },
+  { object: [WallObject, { effects: { scale: 2 } }], bbox: [350, 120, 450, 150] },
 
   { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 200, 180, 210] },
 

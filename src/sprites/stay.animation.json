@@ -1,0 +1,28 @@
+{
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 475,
+      "height": 720,
+      "animationDelay": 300,
+      "spriteId": ""
+    },
+    {
+      "x": 475,
+      "y": 0,
+      "width": 475,
+      "height": 720,
+      "animationDelay": 300,
+      "spriteId": ""
+    },
+    {
+      "x": 950,
+      "y": 0,
+      "width": 475,
+      "height": 720,
+      "animationDelay": 300,
+      "spriteId": ""
+    }
+  ]
+}

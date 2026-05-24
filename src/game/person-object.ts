@@ -2,26 +2,31 @@ import { MotionObject, type Animations } from "#engine/motion-object";
 import { loadSprite } from "#engine/sprite-loader";
 import { SpriteAnimation } from "#/sprite-animation";
 
-import runAnimation from "#/sprites/run.animation.json";
-import run from "#/sprites/run.png";
+import run from "#/sprites/run.webp";
 
-const image = await loadSprite(run, { removeBackground: true });
+import runAnimation from "#/sprites/run.animation.json";
+import stayAnimation from "#/sprites/stay.animation.json";
+import jumpAnimation from "#/sprites/jump.animation.json";
+
+const runImage = await loadSprite(run, { removeBackground: true });
 
 export class PersonObject extends MotionObject {
   static override animations = {
-    run: [image, new SpriteAnimation(runAnimation.sprites)],
+    stay: [runImage, new SpriteAnimation(stayAnimation.sprites)],
+    run: [runImage, new SpriteAnimation(runAnimation.sprites)],
+    jump: [runImage, new SpriteAnimation(jumpAnimation.sprites)],
   } satisfies Animations;
 
   declare readonly Animations: (typeof PersonObject)["animations"];
 
   init() {
-    this.play(this.animations.run);
+    this.play(this.animations.stay);
 
     const SPEED = 300;
-    const JUMP_FORCE = -800;
+    const JUMP_FORCE = -1000;
     const GRAVITY = 2500;
 
-    let vy = 0;
+     let vy = 0;
     let isOnGround = true;
 
     const keys = {
@@ -82,7 +87,7 @@ export class PersonObject extends MotionObject {
       if (keys.Space && isOnGround) {
         vy = JUMP_FORCE;
         isOnGround = false;
-        keys.Space = false;
+        this.ensurePlaying(this.animations.jump);
       }
 
       if (keys.ArrowLeft) {
@@ -107,6 +112,15 @@ export class PersonObject extends MotionObject {
       }
 
       isOnGround = dy > 0 && this.y === oldY;
+
+      if (isOnGround) {
+        if (keys.ArrowLeft || keys.ArrowRight) {
+          this.ensurePlaying(this.animations.run);
+
+        } else {
+          this.ensurePlaying(this.animations.stay);
+        }
+      }
 
       if (isOnGround) {
         vy = 0;
