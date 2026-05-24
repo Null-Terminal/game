@@ -94,6 +94,7 @@ export abstract class GameObject {
   #height = 0;
 
   #paused = false;
+  #activeAnimation: Animations[keyof Animations] | null = null;
   #cancelRedrawHandler: Function | null = null;
 
   constructor(game: Game, opts?: GameObjectOptions) {
@@ -141,6 +142,12 @@ export abstract class GameObject {
     this.#paused = false;
   }
 
+  ensurePlaying(selectedAnimation: Animations[keyof Animations]) {
+    if (this.#activeAnimation !== selectedAnimation) {
+      this.play(selectedAnimation);
+    }
+  }
+
   play(selectedAnimation: Animations[keyof Animations]) {
     const [image, animation, patterns = new Array(animation.length).fill(null)] = selectedAnimation;
 
@@ -153,6 +160,7 @@ export abstract class GameObject {
     let spriteIndex = 0;
 
     this.#cancelRedrawHandler?.();
+    this.#activeAnimation = selectedAnimation;
 
     const { effects } = this;
     const { emitter, events } = this.canvas;
