@@ -61,6 +61,10 @@ export class RTree {
   }
 
   constructor(maxEntries = 9, buffer?: ArrayBufferLike) {
+    if (maxEntries > 16) {
+      throw new Error(`maxEntries cannot exceed 16 (got ${maxEntries})`);
+    }
+
     this.maxEntries = Math.max(4, maxEntries);
     this.minEntries = Math.max(2, Math.ceil(maxEntries * 0.4));
 
