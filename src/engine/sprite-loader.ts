@@ -1,12 +1,12 @@
 const spriteCache = new Map<string, Promise<ImageBitmap>>();
 
 export interface LoadSpriteOptions {
-  removeBackground?: boolean;
+  removeBackground?: boolean | string;
   tolerance?: number;
 }
 
 export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
-  const { removeBackground = false, tolerance = 0,  } = options ?? {};
+  const { removeBackground = false, tolerance = 15 } = options ?? {};
 
   const cacheKey = [url, removeBackground && tolerance].join("_");
 
@@ -30,7 +30,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
       ctx.drawImage(img, 0, 0);
 
       if (removeBackground) {
-        removeCanvasBackground(canvas, tolerance);
+        removeCanvasBackground(canvas, removeBackground, tolerance);
       }
 
       resolve(createImageBitmap(canvas));
@@ -49,7 +49,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
   return promise;
 }
 
-function removeCanvasBackground(canvas: OffscreenCanvas, tolerance = 30) {
+function removeCanvasBackground(canvas: OffscreenCanvas, color: string | boolean, tolerance: number) {
   const ctx = canvas.getContext("2d")!;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -60,22 +60,23 @@ function removeCanvasBackground(canvas: OffscreenCanvas, tolerance = 30) {
   }
 
   // Определяем цвет фона из левого верхнего угла
-  const targetColor = {
-    r: data[0]!,
-    g: data[1]!,
-    b: data[2]!,
-    alpha: data[3]!,
-  };
+  let targetColor = new Uint8Array(data.buffer, 0, 4);
 
-  if (targetColor.alpha === 0) {
+  // Либо цвет для удаления задан явно
+  if (typeof color === "string") {
+    targetColor = new Uint8Array(4).fill(255);
+    targetColor.setFromHex(color.startsWith("#") ? color.slice(1) : color);
+  }
+
+  if (targetColor[3] === 0) {
     return;
   }
 
   // Заливка фона
   for (let i = 0; i < data.length; i += 4) {
-    const diffR = Math.abs(data[i]! - targetColor.r);
-    const diffG = Math.abs(data[i + 1]! - targetColor.g);
-    const diffB = Math.abs(data[i + 2]! - targetColor.b);
+    const diffR = Math.abs(data[i]! - targetColor[0]!);
+    const diffG = Math.abs(data[i + 1]! - targetColor[1]!);
+    const diffB = Math.abs(data[i + 2]! - targetColor[2]!);
 
     if (diffR <= tolerance && diffG <= tolerance && diffB <= tolerance) {
       data[i + 3] = 0;

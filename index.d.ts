@@ -1,4 +1,5 @@
 interface Uint8Array {
+  setFromHex(hex: string): { read: number; written: number };
   toBase64(options?: { alphabet?: "base64" | "base64url"; omitPadding?: boolean }): string;
   toHex(): string;
 }
