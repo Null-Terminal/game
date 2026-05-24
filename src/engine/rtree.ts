@@ -8,7 +8,7 @@ export type { BBoxTuple } from "#engine/rtree/bbox";
 
 export const header = tuple("header", [
   alias("size", usize2),
-  alias("reserved", usize2),
+  alias("_", usize2),
 ]);
 
 const BLOCKS32_PER_ELEMENT = RTreeNode.BYTES_PER_ELEMENT / 4;
