@@ -7,7 +7,7 @@ export interface Tuple<
   Elems extends BinType[] = [],
   Alias extends string = Name
 > extends BinType<Name, Size<Elems>, Alias> {
-  readonly at: Aliases<Elems> & { [K in keyof Elems]?: IndexedBinType<Elems[K]> };
+  readonly at: Aliases<Elems> & { [K in keyof Elems]: IndexedBinType<Elems[K]> };
   readonly sizes: SizesOrOffsets<Elems>;
   readonly offsets8: SizesOrOffsets<Elems>;
   readonly offsets16: SizesOrOffsets<Elems>;
