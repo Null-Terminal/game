@@ -1,17 +1,43 @@
 import type { Sprite } from "#sprite-editor/sprite";
-import type { MergedSprite, SpriteDescriptor } from "#/sprite-animation/types";
+import type { MergedSprite, SpriteDescriptor, TexturePacker } from "#/sprite-animation/types";
 
 export type * from "#/sprite-animation/types";
 
 export class SpriteAnimation {
   static fromJSON(json: string): SpriteAnimation {
-    const data = JSON.parse(json);
+    let data = JSON.parse(json);
+
+    if ("frames" in data) {
+      try {
+        data = this.fromTexturePacker(data);
+
+      } catch {
+        throw new TypeError("TexturePacker: failed to parse - invalid format or malformed JSON");
+      }
+    }
 
     if (typeof data !== "object" || !("sprites" in data) || !Array.isArray(data.sprites)) {
-      throw new TypeError("Invalid data type");
+      throw new TypeError(`Expected object with "sprites" array, got ${typeof data}${Array.isArray(data) ? " (array)" : ""}`);
     }
 
     return new SpriteAnimation(data.sprites);
+  }
+
+  static fromTexturePacker(data: TexturePacker): { sprites: SpriteDescriptor[] } {
+    const sprites: SpriteDescriptor[] = [];
+
+    for (const { frame, duration } of Object.values(data.frames)) {
+      sprites.push({
+        x: frame.x,
+        y: frame.y,
+        width: frame.w,
+        height: frame.h,
+        animationDelay: duration,
+        spriteId: ""
+      });
+    }
+
+    return { sprites };
   }
 
   static mergeSprites(sprites: Sprite[]): MergedSprite {

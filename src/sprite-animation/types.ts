@@ -9,6 +9,19 @@ export interface SpriteDescriptor {
   spriteId: string;
 }
 
+export interface TexturePacker {
+  frames: Record<string, {
+    frame: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
+
+    duration: number;
+  }>;
+}
+
 export interface MergedSprite {
   canvas: HTMLCanvasElement;
   animation: SpriteAnimation;
