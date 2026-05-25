@@ -52,7 +52,7 @@ export class AnimationPreview extends HTMLElement {
     }
 
     if (this.#editor == null) {
-      throw new Error("Editor is not available");
+      throw new Error(`${this.constructor.name}: Editor is not available`);
     }
 
     this.#render();
@@ -106,7 +106,7 @@ export class AnimationPreview extends HTMLElement {
     const sprite = animation.at(spriteIndex);
 
     if (sprite != null) {
-      this.#player.height = canvas.height;
+      this.#player.height = sprite.height;
       this.#player.width = sprite.width;
 
       this.#editor.focusSprite(spriteIndex, { preventScroll: true });
@@ -120,7 +120,7 @@ export class AnimationPreview extends HTMLElement {
         sprite.width,
         sprite.height,
         0,
-        canvas.height - sprite.height,
+        0,
         sprite.width,
         sprite.height
       );
@@ -168,7 +168,7 @@ export class AnimationPreview extends HTMLElement {
 
   #render() {
     if (this.shadowRoot == null) {
-      throw new Error("ShadowRoot element not found");
+      throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;

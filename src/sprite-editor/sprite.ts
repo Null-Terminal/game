@@ -3,7 +3,7 @@ import { loadImage } from "#/file-loader";
 
 import styles from "#sprite-editor/sprite/styles.css?raw";
 import template from "#sprite-editor/sprite/template.html?raw";
-import type { SpriteOptions } from "#sprite-editor/sprite/types";
+import type { SpriteOptions, Context2D } from "#sprite-editor/sprite/types";
 
 import { SpriteHistory } from "#sprite-editor/sprite/history";
 import { SpriteResizer } from "#sprite-editor/sprite/resizer";
@@ -234,12 +234,12 @@ export class Sprite extends HTMLElement {
     this.height = height;
   }
 
-  redraw(target = this.ctx) {
+  redraw(target: Context2D = this.ctx) {
     cancelAnimationFrame(this.#drawTask);
     this.#drawTask = requestAnimationFrame(() => this.draw(target));
   }
 
-  draw(target = this.ctx) {
+  draw(target: Context2D = this.ctx) {
     target.fillStyle = this.options.backgroundColor;
     target.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -290,7 +290,7 @@ export class Sprite extends HTMLElement {
 
   #render() {
     if (this.shadowRoot == null) {
-      throw new Error("ShadowRoot element not found");
+      throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
     this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
