@@ -103,6 +103,11 @@ export class ActionHandlers extends Handlers<Sprite> {
     this.parent.history.save();
   }
 
+  trimSize() {
+    this.parent.trimSize();
+    this.parent.history.save();
+  }
+
   protected initHandlers() {
     this.parent.controls.addEventListener("click", this.onAction);
     this.parent.controls.addEventListener("input", this.onAction, { capture: true });
