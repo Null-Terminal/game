@@ -29,6 +29,11 @@ export class ActionHandlers extends Handlers<Sprite> {
     });
   }
 
+  trimSize() {
+    this.parent.trimSize();
+    this.parent.history.save();
+  }
+
   copyLeftSize() {
     const currentSprite = this.parent;
 
@@ -100,11 +105,6 @@ export class ActionHandlers extends Handlers<Sprite> {
 
   setAnimationDelay(e: Event) {
     this.parent.animationDelay = parseInt((e.target as HTMLInputElement).value, 10);
-    this.parent.history.save();
-  }
-
-  trimSize() {
-    this.parent.trimSize();
     this.parent.history.save();
   }
 
