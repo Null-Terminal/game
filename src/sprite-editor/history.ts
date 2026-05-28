@@ -89,7 +89,7 @@ export class EditorHistory {
       }
 
       if (actions.size > 0) {
-        this.#pushState({
+        this.pushState({
           undo() {
             mute = true;
 
@@ -126,14 +126,14 @@ export class EditorHistory {
     this.#gridObserver.observe(grid, { childList: true });
   }
 
-  readonly #pushState = (state: Command) => {
+  readonly pushState = (state: Command) => {
     this.#history = this.#history.slice(0, this.#historyIndex + 1);
     this.#history.push(state);
     this.#historyIndex++;
   };
 
   readonly #onStateChange = (e: Event) => {
-    this.#pushState((e as StateEvent).detail);
+    this.pushState((e as StateEvent).detail);
   };
 
   readonly #onKeyboardUndoRedo = (e: KeyboardEvent) => {
