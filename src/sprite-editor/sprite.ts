@@ -229,9 +229,12 @@ export class Sprite extends HTMLElement {
     });
   }
 
-  resize(width: number, height: number) {
-    this.width = width;
-    this.height = height;
+  resize(newWidth: number, newHeight: number) {
+    const { width, height } = this;
+    this.x -= Math.floor((width - newWidth) / 2);
+    this.y -= Math.floor((height - newHeight) / 2);
+    this.width = newWidth;
+    this.height = newHeight;
   }
 
   redraw(target: Context2D = this.ctx) {
