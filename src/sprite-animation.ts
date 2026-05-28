@@ -33,7 +33,7 @@ export class SpriteAnimation {
         y: frame.y,
         width: frame.w,
         height: frame.h,
-        animationDelay: duration,
+        duration,
         spriteId: ""
       });
     }
@@ -116,7 +116,7 @@ export class SpriteAnimation {
           y: currentY,
           width,
           height,
-          animationDelay: item.sprite.animationDelay,
+          duration: item.sprite.duration,
           spriteId: item.sprite.spriteId
         };
 

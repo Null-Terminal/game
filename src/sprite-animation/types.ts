@@ -5,7 +5,7 @@ export interface SpriteDescriptor {
   y: number;
   width: number;
   height: number;
-  animationDelay: number;
+  duration: number;
   spriteId: string;
 }
 

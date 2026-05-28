@@ -260,7 +260,7 @@ export abstract class GameObject {
         this.animation.emit(this.animation.events[animationName]!, sprite.spriteId);
       }
 
-      if (!this.isPaused() && (now - lastFrameTime >= sprite.animationDelay / effects.speed)) {
+      if (!this.isPaused() && (now - lastFrameTime >= sprite.duration / effects.speed)) {
         spriteIndex = (spriteIndex + 1) % animation.length;
         lastFrameTime = now;
       }

@@ -5,7 +5,7 @@
       "y": 0,
       "width": 475,
       "height": 720,
-      "animationDelay": 300,
+      "duration": 300,
       "spriteId": ""
     },
     {
@@ -13,7 +13,7 @@
       "y": 0,
       "width": 475,
       "height": 720,
-      "animationDelay": 300,
+      "duration": 300,
       "spriteId": ""
     },
     {
@@ -21,7 +21,7 @@
       "y": 0,
       "width": 475,
       "height": 720,
-      "animationDelay": 300,
+      "duration": 300,
       "spriteId": ""
     }
   ]

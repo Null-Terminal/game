@@ -86,7 +86,7 @@ export class AnimationPreview extends HTMLElement {
       spriteIndex %= mergedSprite.animation.length;
       const sprite = mergedSprite.animation.at(spriteIndex)!;
 
-      if (now - lastFrameTime >= sprite.animationDelay * this.speed) {
+      if (now - lastFrameTime >= sprite.duration * this.speed) {
         this.spriteIndex = spriteIndex;
         this.renderSprite(this.spriteIndex, mergedSprite);
         spriteIndex++;

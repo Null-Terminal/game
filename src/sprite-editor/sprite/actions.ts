@@ -103,8 +103,8 @@ export class ActionHandlers extends Handlers<Sprite> {
     this.parent.history.save();
   }
 
-  setAnimationDelay(e: Event) {
-    this.parent.animationDelay = parseInt((e.target as HTMLInputElement).value, 10);
+  setDuration(e: Event) {
+    this.parent.duration = parseInt((e.target as HTMLInputElement).value, 10);
     this.parent.history.save();
   }
 

@@ -100,13 +100,13 @@ export class Sprite extends HTMLElement {
     this.#spriteIdInput.value = value;
   }
 
-  get animationDelay() {
-    return this.#animationDelay;
+  get duration() {
+    return this.#duration;
   }
 
-  set animationDelay(value: number) {
-    this.#animationDelay = value;
-    this.#animationDelayInput.value = value.toString();
+  set duration(value: number) {
+    this.#duration = value;
+    this.#durationInput.value = value.toString();
   }
 
   @cache
@@ -131,11 +131,11 @@ export class Sprite extends HTMLElement {
   }
 
   @cache
-  get #animationDelayInput(): HTMLInputElement {
-    return this.shadowRoot!.getElementById("animationDelay") as HTMLInputElement;
+  get #durationInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("duration") as HTMLInputElement;
   }
 
-  #animationDelay!: number;
+  #duration!: number;
 
   #x!: number;
 
@@ -183,7 +183,7 @@ export class Sprite extends HTMLElement {
       y: 0,
 
       spriteId: "",
-      animationDelay: 100,
+      duration: 100,
 
       handleSize: 12,
       handlerColor: "#CCC",
@@ -225,7 +225,7 @@ export class Sprite extends HTMLElement {
       y: this.y,
       width: this.width,
       height: this.height,
-      animationDelay: this.animationDelay
+      duration: this.duration
     });
   }
 
@@ -372,7 +372,7 @@ export class Sprite extends HTMLElement {
     this.height = this.options.height;
 
     this.spriteId = this.options.spriteId;
-    this.animationDelay = this.options.animationDelay;
+    this.duration = this.options.duration;
 
     this.history.save(false);
 
