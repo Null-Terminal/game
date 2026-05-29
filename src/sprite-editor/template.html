@@ -5,7 +5,7 @@
     <p>
       <label>
         Исходное изображение
-        <input name="sprite" type="file" accept="image/*, .animation.json" multiple required>
+        <input name="sprite" type="file" accept="image/*, .json" multiple required>
       </label>
     </p>
 
@@ -41,6 +41,18 @@
 
     <p>
       <label>
+        Базовый коэффициент скорости
+        <input name="speed" type="number" value="1" step="0.1" required>
+      </label>
+
+      <label>
+        Базовый коэффициент масштабирования
+        <input name="scale" type="number" value="1" step="0.1" required>
+      </label>
+    </p>
+
+    <p>
+      <label>
         Имя файла
         <input name="name" value="merged" required>
       </label>
@@ -48,7 +60,8 @@
       <label>
         Расширение
         <select name="ext" required>
-          <option value="png" selected>png</option>
+          <option value="webp" selected>webp</option>
+          <option value="png">png</option>
           <option value="jpeg">jpeg</option>
         </select>
       </label>

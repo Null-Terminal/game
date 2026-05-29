@@ -21,6 +21,22 @@ export class SpriteEditor extends HTMLElement {
     return this.shadowRoot!.getElementById("grid")!;
   }
 
+  get speed(): number {
+    return this.getSetting("speed").valueAsNumber;
+  }
+
+  set speed(value: number) {
+    this.getSetting("speed").valueAsNumber = value;
+  }
+
+  get scale(): number {
+    return this.getSetting("scale").valueAsNumber;
+  }
+
+  set scale(value: number) {
+    this.getSetting("scale").valueAsNumber = value;
+  }
+
   #actionHandlers!: ActionHandlers;
 
   constructor() {

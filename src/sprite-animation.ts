@@ -1,5 +1,5 @@
 import type { Sprite } from "#sprite-editor/sprite";
-import type { MergedSprite, SpriteDescriptor, TexturePacker } from "#/sprite-animation/types";
+import type { MergedSprite, AnimationParameters, SpriteDescriptor, TexturePacker } from "#/sprite-animation/types";
 
 export type * from "#/sprite-animation/types";
 
@@ -21,7 +21,7 @@ export class SpriteAnimation {
       throw new TypeError(`${this.constructor.name}: expected object with "sprites" array, got ${got}`);
     }
 
-    return new SpriteAnimation(data.sprites);
+    return new SpriteAnimation(data.sprites, data.params);
   }
 
   static fromTexturePacker(data: TexturePacker): { sprites: SpriteDescriptor[] } {
@@ -41,7 +41,7 @@ export class SpriteAnimation {
     return { sprites };
   }
 
-  static mergeSprites(sprites: Sprite[]): MergedSprite {
+  static mergeSprites(sprites: Sprite[], params?: AnimationParameters): MergedSprite {
     // Максимальная ширина конечного спрайта
     const MAX_WIDTH = 2048;
 
@@ -126,33 +126,40 @@ export class SpriteAnimation {
       currentY += row.height;
     }
 
-    return { canvas: resultCanvas, animation: new SpriteAnimation(spriteDescriptors) };
+    return { canvas: resultCanvas, animation: new SpriteAnimation(spriteDescriptors, params) };
   }
 
   get length(): number {
-    return this.sprites.length;
+    return this.#sprites.length;
   }
 
-  protected readonly sprites: SpriteDescriptor[];
+  readonly params: Readonly<AnimationParameters>;
 
-  constructor(sprites: SpriteDescriptor[]) {
-    this.sprites = sprites;
+  readonly #sprites: readonly SpriteDescriptor[];
+
+  constructor(sprites: SpriteDescriptor[], params?: AnimationParameters) {
+    this.#sprites = sprites;
+    this.params = {
+      speed: 1,
+      scale: 1,
+      ...params
+    };
   }
 
   isEmpty() {
-    return this.sprites.length === 0;
+    return this.#sprites.length === 0;
   }
 
   at(index: number): Readonly<SpriteDescriptor> | undefined {
-    return this.sprites.at(index);
+    return this.#sprites.at(index);
   }
 
   toDataURL() {
-    const data = encodeURIComponent(JSON.stringify({ sprites: this.sprites }));
+    const data = encodeURIComponent(JSON.stringify({ params: this.params, sprites: this.#sprites }));
     return `data:application/json,${data}`;
   }
 
   [Symbol.iterator]() {
-    return this.sprites.values();
+    return this.#sprites.values();
   }
 }

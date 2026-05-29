@@ -106,7 +106,7 @@ export class Sprite extends HTMLElement {
 
   set duration(value: number) {
     this.#duration = value;
-    this.#durationInput.value = value.toString();
+    this.#durationInput.valueAsNumber = value;
   }
 
   @cache

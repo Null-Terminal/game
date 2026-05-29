@@ -1,5 +1,10 @@
 import type { SpriteAnimation } from "#/sprite-animation";
 
+export interface AnimationParameters {
+  speed: number;
+  scale: number;
+}
+
 export interface SpriteDescriptor {
   x: number;
   y: number;

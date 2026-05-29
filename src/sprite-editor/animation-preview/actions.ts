@@ -12,7 +12,7 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
   }
 
   speedUp() {
-    this.parent.speed *= 0.5;
+    this.parent.speed *= 2;
   }
 
   speedReset() {
@@ -20,7 +20,7 @@ export class ActionHandlers extends Handlers<AnimationPreview> {
   }
 
   speedDown() {
-    this.parent.speed *= 1.5;
+    this.parent.speed /= 2;
   }
 
   play() {
