@@ -123,27 +123,22 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     }
 
     const sprites = Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[];
-    const sizes: [number, number, number, number][] = [];
 
     for (const sprite of sprites) {
-      sizes.push([sprite.x, sprite.y, sprite.width, sprite.height]);
       sprite.trimSize();
+      sprite.history.save();
     }
 
     editor.history.pushState({
       undo() {
-        for (const [i, sprite] of sprites.entries()) {
-          const size = sizes[i]!;
-          sprite.x = size[0];
-          sprite.y = size[1];
-          sprite.width = size[2];
-          sprite.height = size[3];
+        for (const sprite of sprites) {
+          sprite.history.undo();
         }
       },
 
       redo() {
         for (const sprite of sprites) {
-          sprite.trimSize();
+          sprite.history.redo();
         }
       }
     });
