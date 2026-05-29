@@ -1,8 +1,8 @@
 import type { SpriteAnimation } from "#/sprite-animation";
 
-export interface AnimationParameters {
-  speed: number;
-  scale: number;
+export interface Animation {
+  sprites: SpriteDescriptor[];
+  params?: AnimationParameters | undefined;
 }
 
 export interface SpriteDescriptor {
@@ -12,6 +12,11 @@ export interface SpriteDescriptor {
   height: number;
   duration: number;
   spriteId: string;
+}
+
+export interface AnimationParameters {
+  speed: number;
+  scale: number;
 }
 
 export interface TexturePacker {

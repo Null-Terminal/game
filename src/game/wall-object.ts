@@ -10,7 +10,7 @@ const image = await loadSprite(wall);
 
 export class WallObject extends GameObject {
   static override animations = {
-    default: [image, new SpriteAnimation(wallAnimation.sprites)],
+    default: [image, new SpriteAnimation(wallAnimation)],
   } satisfies Animations;
 
   declare readonly Animations: (typeof WallObject)["animations"];

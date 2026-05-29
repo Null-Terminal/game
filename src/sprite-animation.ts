@@ -1,5 +1,7 @@
 import type { Sprite } from "#sprite-editor/sprite";
-import type { MergedSprite, AnimationParameters, SpriteDescriptor, TexturePacker } from "#/sprite-animation/types";
+
+import type { MergedSprite, TexturePacker } from "#/sprite-animation/types";
+import type { Animation, AnimationParameters, SpriteDescriptor } from "#/sprite-animation/types";
 
 export type * from "#/sprite-animation/types";
 
@@ -21,7 +23,7 @@ export class SpriteAnimation {
       throw new TypeError(`${this.constructor.name}: expected object with "sprites" array, got ${got}`);
     }
 
-    return new SpriteAnimation(data.sprites, data.params);
+    return new SpriteAnimation(data);
   }
 
   static fromTexturePacker(data: TexturePacker): { sprites: SpriteDescriptor[] } {
@@ -126,7 +128,7 @@ export class SpriteAnimation {
       currentY += row.height;
     }
 
-    return { canvas: resultCanvas, animation: new SpriteAnimation(spriteDescriptors, params) };
+    return { canvas: resultCanvas, animation: new SpriteAnimation({ sprites: spriteDescriptors, params }) };
   }
 
   get length(): number {
@@ -137,12 +139,13 @@ export class SpriteAnimation {
 
   readonly #sprites: readonly SpriteDescriptor[];
 
-  constructor(sprites: SpriteDescriptor[], params?: AnimationParameters) {
-    this.#sprites = sprites;
+  constructor(animation: Animation) {
+    this.#sprites = animation.sprites;
+
     this.params = {
       speed: 1,
       scale: 1,
-      ...params
+      ...animation.params
     };
   }
 

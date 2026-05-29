@@ -12,9 +12,9 @@ const runImage = await loadSprite(run, { removeBackground: true });
 
 export class PersonObject extends MotionObject {
   static override animations = {
-    stay: [runImage, new SpriteAnimation(stayAnimation.sprites)],
-    run: [runImage, new SpriteAnimation(runAnimation.sprites)],
-    jump: [runImage, new SpriteAnimation(jumpAnimation.sprites)],
+    stay: [runImage, new SpriteAnimation(stayAnimation)],
+    run: [runImage, new SpriteAnimation(runAnimation)],
+    jump: [runImage, new SpriteAnimation(jumpAnimation)],
   } satisfies Animations;
 
   declare readonly Animations: (typeof PersonObject)["animations"];
