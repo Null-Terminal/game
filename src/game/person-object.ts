@@ -1,22 +1,25 @@
-import { MotionObject, type Animations } from "#engine/motion-object";
-import { loadSprite } from "#engine/sprite-loader";
-import { SpriteAnimation } from "#/sprite-animation";
+import { MotionObject } from "#engine/motion-object";
+import { loadAnimation } from "#engine/animation-loader";
 
-import run from "#/sprites/run.webp";
+const [stay, run, jump] = await Promise.all([
+  loadAnimation(import("#/sprites/run.webp"), {
+    sprite: { removeBackground: true, tolerance: 120 },
+    animation: import("#/sprites/stay.animation.json")
+  }),
 
-import runAnimation from "#/sprites/run.animation.json";
-import stayAnimation from "#/sprites/stay.animation.json";
-import jumpAnimation from "#/sprites/jump.animation.json";
+  loadAnimation(import("#/sprites/run.webp"), {
+    sprite: { removeBackground: true, tolerance: 120 },
+    animation: import("#/sprites/run.animation.json")
+  }),
 
-const runImage = await loadSprite(run, { removeBackground: true });
+  loadAnimation(import("#/sprites/run.webp"), {
+    sprite: { removeBackground: true, tolerance: 120 },
+    animation: import("#/sprites/jump.animation.json")
+  })
+]);
 
 export class PersonObject extends MotionObject {
-  static override animations = {
-    stay: [runImage, new SpriteAnimation(stayAnimation)],
-    run: [runImage, new SpriteAnimation(runAnimation)],
-    jump: [runImage, new SpriteAnimation(jumpAnimation)],
-  } satisfies Animations;
-
+  static override animations = { stay, run, jump };
   declare readonly Animations: (typeof PersonObject)["animations"];
 
   init() {

@@ -10,5 +10,5 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
 const game = new Game(canvas, { staticWorld } );
 
 for (let i = 0; i < 1; i++) {
-  new PersonObject(game, { effects: { scale: 0.2, speed: 2  } });
+  new PersonObject(game);
 }

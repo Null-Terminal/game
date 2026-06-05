@@ -1,21 +1,16 @@
-import { GameObject, type Animations } from "#engine/game-object";
+import { GameObject } from "#engine/game-object";
 
-import { loadSprite } from "#engine/sprite-loader";
-import { SpriteAnimation } from "#/sprite-animation";
+import { loadAnimation } from "#engine/animation-loader";
 
-import wallAnimation from "#/sprites/wall.animation.json";
-import wall from "#/sprites/wall.png";
-
-const image = await loadSprite(wall);
+const wall = await loadAnimation(import("#/sprites/wall.png"), {
+  animation: import("#/sprites/wall.animation.json")
+});
 
 export class WallObject extends GameObject {
-  static override animations = {
-    default: [image, new SpriteAnimation(wallAnimation)],
-  } satisfies Animations;
-
+  static override animations = { wall };
   declare readonly Animations: (typeof WallObject)["animations"];
 
   init() {
-    this.play(this.animations.default);
+    this.play(this.animations.wall);
   }
 }
