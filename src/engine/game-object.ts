@@ -42,10 +42,7 @@ export abstract class GameObject {
     const entries = Object.entries(this.animations);
 
     entries.forEach(([name, value]) => {
-      // Сохраняем имя связанного события
-      if (!Object.hasOwn(value, "eventName")) {
-        Object.defineProperty(value, "eventName", { value: name });
-      }
+      value.name = name;
     });
 
     return entries;
@@ -149,12 +146,7 @@ export abstract class GameObject {
   }
 
   play(selectedAnimation: Animations[keyof Animations]) {
-    const [image, animation, patterns = new Array(animation.length).fill(null)] = selectedAnimation;
-
-    // Добавляем кэш для текстур-шаблонов (CanvasPattern)
-    if (selectedAnimation.length === 2) {
-      selectedAnimation.push(patterns);
-    }
+    const { animation } = selectedAnimation;
 
     let lastFrameTime = 0;
     let spriteIndex = 0;
@@ -176,16 +168,8 @@ export abstract class GameObject {
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     } else {
-      let maxWidth = 0;
-      let maxHeight = 0;
-
-      for (const sprite of animation) {
-        maxWidth = Math.max(maxWidth, sprite.width);
-        maxHeight = Math.max(maxHeight, sprite.height);
-      }
-
-      this.#width = maxWidth * effects.scale;
-      this.#height = maxHeight * effects.scale;
+      this.#width = selectedAnimation.maxWidth * effects.scale;
+      this.#height = selectedAnimation.maxHeight * effects.scale;
     }
 
     this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
@@ -193,71 +177,32 @@ export abstract class GameObject {
 
       const sprite = animation.at(spriteIndex)!;
 
-      let spriteWidth = sprite.width;
-      let spriteHeight = sprite.height;
-
       if (this.bbox != null) {
-        if (patterns[spriteIndex] == null) {
-          const canvas = new OffscreenCanvas(spriteWidth, spriteHeight);
-
-          canvas.getContext("2d")!.drawImage(
-            image,
-
-            sprite.x,
-            sprite.y,
-            sprite.width,
-            sprite.height,
-
-            0,
-            0,
-            spriteWidth,
-            spriteHeight
-          );
-
-          patterns[spriteIndex] = ctx.createPattern(canvas, "repeat");
-        }
-
-        ctx.fillStyle = patterns[spriteIndex];
+        ctx.fillStyle = selectedAnimation.getPatternFrame(ctx, spriteIndex);
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
       } else {
-        spriteWidth *= effects.scale;
-        spriteHeight *= effects.scale;
+        const image = selectedAnimation.getSpriteFrame(spriteIndex, effects.scale);
 
         let x = this.x;
         let y = this.y;
 
-        ctx.scale(effects.flipX ? -1 : 1, effects.flipY ? -1 : 1);
-
         if (effects.flipX) {
-          x = -x - spriteWidth;
+          x = -x - this.width;
         }
 
         if (effects.flipY) {
-          y = -y - spriteHeight;
+          y = -y - this.height;
         }
 
-        ctx.drawImage(
-          image,
-
-          sprite.x,
-          sprite.y,
-          sprite.width,
-          sprite.height,
-
-          x,
-          y,
-          spriteWidth,
-          spriteHeight
-        );
+        ctx.scale(effects.flipX ? -1 : 1, effects.flipY ? -1 : 1);
+        ctx.drawImage(image, x, y, image.width, image.height);
       }
 
       ctx.restore();
 
-      const animationName = selectedAnimation.eventName!;
-
-      if ((!rendered || sprite.spriteId !== "") && animationName in this.animation.events) {
-        this.animation.emit(this.animation.events[animationName]!, sprite.spriteId);
+      if ((!rendered || sprite.spriteId !== "") && selectedAnimation.name in this.animation.events) {
+        this.animation.emit(this.animation.events[selectedAnimation.name]!, sprite.spriteId);
       }
 
       if (!this.isPaused() && (now - lastFrameTime >= sprite.duration / effects.speed)) {

@@ -1,9 +1,6 @@
-const spriteCache = new Map<string, Promise<ImageBitmap>>();
+import type { LoadSpriteOptions } from "#engine/animation-loader/types";
 
-export interface LoadSpriteOptions {
-  removeBackground?: boolean | string;
-  tolerance?: number;
-}
+const spriteCache = new Map<string, Promise<ImageBitmap>>();
 
 export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
   const { removeBackground = false, tolerance = 15 } = options ?? {};
@@ -25,9 +22,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
   img.onload = () => {
     try {
       const canvas = new OffscreenCanvas(img.width, img.height);
-
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
 
       if (removeBackground) {
         removeCanvasBackground(canvas, removeBackground, tolerance);

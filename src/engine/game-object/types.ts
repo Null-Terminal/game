@@ -1,11 +1,9 @@
 import type { Handlers } from "#/event-emitter";
-import type { SpriteAnimation } from "#/sprite-animation";
+
 import type { BBoxTuple } from "#engine/rtree";
+import type { LoadedAnimation } from "#engine/animation-loader";
 
-export type Animation = [ImageBitmap, SpriteAnimation, CanvasPattern[]?];
-
-export type Animations = Record<string, Animation & {eventName?: string}>;
-
+export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
 export interface Effects {
