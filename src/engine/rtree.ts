@@ -44,10 +44,9 @@ export class RTree {
   readonly #view: RTreeView;
   readonly #node: RTreeNode;
   readonly #header: Uint16Array;
-  readonly #root: Ptr32;
-
   readonly #buffer;
 
+  #root: Ptr32;
   #size;
 
   get #freePtr32(): Ptr32 {
@@ -84,6 +83,11 @@ export class RTree {
     this.#header = new Uint16Array(this.#buffer, 0, header.size / 2);
 
     this.#size = this.#header[header.at.size.index]!;
+    this.#root = this.#createEmptyNode();
+  }
+
+  clear() {
+    this.size = 0;
     this.#root = this.#createEmptyNode();
   }
 
