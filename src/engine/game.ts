@@ -2,7 +2,7 @@ import { World, type WorldOptions } from "#engine/game/world";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 
 export { World, type WorldOptions };
-export { RenderCanvas, type RenderCanvasOptions } from "#engine/game/render-canvas";
+export { RenderCanvas, type RenderCanvasOptions, type RenderPayload } from "#engine/game/render-canvas";
 
 export class Game {
   readonly canvas: RenderCanvas;
