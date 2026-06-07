@@ -1,4 +1,4 @@
-import { RTree } from "#engine/rtree";
+import { RTree, type RTreePred } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
@@ -48,19 +48,38 @@ export class World {
     return this.#objectPool.add(object, this.game, opts);
   }
 
+  addToDynamicWorld(object: GameObject) {
+    this.#dynamicWorld.insert(object.poolPointer[0], object.poolPointer[1], object.x, object.y, object.width, object.height);
+  }
+
+  addToStaticWorld(object: GameObject) {
+    this.#staticWorld.insert(object.poolPointer[0], object.poolPointer[1], object.x, object.y, object.width, object.height);
+  }
+
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
-    return this.#staticWorld.searchFirst(minX - 1, minY - 1, maxX + 1, maxY + 1, ({ bbox }) => {
-      const [rx, ry, rw, rh] = bbox;
-      return maxX > rx && minX < rw && maxY > ry && minY < rh;
-    }) != null;
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
+
+    const pred: RTreePred = ({ bbox }) =>
+      maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+
+    if (this.#dynamicWorld.searchFirst(x1, y1, x2, y2, pred) == null) {
+      return this.#staticWorld.searchFirst(x1, y1, x2, y2, pred) != null;
+    }
+
+    return true;
   }
 
   findCollisions(minX: number, minY: number, maxX: number, maxY: number): GameObject[] {
-    const collisions = this.#staticWorld.search(minX - 1, minY - 1, maxX + 1, maxY + 1, ({ bbox }) => {
-      const [rx, ry, rw, rh] = bbox;
-      return maxX > rx && minX < rw && maxY > ry && minY < rh;
-    });
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
 
-    return collisions.map(({ pointer: [kind, i] }) => this.#objectPool.get(kind, i)!)!;
+    const pred: RTreePred = ({ bbox }) =>
+      maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+
+    return this.#dynamicWorld
+      .search(x1, y1, x2, y2, pred)
+      .concat(this.#staticWorld.search(x1, y1, x2, y2, pred))
+      .map(({ pointer: [kind, i] }) => this.#objectPool.get(kind, i)!)!;
   }
 }
