@@ -47,6 +47,10 @@ export abstract class GameObject extends KindedObject {
     return this.game.canvas;
   }
 
+  get redrawEvent() {
+    return this.game.canvas.events.static;
+  }
+
   get world() {
     return this.game.world;
   }
@@ -158,7 +162,7 @@ export abstract class GameObject extends KindedObject {
       this.#height = selectedAnimation.maxHeight * effects.scale;
     }
 
-    this.#cancelRedrawHandler = emitter.on(events.redraw, ([now, ctx]) => {
+    this.#cancelRedrawHandler = emitter.on(this.redrawEvent, ([now, ctx]) => {
       ctx.save();
 
       const sprite = animation.at(spriteIndex)!;
