@@ -1,10 +1,10 @@
 import { RTree } from "#engine/rtree";
-import { GameObjectPool } from "#engine/game-object-pool";
+import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
 import type { GameObject } from "#engine/game-object";
 
-import type { WorldOptions } from "#engine/game/world/types";
+import type { WorldObject, WorldOptions } from "#engine/game/world/types";
 
 export * from "#engine/game/world/types";
 
@@ -13,14 +13,16 @@ export class World {
   readonly options: Required<WorldOptions>;
 
   #staticWorld = new RTree();
+  #dynamicWorld = new RTree();
   #objectPool = new GameObjectPool();
 
   constructor(game: Game, opts: WorldOptions) {
     this.game = game;
+    this.options = { ...opts };
 
-    this.options = {
-      ...opts
-    };
+    game.canvas.emitter.on(game.canvas.events.background, () => {
+      this.#dynamicWorld.clear();
+    });
 
     for (const elem of opts.staticWorld) {
       const opts = elem.object[1];
@@ -33,13 +35,17 @@ export class World {
         }
       }
 
-      const ptr = this.#objectPool.add(elem.object[0], game, {
+      const ptr = this.createObject(elem.object[0], {
         bbox: elem.bbox,
         ...elem.object[1]
-       });
+      });
 
       this.#staticWorld.insert(...ptr, ...elem.bbox);
     }
+  }
+
+  createObject(object: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
+    return this.#objectPool.add(object, this.game, opts);
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {

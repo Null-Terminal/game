@@ -2,6 +2,7 @@ import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import type { Game } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
 import { KindedObject } from "#engine/game-object/kinded";
@@ -33,6 +34,7 @@ export abstract class GameObject extends KindedObject {
   });
 
   game!: Game;
+  poolPointer!: PoolPointer;
 
   options!: GameObjectOptions;
   effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
@@ -69,14 +71,16 @@ export abstract class GameObject extends KindedObject {
   #activeAnimation: Animations[keyof Animations] | null = null;
   #cancelRedrawHandler: Function | null = null;
 
-  constructor(game: Game, opts?: GameObjectOptions) {
-    this.create(game, opts);
+  constructor(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
+    super();
+    this.create(game, poolPointer, opts);
   }
 
   abstract init(): void;
 
-  create(game: Game, opts?: GameObjectOptions) {
+  create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
     this.game = game;
+    this.poolPointer = poolPointer;
     this.options = { ...opts };
 
     if ("bbox" in this.options) {
