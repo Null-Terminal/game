@@ -3,6 +3,10 @@ import { GameObject } from "#engine/game-object";
 export * from "#engine/game-object/types";
 
 export abstract class MotionObject extends GameObject {
+  override get redrawEvent() {
+    return this.canvas.events.dynamic;
+  }
+
   hasCollision(x = this.x, y = this.y): boolean {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
