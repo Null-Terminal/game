@@ -12,3 +12,8 @@ export type WorldObjects = {
 export interface WorldOptions {
   staticWorld: WorldObjects
 }
+
+export interface Collision {
+  bbox: BBoxTuple;
+  object: GameObject;
+}

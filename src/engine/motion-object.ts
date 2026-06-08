@@ -1,4 +1,5 @@
 import { GameObject } from "#engine/game-object";
+import type { Collision } from "#engine/game/world";
 
 export * from "#engine/game-object/types";
 
@@ -11,7 +12,7 @@ export abstract class MotionObject extends GameObject {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
 
-  findCollisions(x = this.x, y = this.y): GameObject[] {
+  findCollisions(x = this.x, y = this.y): Collision[] {
     return this.world.findCollisions(x, y, x + this.width, y + this.height);
   }
 
@@ -64,9 +65,66 @@ export abstract class MotionObject extends GameObject {
           } else {
             break;
           }
-
-          this.y = testY;
         }
+
+        this.y = testY;
+      }
+    }
+
+    this.#exitCollision();
+  }
+
+  #exitCollision() {
+    if (!this.hasCollision(this.x, this.y)) {
+      return;
+    }
+
+    const collisions = this.findCollisions(this.x, this.y);
+
+    // Собираем все границы препятствий
+    let nearestX = null;
+    let nearestY = null;
+    let minDistance = Infinity;
+
+    for (const { bbox: [minX, minY, maxX, maxY] } of collisions) {
+      // Вычисляем расстояния до каждой стороны
+      const distToLeft = Math.abs(this.x - maxX);
+      const distToRight = Math.abs((this.x + this.width) - minX);
+      const distToTop = Math.abs(this.y - maxY);
+      const distToBottom = Math.abs((this.y + this.height) - minY);
+
+      // Находим ближайшую сторону
+      const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
+
+      if (minDist < minDistance) {
+        minDistance = minDist;
+
+        if (minDist === distToLeft) {
+          nearestX = maxX;
+          nearestY = this.y;
+
+        } else if (minDist === distToRight) {
+          nearestX = minX - this.width;
+          nearestY = this.y;
+
+        } else if (minDist === distToTop) {
+          nearestX = this.x;
+          nearestY = maxY;
+
+        } else if (minDist === distToBottom) {
+          nearestX = this.x;
+          nearestY = minY - this.height;
+        }
+      }
+    }
+
+    if (nearestX != null || nearestY != null) {
+      const x = nearestX ?? this.x;
+      const y = nearestY ?? this.y;
+
+      if (!this.hasCollision(x, y)) {
+        this.x = x;
+        this.y = y;
       }
     }
   }

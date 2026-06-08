@@ -4,7 +4,7 @@ import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 import type { Game } from "#engine/game";
 import type { GameObject } from "#engine/game-object";
 
-import type { WorldObject, WorldOptions } from "#engine/game/world/types";
+import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
 
 export * from "#engine/game/world/types";
 
@@ -70,7 +70,7 @@ export class World {
     return true;
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): GameObject[] {
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
@@ -80,6 +80,11 @@ export class World {
     return this.#dynamicWorld
       .search(x1, y1, x2, y2, pred)
       .concat(this.#staticWorld.search(x1, y1, x2, y2, pred))
-      .map(({ pointer: [kind, i] }) => this.#objectPool.get(kind, i)!)!;
+      .map(({ bbox, pointer: [kind, i] }) => {
+        return {
+          bbox,
+          object: this.#objectPool.get(kind, i)!
+        };
+      })!;
   }
 }
