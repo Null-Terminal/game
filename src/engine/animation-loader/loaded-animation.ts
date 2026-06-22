@@ -1,5 +1,7 @@
 import { cache } from "#decorators/cache";
+
 import type { SpriteAnimation } from "#/sprite-animation";
+import type { LoadedSprite, SpriteEffects } from "#engine/animation-loader/types";
 
 export class LoadedAnimation {
   name = "";
@@ -30,15 +32,14 @@ export class LoadedAnimation {
   }
 
   readonly #images: Record<string, ImageBitmap | OffscreenCanvas> = {};
-  readonly #patterns: WeakMap<CanvasRenderingContext2D, Record<string, CanvasPattern>> = new WeakMap();
 
   constructor(image: ImageBitmap, animation: SpriteAnimation) {
     this.image = image;
     this.animation = animation;
   }
 
-  getSpriteFrame(index: number, scale = 1): ImageBitmap | OffscreenCanvas {
-    const cacheKey = this.#getKey(index, scale);
+  getSpriteFrame(index: number, effects: SpriteEffects = {}): LoadedSprite {
+    const cacheKey = this.#getKey(index, effects);
     const fromCache = this.#images[cacheKey];
 
     if (fromCache != null) {
@@ -51,14 +52,20 @@ export class LoadedAnimation {
       throw new Error(`${this.constructor.name}: Sprite frame ${index} not found (total: ${this.animation.length})`);
     }
 
-    const resolvedScale = this.animation.params.scale * scale;
+    const resolvedScale = this.animation.params.scale * (effects.scale ?? 1);
 
     const spriteWidth = sprite.width * resolvedScale;
     const spriteHeight = sprite.height * resolvedScale;
 
     const canvas = new OffscreenCanvas(spriteWidth, spriteHeight);
+    const ctx = canvas.getContext("2d")!;
 
-    canvas.getContext("2d")!.drawImage(
+    const flipX = effects.flipX ? -1 : 1;
+    const flipY = effects.flipY ? -1 : 1;
+
+    ctx.scale(flipX, flipY);
+
+    ctx.drawImage(
       this.image,
 
       sprite.x,
@@ -68,8 +75,8 @@ export class LoadedAnimation {
 
       0,
       0,
-      spriteWidth,
-      spriteHeight
+      spriteWidth * flipX,
+      spriteHeight * flipY
     );
 
     this.#images[cacheKey] = canvas;
@@ -81,30 +88,32 @@ export class LoadedAnimation {
     return canvas;
   }
 
-  getPatternFrame(ctx: CanvasRenderingContext2D, index: number, scale = 1): CanvasPattern {
-    let patters = this.#patterns.get(ctx);
-
-    if (patters == null) {
-      patters = {};
-      this.#patterns.set(ctx, patters);
-    }
-
-    const cacheKey = this.#getKey(index, scale);
-    const fromCache = patters[cacheKey];
+  getPatternFrame(index: number, effects: SpriteEffects = {}): LoadedSprite {
+    const cacheKey = this.#getKey(index, effects, true);
+    const fromCache = this.#images[cacheKey];
 
     if (fromCache != null) {
       return fromCache;
     }
 
-    const image = this.getSpriteFrame(index, scale);
+    const canvas = new OffscreenCanvas(3840, 3840);
+    const ctx = canvas.getContext("2d")!;
 
-    const pattern = ctx.createPattern(image, "repeat")!;
-    patters[cacheKey] = pattern;
+    const image = this.getSpriteFrame(index, effects);
 
-    return pattern;
+    ctx.fillStyle = ctx.createPattern(image, "repeat")!;
+    ctx.fillRect(0, 0, 1024, 1024);
+
+    this.#images[cacheKey] = canvas;
+
+    createImageBitmap(canvas).then((image) => {
+      this.#images[cacheKey] = image;
+    });
+
+    return canvas;
   }
 
-  #getKey(index: number, scale: number) {
-    return `${index}-${scale}`;
+  #getKey(index: number, effects: SpriteEffects, pattern = false) {
+    return `${index}-${effects.scale ?? 1}-${effects.flipX ?? false}-${effects.flipY ?? false}-${pattern}`;
   }
 }

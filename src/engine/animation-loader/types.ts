@@ -11,3 +11,11 @@ export interface LoadAnimationOptions {
   sprite?: LoadSpriteOptions;
   animation: Import<Animation>;
 }
+
+export type LoadedSprite = ImageBitmap | OffscreenCanvas;
+
+export interface SpriteEffects {
+  scale?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+}
