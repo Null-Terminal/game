@@ -163,7 +163,11 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         const image = selectedAnimation.getSpriteFrame(spriteIndex, effects);
-        ctx.drawImage(image, this.x, this.y, image.width, image.height);
+
+        const diffX = this.width - image.width;
+        const diffY = this.height - image.height;
+
+        ctx.drawImage(image, this.x + diffX, this.y + diffY, image.width, image.height);
       }
 
       if ((!rendered || sprite.spriteId !== "") && selectedAnimation.name in this.animation.events) {
@@ -181,3 +185,4 @@ export abstract class GameObject extends KindedObject {
     });
   }
 }
+
