@@ -15,7 +15,7 @@ export class AnimationPreview extends HTMLElement {
     return this.shadowRoot!.getElementById("controls")!;
   }
 
-  get speed(): number {
+  get speed() {
     return this.#editor.speed;
   }
 
