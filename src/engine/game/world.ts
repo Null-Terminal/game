@@ -25,16 +25,6 @@ export class World {
     });
 
     for (const elem of opts.staticWorld) {
-      const opts = elem.object[1];
-
-      if (opts.effects?.scale != null) {
-        const { scale } = opts.effects;
-
-        for (let i = 0; i < elem.bbox.length; i++) {
-          elem.bbox[i]! *= scale;
-        }
-      }
-
       const ptr = this.createObject(elem.object[0], {
         bbox: elem.bbox,
         ...elem.object[1]
@@ -49,7 +39,15 @@ export class World {
   }
 
   addToDynamicWorld(object: GameObject) {
-    this.#dynamicWorld.insert(object.poolPointer[0], object.poolPointer[1], object.x, object.y, object.width, object.height);
+    this.#dynamicWorld.insert(
+      object.poolPointer[0],
+      object.poolPointer[1],
+
+      object.x,
+      object.y,
+      object.x + object.width,
+      object.y + object.height
+    );
   }
 
   addToStaticWorld(object: GameObject) {
