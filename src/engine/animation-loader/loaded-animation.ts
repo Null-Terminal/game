@@ -96,13 +96,15 @@ export class LoadedAnimation {
       return fromCache;
     }
 
-    const canvas = new OffscreenCanvas(3840, 3840);
+    const SIZE = 3840;
+
+    const canvas = new OffscreenCanvas(SIZE, SIZE);
     const ctx = canvas.getContext("2d")!;
 
     const image = this.getSpriteFrame(index, effects);
 
     ctx.fillStyle = ctx.createPattern(image, "repeat")!;
-    ctx.fillRect(0, 0, 1024, 1024);
+    ctx.fillRect(0, 0, SIZE, SIZE);
 
     this.#images[cacheKey] = canvas;
 
