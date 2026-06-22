@@ -12,9 +12,9 @@ export interface LoadAnimationOptions {
   animation: Import<Animation>;
 }
 
-export type LoadedSprite = ImageBitmap | OffscreenCanvas;
+export type BakedFrame = ImageBitmap | OffscreenCanvas;
 
-export interface SpriteEffects {
+export interface FrameEffects {
   scale?: number;
   flipX?: boolean;
   flipY?: boolean;

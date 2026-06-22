@@ -1,7 +1,7 @@
 import { cache } from "#decorators/cache";
 
 import type { SpriteAnimation } from "#/sprite-animation";
-import type { LoadedSprite, SpriteEffects } from "#engine/animation-loader/types";
+import type { BakedFrame, FrameEffects } from "#engine/animation-loader/types";
 
 export class LoadedAnimation {
   name = "";
@@ -38,7 +38,7 @@ export class LoadedAnimation {
     this.animation = animation;
   }
 
-  getSpriteFrame(index: number, effects: SpriteEffects = {}): LoadedSprite {
+  getSpriteFrame(index: number, effects: FrameEffects = {}): BakedFrame {
     const cacheKey = this.#getKey(index, effects);
     const fromCache = this.#images[cacheKey];
 
@@ -88,7 +88,7 @@ export class LoadedAnimation {
     return canvas;
   }
 
-  getPatternFrame(index: number, effects: SpriteEffects = {}): LoadedSprite {
+  getPatternFrame(index: number, effects: FrameEffects = {}): BakedFrame {
     const cacheKey = this.#getKey(index, effects, true);
     const fromCache = this.#images[cacheKey];
 
@@ -113,7 +113,7 @@ export class LoadedAnimation {
     return canvas;
   }
 
-  #getKey(index: number, effects: SpriteEffects, pattern = false) {
+  #getKey(index: number, effects: FrameEffects, pattern = false) {
     return `${index}-${effects.scale ?? 1}-${effects.flipX ?? false}-${effects.flipY ?? false}-${pattern}`;
   }
 }
