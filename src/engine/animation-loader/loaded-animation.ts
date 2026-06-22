@@ -88,23 +88,21 @@ export class LoadedAnimation {
     return canvas;
   }
 
-  getPatternFrame(index: number, effects: FrameEffects = {}): BakedFrame {
-    const cacheKey = this.#getKey(index, effects, true);
+  getPatternFrame(index: number, width: number, height: number, effects: FrameEffects = {}): BakedFrame {
+    const cacheKey = this.#getKey(index, effects, width, height);
     const fromCache = this.#images[cacheKey];
 
     if (fromCache != null) {
       return fromCache;
     }
 
-    const SIZE = 3840;
-
-    const canvas = new OffscreenCanvas(SIZE, SIZE);
+    const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d")!;
 
     const image = this.getSpriteFrame(index, effects);
 
     ctx.fillStyle = ctx.createPattern(image, "repeat")!;
-    ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.fillRect(0, 0, width, height);
 
     this.#images[cacheKey] = canvas;
 
@@ -115,7 +113,7 @@ export class LoadedAnimation {
     return canvas;
   }
 
-  #getKey(index: number, effects: FrameEffects, pattern = false) {
-    return `${index}-${effects.scale ?? 1}-${effects.flipX ?? false}-${effects.flipY ?? false}-${pattern}`;
+  #getKey(index: number, effects: FrameEffects, width = 0, height = 0) {
+    return `${index}-${effects.scale ?? 1}-${effects.flipX ?? false}-${effects.flipY ?? false}-${width}-${height}`;
   }
 }

@@ -158,7 +158,7 @@ export abstract class GameObject extends KindedObject {
       const sprite = animation.at(spriteIndex)!;
 
       if (this.bbox != null) {
-        const image = selectedAnimation.getPatternFrame(spriteIndex, effects);
+        const image = selectedAnimation.getPatternFrame(spriteIndex, this.width, this.height, effects);
         ctx.drawImage(image, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height);
 
       } else {
