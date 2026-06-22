@@ -3,19 +3,19 @@ import { WallObject } from "#game/wall-object";
 import type { WorldObjects } from "#engine/game/world";
 
 export const staticWorld: WorldObjects = [
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [0, 250, 1500, 300] },
+  { object: [WallObject], bbox: [0, 500, 3000, 600] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 50, 250, 60] },
+  { object: [WallObject], bbox: [200, 100, 500, 120] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [180, 140, 280, 170] },
+  { object: [WallObject], bbox: [360, 280, 560, 340] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [350, 120, 450, 150] },
+  { object: [WallObject], bbox: [700, 240, 900, 300] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 200, 180, 210] },
+  { object: [WallObject], bbox: [200, 400, 360, 420] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [600, 80, 800, 90] },
+  { object: [WallObject], bbox: [1200, 160, 1600, 180] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [850, 180, 930, 190] },
+  { object: [WallObject], bbox: [1700, 360, 1860, 380] },
 
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [500, 0, 520, 40] },
+  { object: [WallObject], bbox: [1000, 0, 1040, 80] },
 ];

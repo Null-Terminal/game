@@ -1,290 +1,294 @@
 {
+  "params": {
+    "speed": 2,
+    "scale": 0.15
+  },
   "sprites": [
     {
       "x": 0,
       "y": 0,
-      "width": 475,
-      "height": 720,
+      "width": 259,
+      "height": 718,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
+      "x": 259,
       "y": 0,
-      "width": 475,
-      "height": 720,
+      "width": 261,
+      "height": 714,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 950,
+      "x": 520,
       "y": 0,
-      "width": 475,
-      "height": 720,
+      "width": 264,
+      "height": 707,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 1425,
+      "x": 1157,
       "y": 0,
-      "width": 475,
-      "height": 720,
+      "width": 276,
+      "height": 696,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1720,
+      "y": 718,
+      "width": 289,
+      "height": 693,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 450,
+      "y": 718,
+      "width": 368,
+      "height": 695,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 456,
+      "y": 2796,
+      "width": 389,
+      "height": 686,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1045,
+      "y": 2107,
+      "width": 409,
+      "height": 688,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1454,
+      "y": 2107,
+      "width": 388,
+      "height": 688,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 940,
+      "y": 3483,
+      "width": 358,
+      "height": 683,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1667,
+      "y": 2796,
+      "width": 360,
+      "height": 684,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 818,
+      "y": 718,
+      "width": 432,
+      "height": 694,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1433,
+      "y": 0,
+      "width": 452,
+      "height": 696,
       "duration": 100,
       "spriteId": ""
     },
     {
       "x": 0,
-      "y": 720,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 475,
-      "y": 720,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 950,
-      "y": 720,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 1425,
-      "y": 720,
-      "width": 475,
-      "height": 720,
+      "y": 3483,
+      "width": 473,
+      "height": 684,
       "duration": 100,
       "spriteId": ""
     },
     {
       "x": 0,
-      "y": 1440,
-      "width": 475,
-      "height": 720,
+      "y": 1414,
+      "width": 474,
+      "height": 693,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 1440,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 950,
-      "y": 1440,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 1425,
-      "y": 1440,
-      "width": 475,
-      "height": 720,
+      "x": 1615,
+      "y": 1414,
+      "width": 430,
+      "height": 691,
       "duration": 100,
       "spriteId": ""
     },
     {
       "x": 0,
-      "y": 2160,
-      "width": 475,
-      "height": 720,
+      "y": 2107,
+      "width": 390,
+      "height": 689,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 2160,
-      "width": 475,
-      "height": 720,
+      "x": 390,
+      "y": 2107,
+      "width": 328,
+      "height": 689,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 950,
-      "y": 2160,
-      "width": 475,
-      "height": 720,
+      "x": 784,
+      "y": 0,
+      "width": 373,
+      "height": 698,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 1425,
-      "y": 2160,
-      "width": 475,
-      "height": 720,
+      "x": 1081,
+      "y": 4167,
+      "width": 402,
+      "height": 677,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 0,
-      "y": 2880,
-      "width": 475,
-      "height": 720,
+      "x": 845,
+      "y": 2796,
+      "width": 417,
+      "height": 685,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 2880,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 950,
-      "y": 2880,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 1425,
-      "y": 2880,
-      "width": 475,
-      "height": 720,
+      "x": 1590,
+      "y": 3483,
+      "width": 379,
+      "height": 682,
       "duration": 100,
       "spriteId": ""
     },
     {
       "x": 0,
-      "y": 3600,
-      "width": 475,
-      "height": 720,
+      "y": 4167,
+      "width": 342,
+      "height": 680,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 3600,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 950,
-      "y": 3600,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 1425,
-      "y": 3600,
-      "width": 475,
-      "height": 720,
+      "x": 866,
+      "y": 1414,
+      "width": 420,
+      "height": 692,
       "duration": 100,
       "spriteId": ""
     },
     {
       "x": 0,
-      "y": 4320,
-      "width": 475,
-      "height": 720,
+      "y": 718,
+      "width": 450,
+      "height": 696,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 4320,
-      "width": 475,
-      "height": 720,
+      "x": 473,
+      "y": 3483,
+      "width": 467,
+      "height": 684,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 950,
-      "y": 4320,
-      "width": 475,
-      "height": 720,
-      "duration": 100,
-      "spriteId": ""
-    },
-    {
-      "x": 1425,
-      "y": 4320,
-      "width": 475,
-      "height": 720,
+      "x": 1250,
+      "y": 718,
+      "width": 470,
+      "height": 694,
       "duration": 100,
       "spriteId": ""
     },
     {
       "x": 0,
-      "y": 5040,
-      "width": 475,
-      "height": 720,
+      "y": 2796,
+      "width": 456,
+      "height": 687,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 5040,
-      "width": 475,
-      "height": 720,
+      "x": 1262,
+      "y": 2796,
+      "width": 405,
+      "height": 685,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 950,
-      "y": 5040,
-      "width": 475,
-      "height": 720,
+      "x": 718,
+      "y": 2107,
+      "width": 327,
+      "height": 689,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 1425,
-      "y": 5040,
-      "width": 475,
-      "height": 720,
+      "x": 1286,
+      "y": 1414,
+      "width": 329,
+      "height": 692,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 0,
-      "y": 5760,
-      "width": 475,
-      "height": 720,
+      "x": 474,
+      "y": 1414,
+      "width": 392,
+      "height": 693,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 475,
-      "y": 5760,
-      "width": 475,
-      "height": 720,
+      "x": 1483,
+      "y": 4167,
+      "width": 395,
+      "height": 667,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 950,
-      "y": 5760,
-      "width": 475,
-      "height": 720,
+      "x": 342,
+      "y": 4167,
+      "width": 378,
+      "height": 680,
       "duration": 100,
       "spriteId": ""
     },
     {
-      "x": 1425,
-      "y": 5760,
-      "width": 475,
-      "height": 720,
+      "x": 720,
+      "y": 4167,
+      "width": 361,
+      "height": 678,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1298,
+      "y": 3483,
+      "width": 292,
+      "height": 683,
       "duration": 100,
       "spriteId": ""
     }
