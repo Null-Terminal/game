@@ -99,6 +99,15 @@ export class RTree {
     pred?: RTreePred
   ): RTreePublicNode[] {
     const results: RTreePublicNode[] = [];
+
+    if (minX > maxX) {
+      [minX, maxX] = [maxX, minX];
+    }
+
+    if (minY > maxY) {
+      [minY, maxY] = [maxY, minY];
+    }
+
     this.#searchNode(this.#root, minX, minY, maxX, maxY, results, pred);
     return results;
   }
@@ -110,6 +119,14 @@ export class RTree {
     maxY: number,
     pred?: RTreePred
   ): RTreePublicNode | null {
+    if (minX > maxX) {
+      [minX, maxX] = [maxX, minX];
+    }
+
+    if (minY > maxY) {
+      [minY, maxY] = [maxY, minY];
+    }
+
     return this.#searchFirstNode(this.#root, minX, minY, maxX, maxY, pred);
   }
 
@@ -121,6 +138,14 @@ export class RTree {
     maxX: number,
     maxY: number,
   ): Ptr32 {
+    if (minX > maxX) {
+      [minX, maxX] = [maxX, minX];
+    }
+
+    if (minY > maxY) {
+      [minY, maxY] = [maxY, minY];
+    }
+
     const node = this.#node;
 
     const ptr = this.#createEmptyNode();
