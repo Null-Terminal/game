@@ -266,11 +266,7 @@ export class RTreeNode extends BinView {
 
   #clearMemory(ptr: Ptr32) {
     const start = ptr * 4;
-    const end = start + rTreeNode.size;
-
-    for (let i = start; i < end; i++) {
-      this.view.uints8[i] = 0;
-    }
+    this.view.uints8.fill(0, start, start + rTreeNode.size);
   }
 
   #getBBoxPtr(ptr: Ptr32): number {
