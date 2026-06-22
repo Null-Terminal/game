@@ -40,7 +40,7 @@ export abstract class State<Parent extends HTMLElement = HTMLElement, State = un
     return this.historyIndex < this.history.length - 1;
   }
 
-  protected pushState(state: State, dispatchEvent = true): void {
+  protected pushState(state: State, dispatchEvent = true) {
     this.history = this.history.slice(0, this.historyIndex + 1);
 
     // Состояния в истории не должны быть подряд одинаковыми
