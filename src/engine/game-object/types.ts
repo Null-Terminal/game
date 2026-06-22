@@ -1,16 +1,13 @@
 import type { Handlers } from "#/event-emitter";
 
 import type { BBoxTuple } from "#engine/rtree";
-import type { LoadedAnimation } from "#engine/animation-loader";
+import type { LoadedAnimation, SpriteEffects } from "#engine/animation-loader";
 
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
-export interface Effects {
-  scale?: number;
+export interface Effects extends SpriteEffects {
   speed?: number;
-  flipX?: boolean;
-  flipY?: boolean;
 }
 
 export type GameObjectOptions =

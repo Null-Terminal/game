@@ -1,11 +1,18 @@
-import { GameObject } from "#engine/game-object";
+import { MotionObject } from "#engine/game-object/motion-object";
 import type { Collision } from "#engine/game/world";
 
-export * from "#engine/game-object/types";
+export enum CollisionStatus {
+  NoCollision     = 0b00000,
+  LeftCollision   = 0b00001,
+  RightCollision  = 0b00010,
+  TopCollision    = 0b00100,
+  BottomCollision = 0b01000,
+  Crashed         = 0b10000,
+}
 
-export abstract class MotionObject extends GameObject {
+export abstract class CollisionObject extends MotionObject {
   override get redrawEvent() {
-    return this.canvas.events.dynamic;
+    return this.canvas.events.main;
   }
 
   hasCollision(x = this.x, y = this.y): boolean {
@@ -16,7 +23,16 @@ export abstract class MotionObject extends GameObject {
     return this.world.findCollisions(x, y, x + this.width, y + this.height);
   }
 
-  move(dx: number, dy: number) {
+  override move(dx: number, dy: number): number {
+    if (!this.#exitCollision()) {
+      return CollisionStatus.Crashed;
+    }
+
+    const oldX = this.x;
+    const oldY = this.y;
+
+    let status: number = CollisionStatus.NoCollision;
+
     if (dx !== 0) {
       const newX = this.x + dx;
 
@@ -42,6 +58,10 @@ export abstract class MotionObject extends GameObject {
         }
 
         this.x = testX;
+      }
+
+      if (this.x === oldX) {
+        status |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
       }
     }
 
@@ -69,14 +89,18 @@ export abstract class MotionObject extends GameObject {
 
         this.y = testY;
       }
+
+      if (this.y === oldY) {
+        status |= dy > 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
+      }
     }
 
-    this.#exitCollision();
+    return status;
   }
 
-  #exitCollision() {
+  #exitCollision(): boolean {
     if (!this.hasCollision(this.x, this.y)) {
-      return;
+      return true;
     }
 
     const collisions = this.findCollisions(this.x, this.y);
@@ -125,7 +149,10 @@ export abstract class MotionObject extends GameObject {
       if (!this.hasCollision(x, y)) {
         this.x = x;
         this.y = y;
+        return true;
       }
     }
+
+    return false;
   }
 }
