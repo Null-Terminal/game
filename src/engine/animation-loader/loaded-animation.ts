@@ -89,6 +89,9 @@ export class LoadedAnimation {
   }
 
   getPatternFrame(index: number, width: number, height: number, effects: FrameEffects = {}): BakedFrame {
+    width = this.#resolveSize(width);
+    height = this.#resolveSize(height);
+
     const cacheKey = this.#getKey(index, effects, width, height);
     const fromCache = this.#images[cacheKey];
 
@@ -111,6 +114,34 @@ export class LoadedAnimation {
     });
 
     return canvas;
+  }
+
+  #resolveSize(size: number): number {
+    if (size < 32) {
+      return 32;
+    }
+
+    if (size < 64) {
+      return 64;
+    }
+
+    if (size < 128) {
+      return 128;
+    }
+
+    if (size < 256) {
+      return 256;
+    }
+
+    if (size < 512) {
+      return 512;
+    }
+
+    if (size < 1024) {
+      return 1024;
+    }
+
+    return size;
   }
 
   #getKey(index: number, effects: FrameEffects, width = 0, height = 0) {
