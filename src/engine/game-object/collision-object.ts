@@ -11,10 +11,6 @@ export enum CollisionStatus {
 }
 
 export abstract class CollisionObject extends MotionObject {
-  override get redrawEvent() {
-    return this.canvas.events.main;
-  }
-
   hasCollision(x = this.x, y = this.y): boolean {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
@@ -91,7 +87,7 @@ export abstract class CollisionObject extends MotionObject {
       }
 
       if (this.y === oldY) {
-        status |= dy > 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
+        status |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
     }
 
