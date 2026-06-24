@@ -5,11 +5,11 @@ import type { WorldObjects } from "#engine/game/world";
 
 export const staticWorld: WorldObjects = [
   [InvisibleWallObject, { bbox: [0, 130, 3000, 135] }],
-  [WallObject, { bbox: [200, 400, 500, 420] }],
-  [WallObject, { bbox: [360, 180, 560, 240] }],
-  [WallObject, { bbox: [700, 220, 900, 280] }],
-  [WallObject, { bbox: [170, 550, 360, 570] }],
-  [WallObject, { bbox: [1200, 340, 1600, 360] }],
-  [WallObject, { bbox: [1700, 160, 1860, 180] }],
-  [WallObject, { bbox: [1000, 440, 1040, 520] }],
+  [WallObject, { bbox: [100, 500, 300, 520] }],
+  [WallObject, { bbox: [360, 280, 560, 340] }],
+  [WallObject, { bbox: [700, 320, 900, 380] }],
+  [WallObject, { bbox: [170, 650, 360, 670] }],
+  [WallObject, { bbox: [1200, 440, 1600, 460] }],
+  [WallObject, { bbox: [1700, 260, 1860, 280] }],
+  [WallObject, { bbox: [900, 540, 950, 620] }],
 ];

@@ -1,9 +1,8 @@
 import { Game, RenderCanvas } from "#engine/game";
+
 import { PersonObject } from "#game/person-object";
 import { PlatformObject } from "#game/platform-object";
-
-import { SkyboxObject } from "#game/skybox-object";
-import { FloorObject } from "#game/floor-object";
+import { FillerObject } from "#game/filler-object";
 
 import { staticWorld } from "#game/world";
 
@@ -25,8 +24,22 @@ game.world.createObject(PlatformObject, {
    ]
 });
 
-game.world.createObject(SkyboxObject);
-game.world.createObject(FloorObject);
+game.world.createObject(FillerObject, {
+  animation: "night",
+  stretchWidth: true,
+});
+
+game.world.createObject(FillerObject, {
+  animation: "asphalt",
+  stretchWidth: true,
+});
+
+game.world.createObject(FillerObject, {
+  y: 140,
+  animation: "meshFence",
+  stretchWidth: true,
+  effects: { scale: 0.7, opacity: 0.7 },
+});
 
 for (let i = 0; i < 1; i++) {
   game.world.createObject(PersonObject, { y: 1000, x: 300 });

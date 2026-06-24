@@ -2,8 +2,8 @@ import { DynamicObject } from "#engine/game-object";
 
 import { loadAnimation } from "#engine/animation-loader";
 
-const wall = await loadAnimation(import("#/sprites/wall.png"), {
-  animation: import("#/sprites/wall.animation.json")
+const wall = await loadAnimation(import("#/sprites/bricks.webp"), {
+  animation: import("#/sprites/bricks.animation.json")
 });
 
 export class PlatformObject extends DynamicObject {

@@ -2,15 +2,15 @@ import { StaticObject } from "#engine/game-object";
 
 import { loadAnimation } from "#engine/animation-loader";
 
-const wall = await loadAnimation(import("#/sprites/wall.png"), {
-  animation: import("#/sprites/wall.animation.json")
+const bricks = await loadAnimation(import("#/sprites/bricks.webp"), {
+  animation: import("#/sprites/bricks.animation.json")
 });
 
 export class WallObject extends StaticObject {
-  static override animations = { wall };
+  static override animations = { bricks };
   declare readonly Animations: (typeof WallObject)["animations"];
 
   init() {
-    this.play(this.animations.wall);
+    this.play(this.animations.bricks);
   }
 }
