@@ -1,15 +1,24 @@
+import { Disposable } from "#engine/disposable";
+
 import { World, type WorldOptions } from "#engine/game/world";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 
 export { World, type WorldOptions };
 export { RenderCanvas, type RenderCanvasOptions, type RenderPayload } from "#engine/game/render-canvas";
 
-export class Game {
+export class Game extends Disposable {
   readonly canvas: RenderCanvas;
   readonly world: World;
 
   constructor(renderCanvas: RenderCanvas, world: WorldOptions) {
+    super();
     this.canvas = renderCanvas;
     this.world = new World(this, world);
+  }
+
+  override destroy() {
+    super.destroy();
+    this.canvas.destroy();
+    this.world.destroy();
   }
 }

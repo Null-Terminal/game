@@ -1,8 +1,9 @@
 import { cache } from "#decorators/cache";
+import { Disposable } from "#engine/disposable";
 
 const kinds = new Map<number, string>();
 
-export abstract class KindedObject {
+export abstract class KindedObject extends Disposable {
   @cache
   static get kind() {
     const name = this.name;

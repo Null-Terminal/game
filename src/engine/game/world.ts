@@ -1,3 +1,5 @@
+import { Disposable } from "#engine/disposable";
+
 import { RTree, type RTreePred } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
@@ -8,7 +10,7 @@ import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/ty
 
 export * from "#engine/game/world/types";
 
-export class World {
+export class World extends Disposable {
   readonly game: Game;
   readonly options: Required<WorldOptions>;
 
@@ -17,12 +19,16 @@ export class World {
   #objectPool = new GameObjectPool();
 
   constructor(game: Game, opts: WorldOptions) {
+    super();
+
     this.game = game;
     this.options = { ...opts };
 
-    game.canvas.emitter.on(game.canvas.events.background, () => {
-      this.#dynamicWorld.clear();
-    });
+    this.register(
+      game.canvas.emitter.on(game.canvas.events.background, () => {
+        this.#dynamicWorld.clear();
+      })
+    );
 
     for (const elem of opts.staticWorld) {
       const ptr = this.createObject(elem.object[0], {

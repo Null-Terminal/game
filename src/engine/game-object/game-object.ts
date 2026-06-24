@@ -69,7 +69,6 @@ export abstract class GameObject extends KindedObject {
   #activeAnimation: Animations[keyof Animations] | null = null;
 
   #cancelRedrawHandler: Function | null = null;
-  readonly #destructors: Function[] = [];
 
   constructor(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
     super();
@@ -111,7 +110,8 @@ export abstract class GameObject extends KindedObject {
     this.#destructors.push(destructor);
   }
 
-  destroy() {
+  override destroy() {
+    super.destroy();
     this.#cancelRedrawHandler?.();
     this.#destructors.splice(0, this.#destructors.length).forEach((destroy) => destroy());
   }
