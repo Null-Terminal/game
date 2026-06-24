@@ -15,6 +15,7 @@ export interface LoadAnimationOptions {
 export type BakedFrame = ImageBitmap | OffscreenCanvas;
 
 export interface FrameEffects {
+  opacity?: number;
   scale?: number;
   flipX?: boolean;
   flipY?: boolean;

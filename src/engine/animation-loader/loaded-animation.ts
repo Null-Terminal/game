@@ -64,6 +64,7 @@ export class LoadedAnimation {
     const flipY = effects.flipY ? -1 : 1;
 
     ctx.scale(flipX, flipY);
+    ctx.globalAlpha = effects.opacity ?? 1;
 
     ctx.drawImage(
       this.image,
@@ -145,6 +146,6 @@ export class LoadedAnimation {
   }
 
   #getKey(index: number, effects: FrameEffects, width = 0, height = 0) {
-    return `${index}-${effects.scale ?? 1}-${effects.flipX ?? false}-${effects.flipY ?? false}-${width}-${height}`;
+    return `${index}-${effects.opacity ?? 1}-${effects.scale ?? 1}-${effects.flipX ?? false}-${effects.flipY ?? false}-${width}-${height}`;
   }
 }
