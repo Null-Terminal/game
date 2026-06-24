@@ -1,7 +1,8 @@
 {
   "params": {
     "speed": 2,
-    "scale": 0.15
+    "scale": 0.15,
+    "randomDuration": [100, 500]
   },
   "sprites": [
     {
