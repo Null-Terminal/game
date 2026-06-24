@@ -17,6 +17,8 @@ export interface SpriteDescriptor {
 export interface AnimationParameters {
   speed: number;
   scale: number;
+  randomOrder?: boolean;
+  randomDuration?: number[];
 }
 
 export interface TexturePacker {

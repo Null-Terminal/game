@@ -157,6 +157,10 @@ export class SpriteAnimation {
     return this.#sprites.at(index);
   }
 
+  randomIndex(): number {
+    return Math.floor(Math.random() * this.#sprites.length);
+  }
+
   toDataURL() {
     const data = encodeURIComponent(JSON.stringify({ params: this.params, sprites: this.#sprites }));
     return `data:application/json,${data}`;

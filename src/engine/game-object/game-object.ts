@@ -141,10 +141,10 @@ export abstract class GameObject extends KindedObject {
   }
 
   play(selectedAnimation: Animations[keyof Animations]) {
-    const { animation } = selectedAnimation;
+    const { animation, animation: { params } } = selectedAnimation;
 
     let lastFrameTime = 0;
-    let spriteIndex = 0;
+    let spriteIndex = params.randomOrder ? animation.randomIndex() : 0;
 
     this.#cancelRedrawHandler?.();
     this.#activeAnimation = selectedAnimation;
@@ -192,10 +192,21 @@ export abstract class GameObject extends KindedObject {
         this.animation.emit(this.animation.events[selectedAnimation.name]!, sprite.spriteId);
       }
 
-      const duration = sprite.duration / (animation.params.speed * effects.speed);
+      let duration;
+
+      if (params.randomDuration != null) {
+        const max = params.randomDuration[0] ?? 100;
+        const min = params.randomDuration[1] ?? 100;
+        duration = Math.floor(Math.random() * (max - min + 1)) + min;
+
+      } else {
+        duration = sprite?.duration;
+      }
+
+      duration /= (params.speed * effects.speed);
 
       if (!this.isPaused() && (now - lastFrameTime >= duration)) {
-        spriteIndex = (spriteIndex + 1) % animation.length;
+        spriteIndex = params.randomOrder ? animation.randomIndex() : (spriteIndex + 1) % animation.length;
         lastFrameTime = now;
       }
 
