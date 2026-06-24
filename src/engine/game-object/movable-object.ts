@@ -1,4 +1,4 @@
-import { MotionObject } from "#engine/game-object/motion-object";
+import { GameObject } from "#engine/game-object/game-object";
 import type { Collision } from "#engine/game/world";
 
 export enum CollisionStatus {
@@ -10,7 +10,11 @@ export enum CollisionStatus {
   Crashed         = 0b10000,
 }
 
-export abstract class CollisionObject extends MotionObject {
+export abstract class MovableObject extends GameObject {
+  override get redrawEvent() {
+    return this.canvas.events.main;
+  }
+
   hasCollision(x = this.x, y = this.y): boolean {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
