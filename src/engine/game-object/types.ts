@@ -13,6 +13,9 @@ export interface Effects extends FrameEffects {
 
 export interface DefaultGameObjectOptions {
   movePath?: MovePath;
+  animation?: string;
+  stretchWidth?: boolean;
+  stretchHeight?: boolean;
   effects?: Effects;
 }
 

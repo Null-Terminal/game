@@ -43,9 +43,6 @@ export abstract class GameObject extends KindedObject {
 
   bbox: BBoxTuple | null = null;
 
-  readonly stretchWidth: boolean = false;
-  readonly stretchHeight: boolean = false;
-
   readonly movement = new Movement(this);
 
   get canvas() {
@@ -99,10 +96,12 @@ export abstract class GameObject extends KindedObject {
   create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
     this.game = game;
     this.poolPointer = poolPointer;
-    this.options = { ...opts };
 
-    if ("bbox" in this.options) {
-      this.bbox = this.options.bbox;
+    opts = { ...opts };
+    this.options = opts;
+
+    if ("bbox" in opts) {
+      this.bbox = opts.bbox;
       const [minX, minY, maxX, maxY] = this.bbox;
 
       this.x = minX;
@@ -112,25 +111,29 @@ export abstract class GameObject extends KindedObject {
       this.height = maxY - minY;
 
     } else {
-      if ("x" in this.options) {
-        this.x = this.options.x;
+      if ("x" in opts) {
+        this.x = opts.x;
       }
 
-      if ("y" in this.options) {
-        this.y = this.options.y;
+      if ("y" in opts) {
+        this.y = opts.y;
       }
     }
 
     this.prevX = this.x;
     this.prevY = this.y;
 
-    this.effects = { scale: 1, speed: 1, ...this.options.effects };
+    this.effects = { scale: 1, speed: 1, ...opts.effects };
 
     queueMicrotask(() => {
       this.init();
 
-      if (this.options.movePath != null) {
-        this.movement.moveAlongPath(this.options.movePath);
+      if (opts.animation != null && opts.animation in this.animations) {
+        this.play(this.animations[opts.animation]!);
+      }
+
+      if (opts.movePath != null) {
+        this.movement.moveAlongPath(opts.movePath);
       }
     });
   }
@@ -170,7 +173,7 @@ export abstract class GameObject extends KindedObject {
     this.#cancelRedrawHandler?.();
     this.#activeAnimation = selectedAnimation;
 
-    const { effects } = this;
+    const { effects, options: { stretchWidth, stretchHeight } } = this;
     const { canvas, emitter } = this.canvas;
 
     let rendered = false;
@@ -181,12 +184,12 @@ export abstract class GameObject extends KindedObject {
       this.height = selectedAnimation.maxHeight * effects.scale;
     }
 
-    if (this.stretchWidth || this.stretchHeight) {
-      if (this.stretchWidth) {
+    if (stretchWidth || stretchHeight) {
+      if (stretchWidth) {
         this.width = canvas.width;
       }
 
-      if (this.stretchHeight) {
+      if (stretchHeight) {
         this.height = canvas.height;
       }
     }
@@ -199,7 +202,7 @@ export abstract class GameObject extends KindedObject {
       // Нормализуем y, так как canvas считает 0 верхом, а не низом
       const y = canvas.height - this.y - this.height;
 
-      if (this.bbox != null || this.stretchWidth || this.stretchHeight) {
+      if (this.bbox != null || stretchWidth || stretchHeight) {
         const image = selectedAnimation.getPatternFrame(spriteIndex, this.width, this.height, effects);
         ctx.drawImage(image, 0, 0, this.width, this.height, this.x, y, this.width, this.height);
 
