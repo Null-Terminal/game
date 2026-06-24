@@ -4,10 +4,7 @@ import type { ConcreteGameObjectConstructor  } from "#engine/game-object-pool";
 
 export type WorldObject = [GameObject: ConcreteGameObjectConstructor<typeof GameObject>, GameObjectOptions?];
 
-export type WorldObjects = {
-  object: WorldObject;
-  bbox: BBoxTuple;
-}[];
+export type WorldObjects = WorldObject[];
 
 export interface WorldOptions {
   staticWorld: WorldObjects

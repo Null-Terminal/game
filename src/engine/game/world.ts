@@ -30,18 +30,27 @@ export class World extends Disposable {
       })
     );
 
-    for (const elem of opts.staticWorld) {
-      const ptr = this.createObject(elem.object[0], {
-        bbox: elem.bbox,
-        ...elem.object[1]
-      });
-
-      this.#staticWorld.insert(...ptr, ...elem.bbox);
-    }
+    queueMicrotask(() => {
+      for (const elem of opts.staticWorld) {
+        this.createObject(elem[0], elem[1]);
+      }
+    });
   }
 
   createObject(object: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
     return this.#objectPool.add(object, this.game, opts);
+  }
+
+  addToStaticWorld(object: GameObject) {
+    this.#staticWorld.insert(
+      object.poolPointer[0],
+      object.poolPointer[1],
+
+      object.x,
+      object.y,
+      object.x + object.width,
+      object.y + object.height
+    );
   }
 
   addToDynamicWorld(object: GameObject) {
@@ -54,10 +63,6 @@ export class World extends Disposable {
       object.x + object.width,
       object.y + object.height
     );
-  }
-
-  addToStaticWorld(object: GameObject) {
-    this.#staticWorld.insert(object.poolPointer[0], object.poolPointer[1], object.x, object.y, object.width, object.height);
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
