@@ -41,7 +41,7 @@ export abstract class MovableObject extends GameObject {
     let status: number = CollisionStatus.NoCollision;
 
     const riding = this.#riding;
-    const ridingTolerance = riding != null ? Math.ceil(Math.abs(riding.y - riding.prevY)) : 5;
+    const ridingTolerance = riding != null ? Math.ceil(Math.abs(riding.y - riding.prevY)) : 3;
 
     // Проверяем, не стоит мы на двигающейся платформе
     const collision = this.findDynamicCollision(this.x, this.y - ridingTolerance);
@@ -52,7 +52,7 @@ export abstract class MovableObject extends GameObject {
 
       // Корректирую позицию объекта под позицию платформы на которой он стоит
       this.x += riding.x - riding.prevX;
-      this.y += riding.y - riding.prevY;
+      this.y = riding.y + riding.height;
 
       status |= CollisionStatus.BottomCollision;
       if (dy < 0) { dy = 0; }
@@ -65,7 +65,7 @@ export abstract class MovableObject extends GameObject {
 
       if (isStandingOnPlatform) {
         this.x += riding.x - riding.prevX;
-        this.y += riding.y - riding.prevY;
+        this.y = riding.y + riding.height;
 
         status |= CollisionStatus.BottomCollision;
         if (dy < 0) { dy = 0; }
