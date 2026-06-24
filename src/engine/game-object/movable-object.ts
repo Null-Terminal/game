@@ -60,7 +60,7 @@ export abstract class MovableObject extends GameObject {
     } else if (riding != null) {
       const isStandingOnPlatform =
         this.y - riding.y - riding.height <= ridingTolerance &&
-        this.x >= riding.x &&
+        this.x > riding.x &&
         this.x < riding.x + riding.width;
 
       if (isStandingOnPlatform) {
