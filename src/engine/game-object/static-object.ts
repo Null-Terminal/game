@@ -4,7 +4,7 @@ import type { PoolPointer } from "#engine/game-object-pool";
 import { GameObject } from "#engine/game-object/game-object";
 import type { GameObjectOptions } from "#engine/game-object/types";
 
-export abstract class StaticalObject extends GameObject {
+export abstract class StaticObject extends GameObject {
   override get redrawEvent() {
     return this.canvas.events.static;
   }
