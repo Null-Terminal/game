@@ -19,6 +19,10 @@ export abstract class MovableObject extends GameObject {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
 
+  findDynamicCollision(x = this.x, y = this.y): Collision | null {
+    return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
+  }
+
   findCollisions(x = this.x, y = this.y): Collision[] {
     return this.world.findCollisions(x, y, x + this.width, y + this.height);
   }
@@ -28,8 +32,8 @@ export abstract class MovableObject extends GameObject {
       return CollisionStatus.Crashed;
     }
 
-    const oldX = this.x;
-    const oldY = this.y;
+    this.prevX = this.x;
+    this.prevY = this.y;
 
     let status: number = CollisionStatus.NoCollision;
 
@@ -60,7 +64,7 @@ export abstract class MovableObject extends GameObject {
         this.x = testX;
       }
 
-      if (this.x === oldX) {
+      if (this.x === this.prevX) {
         status |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
       }
     }
@@ -90,9 +94,15 @@ export abstract class MovableObject extends GameObject {
         this.y = testY;
       }
 
-      if (this.y === oldY) {
+      if (this.y === this.prevY) {
         status |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
+    }
+
+    const collision = this.findDynamicCollision(this.x, this.y - 1);
+
+    if (collision != null) {
+      this.x += collision.object.x - collision.object.prevX;
     }
 
     return status;

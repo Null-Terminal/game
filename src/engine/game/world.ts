@@ -79,6 +79,25 @@ export class World extends Disposable {
     return true;
   }
 
+  findDynamicCollision(minX: number, minY: number, maxX: number, maxY: number): Collision | null {
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
+
+    const pred: RTreePred = ({ bbox }) =>
+      maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+
+    const collision = this.#dynamicWorld.searchFirst(x1, y1, x2, y2, pred);
+
+    if (collision != null) {
+      return {
+        bbox: collision.bbox,
+        object: this.#objectPool.get(collision.pointer[0], collision.pointer[1])!
+      };
+    }
+
+    return collision;
+  }
+
   findCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;

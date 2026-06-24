@@ -36,7 +36,11 @@ export abstract class GameObject extends KindedObject {
   effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
 
   x = 0;
+  prevX = 0;
+
   y = 0;
+  prevY = 0;
+
   bbox: BBoxTuple | null = null;
 
   readonly stretchWidth: boolean = false;
@@ -117,6 +121,9 @@ export abstract class GameObject extends KindedObject {
       }
     }
 
+    this.prevX = this.x;
+    this.prevY = this.y;
+
     this.effects = { scale: 1, speed: 1, ...this.options.effects };
 
     queueMicrotask(() => {
@@ -129,6 +136,9 @@ export abstract class GameObject extends KindedObject {
   }
 
   move(dx: number, dy: number) {
+    this.prevX = this.x;
+    this.prevY = this.y;
+
     this.x = this.x + dx;
     this.y = this.y + dy;
   }
