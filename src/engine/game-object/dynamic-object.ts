@@ -1,13 +1,12 @@
 import { GameObject } from "#engine/game-object/game-object";
 
-export abstract class MotionObject extends GameObject {
+export abstract class DynamicObject extends GameObject {
   override get redrawEvent() {
     return this.canvas.events.dynamic;
   }
 
-  move(dx: number, dy: number) {
-    this.x = this.x + dx;
-    this.y = this.y + dy;
+  override move(dx: number, dy: number) {
+    super.move(dx, dy);
     this.world.addToDynamicWorld(this);
   }
 }
