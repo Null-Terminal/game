@@ -16,13 +16,13 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
 const game = new Game(canvas, { staticWorld } );
 
 game.world.createObject(PlatformObject, {
-  bbox: [50, 270, 130, 300],
+  bbox: [350, 770, 430, 800],
   movePath: [
-    [200, 180],
-    [400, 180],
+    [700, 500],
+    [400, 500],
     [600, 600],
-    [100, 600]
-  ]
+    [350, 770]
+   ]
 });
 
 game.world.createObject(SkyboxObject);
