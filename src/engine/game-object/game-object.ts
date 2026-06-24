@@ -132,8 +132,8 @@ export abstract class GameObject extends KindedObject {
         this.play(this.animations[opts.animation]!);
       }
 
-      if (opts.movePath != null) {
-        this.movement.moveAlongPath(opts.movePath);
+      if (opts.movement != null) {
+        this.movement.moveAlongPath(opts.movement.path, opts.movement);
       }
     });
   }
