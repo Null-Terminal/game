@@ -62,6 +62,14 @@ export abstract class GameObject extends KindedObject {
     return this.#height;
   }
 
+  protected set width(value: number) {
+    this.#width = value;
+  }
+
+  protected set height(value: number) {
+    this.#height = value;
+  }
+
   #width = 0;
   #height = 0;
 
@@ -89,8 +97,8 @@ export abstract class GameObject extends KindedObject {
       this.x = minX;
       this.y = minY;
 
-      this.#width = maxX - minX;
-      this.#height = maxY - minY;
+      this.width = maxX - minX;
+      this.height = maxY - minY;
 
     } else {
       if ("x" in this.options) {
