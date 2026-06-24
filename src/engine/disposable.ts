@@ -1,8 +1,9 @@
 export abstract class Disposable {
   readonly #destructors: Function[] = [];
 
-  register(destructor: Function) {
+  register<T extends () => void>(destructor: T): T {
     this.#destructors.push(destructor);
+    return destructor;
   }
 
   destroy() {

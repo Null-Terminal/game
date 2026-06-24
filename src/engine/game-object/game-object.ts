@@ -117,11 +117,6 @@ export abstract class GameObject extends KindedObject {
     queueMicrotask(this.init.bind(this));
   }
 
-  override destroy() {
-    super.destroy();
-    this.#cancelRedrawHandler?.();
-  }
-
   isPaused() {
     return this.#paused;
   }
@@ -170,7 +165,7 @@ export abstract class GameObject extends KindedObject {
       }
     }
 
-    this.#cancelRedrawHandler = emitter.on(this.redrawEvent, ([now, ctx]) => {
+    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
       // Нормализуем y, так как canvas считает 0 верхом, а не низом
@@ -212,7 +207,7 @@ export abstract class GameObject extends KindedObject {
       }
 
       rendered = true;
-    });
+    }));
   }
 }
 
