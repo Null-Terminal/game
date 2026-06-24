@@ -37,6 +37,9 @@ export abstract class GameObject extends KindedObject {
   y = 0;
   bbox: BBoxTuple | null = null;
 
+  readonly stretchWidth: boolean = false;
+  readonly stretchHeight: boolean = false;
+
   get canvas() {
     return this.game.canvas;
   }
@@ -158,14 +161,26 @@ export abstract class GameObject extends KindedObject {
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     if (this.bbox == null) {
-      this.#width = selectedAnimation.maxWidth * effects.scale;
-      this.#height = selectedAnimation.maxHeight * effects.scale;
+      this.width = selectedAnimation.maxWidth * effects.scale;
+      this.height = selectedAnimation.maxHeight * effects.scale;
+    }
+
+    const { width, height } = this.game.canvas.canvas;
+
+    if (this.stretchWidth || this.stretchHeight) {
+      if (this.stretchWidth) {
+        this.width = width;
+      }
+
+      if (this.stretchHeight) {
+        this.height = height;
+      }
     }
 
     this.#cancelRedrawHandler = emitter.on(this.redrawEvent, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
-      if (this.bbox != null) {
+      if (this.bbox != null || this.stretchWidth || this.stretchHeight) {
         const image = selectedAnimation.getPatternFrame(spriteIndex, this.width, this.height, effects);
         ctx.drawImage(image, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height);
 
