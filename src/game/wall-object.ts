@@ -1,4 +1,4 @@
-import { StaticalObject } from "#engine/game-object";
+import { StaticObject } from "#engine/game-object";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -6,7 +6,7 @@ const wall = await loadAnimation(import("#/sprites/wall.png"), {
   animation: import("#/sprites/wall.animation.json")
 });
 
-export class WallObject extends StaticalObject {
+export class WallObject extends StaticObject {
   static override animations = { wall };
   declare readonly Animations: (typeof WallObject)["animations"];
 

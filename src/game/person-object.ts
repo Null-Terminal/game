@@ -1,4 +1,4 @@
-import { CollisionObject, CollisionStatus } from "#engine/game-object";
+import { MovableObject, CollisionStatus } from "#engine/game-object";
 import { loadAnimation } from "#engine/animation-loader";
 
 const [stay, run, jump] = await Promise.all([
@@ -18,7 +18,7 @@ const [stay, run, jump] = await Promise.all([
   })
 ]);
 
-export class PersonObject extends CollisionObject {
+export class PersonObject extends MovableObject {
   static override animations = { stay, run, jump };
   declare readonly Animations: (typeof PersonObject)["animations"];
 
