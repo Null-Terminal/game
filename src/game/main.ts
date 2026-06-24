@@ -1,7 +1,9 @@
 import { Game, RenderCanvas } from "#engine/game";
 import { PersonObject } from "#game/person-object";
 import { PlatformObject } from "#game/platform-object";
+
 import { SkyboxObject } from "#game/skybox-object";
+import { FloorObject } from "#game/floor-object";
 
 import { staticWorld } from "#game/world";
 
@@ -13,9 +15,11 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
 
 const game = new Game(canvas, { staticWorld } );
 
-game.world.createObject(PlatformObject, { bbox: [50, 140, 130, 170] });
+game.world.createObject(PlatformObject, { bbox: [50, 270, 130, 300] });
+
 game.world.createObject(SkyboxObject);
+game.world.createObject(FloorObject);
 
 for (let i = 0; i < 1; i++) {
-  game.world.createObject(PersonObject);
+  game.world.createObject(PersonObject, { y: 1000, x: 300 });
 }

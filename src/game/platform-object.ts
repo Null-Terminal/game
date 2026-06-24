@@ -33,7 +33,7 @@ export class PlatformObject extends MotionObject {
 
       totalY = this.y;
 
-      if (totalY > 400 || totalY < 50) {
+      if (totalY > 600 || totalY < 180) {
         SPEED *= -1;
       }
     });

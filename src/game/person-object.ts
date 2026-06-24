@@ -26,8 +26,8 @@ export class PersonObject extends CollisionObject {
     this.play(this.animations.stay);
 
     const SPEED = 300;
-    const JUMP_FORCE = -1000;
-    const GRAVITY = 2500;
+    const JUMP_FORCE = 1000;
+    const GRAVITY = -2500;
 
     let vy = 0;
     let isOnGround = false;
