@@ -40,7 +40,11 @@ export abstract class MovableObject extends GameObject {
 
     let status: number = CollisionStatus.NoCollision;
 
+    // Платформа, на которой стоял игрок в прошлый раз
     const riding = this.#riding;
+
+    // Из-за динамической природы платформ и ошибок округления, нужно закладывать некоторую погрешность.
+    // В базовом случае берется просто примерное подходящее число, а в дальнейшем учитываем скорость платформы.
     const ridingTolerance = riding != null ? Math.ceil(Math.abs(riding.y - riding.prevY)) : 3;
 
     // Проверяем, не стоит мы на двигающейся платформе
