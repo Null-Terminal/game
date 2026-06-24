@@ -6,6 +6,8 @@ import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
 import { KindedObject } from "#engine/game-object/kinded-object";
+import { Movement } from "#engine/game-object/movement";
+
 import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#engine/game-object/types";
 
 export abstract class GameObject extends KindedObject {
@@ -39,6 +41,8 @@ export abstract class GameObject extends KindedObject {
 
   readonly stretchWidth: boolean = false;
   readonly stretchHeight: boolean = false;
+
+  readonly movement = new Movement(this);
 
   get canvas() {
     return this.game.canvas;
@@ -114,7 +118,19 @@ export abstract class GameObject extends KindedObject {
     }
 
     this.effects = { scale: 1, speed: 1, ...this.options.effects };
-    queueMicrotask(this.init.bind(this));
+
+    queueMicrotask(() => {
+      this.init();
+
+      if (this.options.movePath != null) {
+        this.movement.moveAlongPath(this.options.movePath);
+      }
+    });
+  }
+
+  move(dx: number, dy: number) {
+    this.x = this.x + dx;
+    this.y = this.y + dy;
   }
 
   isPaused() {
