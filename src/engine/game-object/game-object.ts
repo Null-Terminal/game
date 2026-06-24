@@ -114,17 +114,12 @@ export abstract class GameObject extends KindedObject {
     }
 
     this.effects = { scale: 1, speed: 1, ...this.options.effects };
-    this.init();
-  }
-
-  register(destructor: Function) {
-    this.#destructors.push(destructor);
+    queueMicrotask(this.init.bind(this));
   }
 
   override destroy() {
     super.destroy();
     this.#cancelRedrawHandler?.();
-    this.#destructors.splice(0, this.#destructors.length).forEach((destroy) => destroy());
   }
 
   isPaused() {
