@@ -16,12 +16,16 @@ const game = new Game(canvas, { staticWorld } );
 
 game.world.createObject(PlatformObject, {
   bbox: [350, 770, 430, 800],
-  movePath: [
-    [700, 500],
-    [400, 500],
-    [600, 600],
-    [350, 770]
-   ]
+  movement: {
+     path: [
+      [700, 500],
+      [400, 500],
+      [600, 600],
+      [350, 770]
+     ],
+
+    speed: 200
+  }
 });
 
 game.world.createObject(FillerObject, {

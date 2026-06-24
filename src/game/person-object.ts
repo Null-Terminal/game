@@ -26,7 +26,7 @@ export class PersonObject extends MovableObject {
     this.play(this.animations.stay);
 
     const SPEED = 300;
-    const JUMP_FORCE = 1000;
+    const JUMP_FORCE = 1200;
     const GRAVITY = -2500;
 
     let vy = 0;
