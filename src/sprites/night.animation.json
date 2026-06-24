@@ -1,0 +1,35 @@
+{
+  "params": {
+    "speed": 1,
+    "scale": 1,
+    "randomOrder": true,
+    "randomDuration": [1000, 3000]
+  },
+
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 631,
+      "height": 1266,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 631,
+      "y": 0,
+      "width": 1262,
+      "height": 1266,
+      "duration": 100,
+      "spriteId": ""
+    },
+    {
+      "x": 1262,
+      "y": 0,
+      "width": 631,
+      "height": 1266,
+      "duration": 100,
+      "spriteId": ""
+    }
+  ]
+}
