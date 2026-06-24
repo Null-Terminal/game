@@ -17,6 +17,7 @@ export interface SpriteDescriptor {
 export interface AnimationParameters {
   speed: number;
   scale: number;
+  loopReverse?: boolean;
   randomOrder?: boolean;
   randomDuration?: number[];
 }

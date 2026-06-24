@@ -191,6 +191,8 @@ export abstract class GameObject extends KindedObject {
       }
     }
 
+    let inc = 1;
+
     this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
@@ -228,7 +230,22 @@ export abstract class GameObject extends KindedObject {
       duration /= (params.speed * effects.speed);
 
       if (!this.isPaused() && (now - lastFrameTime >= duration)) {
-        spriteIndex = params.randomOrder ? animation.randomIndex() : (spriteIndex + 1) % animation.length;
+        if (params.randomOrder) {
+          spriteIndex = animation.randomIndex();
+
+        } else {
+          if (params.loopReverse) {
+            if (spriteIndex + inc === animation.length) {
+              inc = -1;
+
+            } else if (spriteIndex + inc === -1) {
+              inc = 1;
+            }
+          }
+
+          spriteIndex = (spriteIndex + inc) % animation.length;
+        }
+
         lastFrameTime = now;
       }
 
