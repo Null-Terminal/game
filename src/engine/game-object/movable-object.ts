@@ -15,6 +15,13 @@ export abstract class MovableObject extends GameObject {
     return this.canvas.events.main;
   }
 
+  #riding: GameObject | null = null;
+
+  override destroy() {
+    super.destroy();
+    this.#riding = null;
+  }
+
   hasCollision(x = this.x, y = this.y): boolean {
     return this.world.hasCollision(x, y, x + this.width, y + this.height);
   }
@@ -28,14 +35,49 @@ export abstract class MovableObject extends GameObject {
   }
 
   override move(dx: number, dy: number): number {
-    if (!this.#exitCollision()) {
-      return CollisionStatus.Crashed;
-    }
-
     this.prevX = this.x;
     this.prevY = this.y;
 
     let status: number = CollisionStatus.NoCollision;
+
+    const riding = this.#riding;
+    const ridingTolerance = riding != null ? Math.ceil(Math.abs(riding.y - riding.prevY)) : 3;
+
+    // Проверяем, не стоит мы на двигающейся платформе
+    const collision = this.findDynamicCollision(this.x, this.y - ridingTolerance);
+
+    if (collision != null) {
+      const riding = collision.object;
+      this.#riding = collision.object;
+
+      // Корректирую позицию объекта под позицию платформы на которой он стоит
+      this.x += riding.x - riding.prevX;
+      this.y += riding.y - riding.prevY;
+
+      status |= CollisionStatus.BottomCollision;
+      if (dy < 0) { dy = 0; }
+
+    } else if (riding != null) {
+      const isStandingOnPlatform =
+        this.y - riding.y - riding.height <= ridingTolerance &&
+        this.x >= riding.x &&
+        this.x <= riding.x + riding.width;
+
+      if (isStandingOnPlatform) {
+        this.x += riding.x - riding.prevX;
+        this.y += riding.y - riding.prevY;
+
+        status |= CollisionStatus.BottomCollision;
+        if (dy < 0) { dy = 0; }
+
+      } else {
+        this.#riding = null;
+      }
+    }
+
+    if (!this.#exitCollision()) {
+      return CollisionStatus.Crashed;
+    }
 
     if (dx !== 0) {
       const newX = this.x + dx;
@@ -97,12 +139,6 @@ export abstract class MovableObject extends GameObject {
       if (this.y === this.prevY) {
         status |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
-    }
-
-    const collision = this.findDynamicCollision(this.x, this.y - 1);
-
-    if (collision != null) {
-      this.x += collision.object.x - collision.object.prevX;
     }
 
     return status;
