@@ -125,7 +125,7 @@ export abstract class GameObject extends KindedObject {
 
     this.effects = { scale: 1, speed: 1, ...opts.effects };
 
-    queueMicrotask(() => {
+    this.nextTick(() => {
       this.init();
 
       if (opts.animation != null && opts.animation in this.animations) {

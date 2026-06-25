@@ -57,7 +57,7 @@ export class PersonObject extends MovableObject {
         keys[key as keyof typeof keys]++;
         e.preventDefault();
       }
-    });
+    }, { signal: this.abortSignal });
 
     window.addEventListener("keyup", (e) => {
       const key = e.code;
@@ -66,7 +66,7 @@ export class PersonObject extends MovableObject {
         keys[key as keyof typeof keys] = 0;
         e.preventDefault();
       }
-    });
+    }, { signal: this.abortSignal });
 
     let lastTime = performance.now();
 

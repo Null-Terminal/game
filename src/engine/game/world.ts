@@ -30,7 +30,7 @@ export class World extends Disposable {
       })
     );
 
-    queueMicrotask(() => {
+    this.nextTick(() => {
       for (const elem of opts.staticWorld) {
         this.createObject(elem[0], elem[1]);
       }
