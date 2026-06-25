@@ -1,5 +1,5 @@
 import { cache } from "#decorators/cache";
-import { SpriteAnimation } from "#/sprite-animation";
+import { SpriteAnimation } from "#sprite-editor/sprite-animation";
 
 import styles from "#sprite-editor/animation-preview/styles.css?raw";
 import template from "#sprite-editor/animation-preview/template.html?raw";

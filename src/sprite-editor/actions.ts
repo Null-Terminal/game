@@ -1,9 +1,9 @@
 import { loadText } from "#/file-loader";
-
-import { SpriteAnimation } from "#/sprite-animation";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
+import { SpriteAnimation } from "#sprite-editor/sprite-animation";
+
 import { Handlers } from "#sprite-editor/handlers";
 
 export class ActionHandlers extends Handlers<SpriteEditor> {

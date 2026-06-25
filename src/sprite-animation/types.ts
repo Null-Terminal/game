@@ -1,5 +1,3 @@
-import type { SpriteAnimation } from "#/sprite-animation";
-
 export interface Animation {
   sprites: SpriteDescriptor[];
   params?: AnimationParameters | undefined;
@@ -33,9 +31,4 @@ export interface TexturePacker {
 
     duration: number;
   }>;
-}
-
-export interface MergedSprite {
-  canvas: HTMLCanvasElement;
-  animation: SpriteAnimation;
 }
