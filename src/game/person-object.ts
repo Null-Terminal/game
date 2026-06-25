@@ -73,7 +73,6 @@ export class PersonObject extends MovableObject {
     this.register(
       canvas.emitter.on(this.redrawEvent, ([now]) => {
         const delta = Math.min(0.025, (now - lastTime) / 1000);
-
         lastTime = now;
 
         // Горизонтальное движение
