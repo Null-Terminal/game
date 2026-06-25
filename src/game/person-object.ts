@@ -33,9 +33,9 @@ export class PersonObject extends MovableObject {
     let isOnGround = false;
 
     const keys = {
-      ArrowLeft: false,
-      ArrowRight: false,
-      Space: false
+      ArrowLeft: 0,
+      ArrowRight: 0,
+      Space: 0
     };
 
     const { canvas } = this;
@@ -54,7 +54,7 @@ export class PersonObject extends MovableObject {
         }
 
       } else if (e.code in keys) {
-        keys[key as keyof typeof keys] = true;
+        keys[key as keyof typeof keys]++;
         e.preventDefault();
       }
     });
@@ -63,7 +63,7 @@ export class PersonObject extends MovableObject {
       const key = e.code;
 
       if (key in keys) {
-        keys[key as keyof typeof keys] = false;
+        keys[key as keyof typeof keys] = 0;
         e.preventDefault();
       }
     });
@@ -90,7 +90,7 @@ export class PersonObject extends MovableObject {
         }
 
         // Прыжок
-        if (keys.Space && isOnGround) {
+        if (keys.Space === 1 && isOnGround) {
           vy = JUMP_FORCE;
           isOnGround = false;
           this.ensurePlaying(this.animations.jump);
