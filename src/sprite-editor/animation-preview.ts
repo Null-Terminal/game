@@ -1,5 +1,5 @@
 import { cache } from "#decorators/cache";
-import { SpriteAnimation } from "#sprite-editor/sprite-animation";
+import { mergeSprites } from "#sprite-editor/merge-sprites";
 
 import styles from "#sprite-editor/animation-preview/styles.css?raw";
 import template from "#sprite-editor/animation-preview/template.html?raw";
@@ -176,7 +176,7 @@ export class AnimationPreview extends HTMLElement {
   }
 
   #renderSprite() {
-    return SpriteAnimation.mergeSprites(
+    return mergeSprites(
       Array.from(this.#editor.grid.querySelectorAll("sprite-item")) as Sprite[],
     );
   }

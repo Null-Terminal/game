@@ -1,9 +1,10 @@
 import { loadText } from "#/file-loader";
+
+import { SpriteAnimation } from "#/sprite-animation";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
-import { SpriteAnimation } from "#sprite-editor/sprite-animation";
-
+import { mergeSprites } from "#sprite-editor/merge-sprites";
 import { Handlers } from "#sprite-editor/handlers";
 
 export class ActionHandlers extends Handlers<SpriteEditor> {
@@ -102,7 +103,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const { canvas, animation } = SpriteAnimation.mergeSprites(
+    const { canvas, animation } = mergeSprites(
       Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[],
 
       {
