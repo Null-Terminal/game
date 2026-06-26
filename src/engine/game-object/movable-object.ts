@@ -38,49 +38,10 @@ export abstract class MovableObject extends GameObject {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    let status: number = CollisionStatus.NoCollision;
+    let status = this.#updateRiding();
 
-    // Платформа, на которой стоял игрок в прошлый раз
-    const riding = this.#riding;
-
-    const RIDING_TOLERANCE = 5;
-
-    // Из-за динамической природы платформ и ошибок округления, нужно закладывать некоторую погрешность.
-    // В базовом случае берется просто примерное подходящее число, а в дальнейшем учитываем скорость платформы.
-    const ridingTolerance = riding != null ?
-      Math.ceil(Math.abs(riding.y - riding.prevY)) :
-      RIDING_TOLERANCE;
-
-    // Проверяем, не стоит мы на двигающейся платформе
-    const collision = this.findDynamicCollision(this.x, this.y - ridingTolerance);
-
-    if (collision != null) {
-      const riding = collision.object;
-      this.#riding = collision.object;
-
-      // Корректирую позицию объекта под позицию платформы на которой он стоит
-      this.x += riding.x - riding.prevX;
-      this.y = riding.y + riding.height;
-
-      status |= CollisionStatus.BottomCollision;
-      if (dy < 0) { dy = 0; }
-
-    } else if (riding != null) {
-      const isStandingOnPlatform =
-        this.y - riding.y - riding.height <= ridingTolerance &&
-        this.x > riding.x &&
-        this.x < riding.x + riding.width;
-
-      if (isStandingOnPlatform) {
-        this.x += riding.x - riding.prevX;
-        this.y = riding.y + riding.height;
-
-        status |= CollisionStatus.BottomCollision;
-        if (dy < 0) { dy = 0; }
-
-      } else {
-        this.#riding = null;
-      }
+    if (dy < 0 && status & CollisionStatus.BottomCollision) {
+      dy = 0;
     }
 
     if (!this.#exitCollision()) {
@@ -147,6 +108,51 @@ export abstract class MovableObject extends GameObject {
       if (this.y === this.prevY) {
         status |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
+    }
+
+    return status;
+  }
+
+  #updateRiding() {
+    const RIDING_TOLERANCE = 5;
+
+    // Платформа, на которой стоял игрок в прошлый раз
+    const lastRiding = this.#riding;
+
+    // Из-за динамической природы платформ и ошибок округления, нужно закладывать некоторую погрешность.
+    // В базовом случае берется просто примерное подходящее число, а в дальнейшем учитываем скорость платформы.
+    const ridingYTolerance = lastRiding != null ?
+      Math.ceil(Math.abs(lastRiding.y - lastRiding.prevY)) :
+      RIDING_TOLERANCE;
+
+    const ridingXTolerance = lastRiding != null ?
+      Math.ceil(Math.abs(lastRiding.x - lastRiding.prevX)) :
+      RIDING_TOLERANCE;
+
+    // Проверяем, не стоим ли мы на двигающейся платформе
+    const collision = this.findDynamicCollision(this.x, this.y - ridingYTolerance);
+    const riding = collision != null ? collision.object : lastRiding;
+
+    // Проверяем, что мы все еще стоим на платформе
+    const isStandingOnPlatform = riding == null ?
+      false :
+      this.y - riding.y - riding.height <= ridingYTolerance &&
+      this.x + this.width - riding.x > ridingXTolerance &&
+      riding.x + riding.width - this.x > ridingXTolerance;
+
+    let status: number = CollisionStatus.NoCollision;
+
+    if (riding != null && isStandingOnPlatform) {
+      this.#riding = riding;
+
+      // Корректирую позицию объекта под позицию платформы на которой он стоит
+      this.x += riding.x - riding.prevX;
+      this.y = riding.y + riding.height;
+
+      status |= CollisionStatus.BottomCollision;
+
+    } else {
+      this.#riding = null;
     }
 
     return status;
