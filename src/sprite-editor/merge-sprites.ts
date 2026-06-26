@@ -1,6 +1,6 @@
-import type { Sprite } from "#sprite-editor/sprite";
-
 import { SpriteAnimation, type AnimationParameters } from "#/sprite-animation";
+
+import type { Sprite } from "#sprite-editor/sprite";
 
 export interface MergedSprite {
   canvas: HTMLCanvasElement;
