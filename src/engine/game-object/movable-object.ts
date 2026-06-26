@@ -49,63 +49,23 @@ export abstract class MovableObject extends GameObject {
     }
 
     if (dx !== 0) {
-      const newX = this.x + dx;
+      const newX = this.#moveX(dx);
 
-      if (!this.hasCollision(newX, this.y)) {
+      if (newX !== this.x) {
         this.x = newX;
 
-      // Ищем максимальный шаг без коллизии
       } else {
-        const step = dx > 0 ? 1 : -1;
-
-        let testX = this.x;
-
-        // Двигаем до упора
-        while (Math.abs(testX - this.x) < Math.abs(dx)) {
-          const nextX = testX + step;
-
-          if (!this.hasCollision(nextX, this.y)) {
-            testX = nextX;
-
-          } else {
-            break;
-          }
-        }
-
-        this.x = testX;
-      }
-
-      if (this.x === this.prevX) {
         status |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
       }
     }
 
     if (dy !== 0) {
-      const newY = this.y + dy;
+      const newY = this.#moveY(dy);
 
-      if (!this.hasCollision(this.x, newY)) {
+      if (newY !== this.y) {
         this.y = newY;
 
-      // Ищем максимальный шаг без коллизии
       } else {
-        const step = dy > 0 ? 1 : -1;
-        let testY = this.y;
-
-        while (Math.abs(testY - this.y) < Math.abs(dy)) {
-          const nextY = testY + step;
-
-          if (!this.hasCollision(this.x, nextY)) {
-            testY = nextY;
-
-          } else {
-            break;
-          }
-        }
-
-        this.y = testY;
-      }
-
-      if (this.y === this.prevY) {
         status |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
     }
@@ -214,5 +174,51 @@ export abstract class MovableObject extends GameObject {
     }
 
     return false;
+  }
+
+  #moveX(delta: number): number {
+    if (delta === 0) {
+      return this.x;
+    }
+
+    const step = delta > 0 ? 1 : -1;
+
+    let pos = this.x;
+
+    while (Math.abs(pos - this.x) < Math.abs(delta)) {
+      const next = pos + step;
+
+      if (!this.hasCollision(next, this.y)) {
+        pos = next;
+
+      } else {
+        break;
+      }
+    }
+
+    return pos;
+  }
+
+  #moveY(delta: number): number {
+    if (delta === 0) {
+      return this.y;
+    }
+
+    const step = delta > 0 ? 1 : -1;
+
+    let pos = this.y;
+
+    while (Math.abs(pos - this.y) < Math.abs(delta)) {
+      const next = pos + step;
+
+      if (!this.hasCollision(this.x, next)) {
+        pos = next;
+
+      } else {
+        break;
+      }
+    }
+
+    return pos;
   }
 }
