@@ -181,22 +181,28 @@ export abstract class MovableObject extends GameObject {
       return this.x;
     }
 
+    const newX = this.x + delta;
+
+    if (!this.hasCollision(newX, this.y)) {
+      return newX;
+    }
+
     const step = delta > 0 ? 1 : -1;
 
-    let pos = this.x;
+    let start = this.x;
 
-    while (Math.abs(pos - this.x) < Math.abs(delta)) {
-      const next = pos + step;
+    while (Math.abs(start - this.x) < Math.abs(delta)) {
+      const next = start + step;
 
       if (!this.hasCollision(next, this.y)) {
-        pos = next;
+        start = next;
 
       } else {
         break;
       }
     }
 
-    return pos;
+    return start;
   }
 
   #moveY(delta: number): number {
@@ -204,21 +210,27 @@ export abstract class MovableObject extends GameObject {
       return this.y;
     }
 
+    const newY = this.y + delta;
+
+    if (!this.hasCollision(this.x, newY)) {
+      return newY;
+    }
+
     const step = delta > 0 ? 1 : -1;
 
-    let pos = this.y;
+    let start = this.y;
 
-    while (Math.abs(pos - this.y) < Math.abs(delta)) {
-      const next = pos + step;
+    while (Math.abs(start - this.y) < Math.abs(delta)) {
+      const next = start + step;
 
       if (!this.hasCollision(this.x, next)) {
-        pos = next;
+        start = next;
 
       } else {
         break;
       }
     }
 
-    return pos;
+    return start;
   }
 }
