@@ -16,6 +16,7 @@ export abstract class MovableObject extends GameObject {
   }
 
   #riding: GameObject | null = null;
+  #ridingTolerance: Record<number, number> = {};
 
   override destroy() {
     super.destroy();
@@ -74,7 +75,12 @@ export abstract class MovableObject extends GameObject {
   }
 
   #updateRiding() {
-    const RIDING_TOLERANCE = 5;
+    const { fps } = this.canvas;
+
+    // Для разных FPS стартовое значение погрешности будет отличаться.
+    // Например, при 60 FPS платформа будет двигаться куда большими шагами, нежели при 144 FPS.
+    const RIDING_TOLERANCE = this.#ridingTolerance[fps] ?? Math.min(5 * (144 / fps), 20);
+    this.#ridingTolerance[fps] = RIDING_TOLERANCE;
 
     // Платформа, на которой стоял игрок в прошлый раз
     const lastRiding = this.#riding;
