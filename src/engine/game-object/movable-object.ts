@@ -79,7 +79,7 @@ export abstract class MovableObject extends GameObject {
 
     // Для разных FPS стартовое значение погрешности будет отличаться.
     // Например, при 60 FPS платформа будет двигаться куда большими шагами, нежели при 144 FPS.
-    const RIDING_TOLERANCE = this.#ridingTolerance[fps] ?? Math.min(5 * (144 / fps), 20);
+    const RIDING_TOLERANCE = this.#ridingTolerance[fps] ?? Math.min(5 * (144 / fps), 10);
     this.#ridingTolerance[fps] = RIDING_TOLERANCE;
 
     // Платформа, на которой стоял игрок в прошлый раз
