@@ -1,27 +1,32 @@
 {
+  "params": {
+    "speed": 1,
+    "scale": 0.15,
+    "loopReverse": true
+  },
   "sprites": [
     {
       "x": 0,
       "y": 0,
-      "width": 475,
-      "height": 720,
-      "animationDelay": 300,
+      "width": 259,
+      "height": 718,
+      "duration": 150,
       "spriteId": ""
     },
     {
-      "x": 475,
+      "x": 259,
       "y": 0,
-      "width": 475,
-      "height": 720,
-      "animationDelay": 300,
+      "width": 261,
+      "height": 714,
+      "duration": 150,
       "spriteId": ""
     },
     {
-      "x": 950,
+      "x": 520,
       "y": 0,
-      "width": 475,
-      "height": 720,
-      "animationDelay": 300,
+      "width": 264,
+      "height": 707,
+      "duration": 150,
       "spriteId": ""
     }
   ]

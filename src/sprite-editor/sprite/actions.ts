@@ -29,6 +29,11 @@ export class ActionHandlers extends Handlers<Sprite> {
     });
   }
 
+  trimSize() {
+    this.parent.trimSize();
+    this.parent.history.save();
+  }
+
   copyLeftSize() {
     const currentSprite = this.parent;
 
@@ -74,22 +79,22 @@ export class ActionHandlers extends Handlers<Sprite> {
   }
 
   setX(e: Event) {
-    this.parent.x = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.x = (e.target as HTMLInputElement).valueAsNumber;
     this.parent.history.save();
   }
 
   setY(e: Event) {
-    this.parent.y = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.y = (e.target as HTMLInputElement).valueAsNumber;
     this.parent.history.save();
   }
 
   setWidth(e: Event) {
-    this.parent.width = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.width = (e.target as HTMLInputElement).valueAsNumber;
     this.parent.history.save();
   }
 
   setHeight(e: Event) {
-    this.parent.height = parseInt((e.target as HTMLInputElement).value, 10);
+    this.parent.height = (e.target as HTMLInputElement).valueAsNumber;
     this.parent.history.save();
   }
 
@@ -98,8 +103,8 @@ export class ActionHandlers extends Handlers<Sprite> {
     this.parent.history.save();
   }
 
-  setAnimationDelay(e: Event) {
-    this.parent.animationDelay = parseInt((e.target as HTMLInputElement).value, 10);
+  setDuration(e: Event) {
+    this.parent.duration = (e.target as HTMLInputElement).valueAsNumber;
     this.parent.history.save();
   }
 

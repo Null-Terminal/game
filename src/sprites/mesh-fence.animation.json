@@ -3,9 +3,9 @@
     {
       "x": 0,
       "y": 0,
-      "width": 100,
-      "height": 100,
-      "animationDelay": 100,
+      "width": 1055,
+      "height": 181,
+      "duration": 100,
       "spriteId": ""
     }
   ]

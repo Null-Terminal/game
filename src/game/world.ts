@@ -3,19 +3,12 @@ import { WallObject } from "#game/wall-object";
 import type { WorldObjects } from "#engine/game/world";
 
 export const staticWorld: WorldObjects = [
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [0, 250, 1500, 300] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 50, 250, 60] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [180, 140, 280, 170] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [350, 120, 450, 150] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [100, 200, 180, 210] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [600, 80, 800, 90] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [850, 180, 930, 190] },
-
-  { object: [WallObject, { effects: { scale: 2 } }], bbox: [500, 0, 520, 40] },
+  [WallObject, { bbox: [0, 130, 3000, 135] }],
+  [WallObject, { animation: "bricks", bbox: [100, 500, 300, 520] }],
+  [WallObject, { animation: "bricks", bbox: [360, 280, 560, 340] }],
+  [WallObject, { animation: "bricks", bbox: [700, 320, 900, 380] }],
+  [WallObject, { animation: "bricks", bbox: [170, 650, 360, 670] }],
+  [WallObject, { animation: "bricks", bbox: [1200, 440, 1600, 460] }],
+  [WallObject, { animation: "bricks", bbox: [1700, 260, 1860, 280] }],
+  [WallObject, { animation: "bricks", bbox: [900, 540, 950, 620] }],
 ];

@@ -1,60 +1,118 @@
-import { RTree } from "#engine/rtree";
-import { GameObjectPool } from "#engine/game-object-pool";
+import { Disposable } from "#engine/disposable";
+
+import { RTree, type RTreePred } from "#engine/rtree";
+import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
-import type { GameObject } from "#engine/game-object";
+import type { GameObject } from "#engine/game-objects";
 
-import type { WorldOptions } from "#engine/game/world/types";
+import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
 
 export * from "#engine/game/world/types";
 
-export class World {
+export class World extends Disposable {
   readonly game: Game;
   readonly options: Required<WorldOptions>;
 
   #staticWorld = new RTree();
+  #dynamicWorld = new RTree();
   #objectPool = new GameObjectPool();
 
   constructor(game: Game, opts: WorldOptions) {
+    super();
+
     this.game = game;
+    this.options = { ...opts };
 
-    this.options = {
-      ...opts
-    };
+    this.register(
+      game.canvas.emitter.on(game.canvas.events.background, () => {
+        this.#dynamicWorld.clear();
+      })
+    );
 
-    for (const elem of opts.staticWorld) {
-      const opts = elem.object[1];
-
-      if (opts.effects?.scale != null) {
-        const { scale } = opts.effects;
-
-        for (let i = 0; i < elem.bbox.length; i++) {
-          elem.bbox[i]! *= scale;
-        }
+    this.nextTick(() => {
+      for (const elem of opts.staticWorld) {
+        this.createObject(elem[0], elem[1]);
       }
+    });
+  }
 
-      const ptr = this.#objectPool.add(elem.object[0], game, {
-        bbox: elem.bbox,
-        ...elem.object[1]
-       });
+  createObject(object: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
+    return this.#objectPool.add(object, this.game, opts);
+  }
 
-      this.#staticWorld.insert(...ptr, ...elem.bbox);
-    }
+  addToStaticWorld(object: GameObject) {
+    this.#staticWorld.insert(
+      object.poolPointer[0],
+      object.poolPointer[1],
+
+      object.x,
+      object.y,
+      object.x + object.width,
+      object.y + object.height
+    );
+  }
+
+  addToDynamicWorld(object: GameObject) {
+    this.#dynamicWorld.insert(
+      object.poolPointer[0],
+      object.poolPointer[1],
+
+      object.x,
+      object.y,
+      object.x + object.width,
+      object.y + object.height
+    );
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
-    return this.#staticWorld.searchFirst(minX - 1, minY - 1, maxX + 1, maxY + 1, ({ bbox }) => {
-      const [rx, ry, rw, rh] = bbox;
-      return maxX > rx && minX < rw && maxY > ry && minY < rh;
-    }) != null;
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
+
+    const pred: RTreePred = ({ bbox }) =>
+      maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+
+    if (this.#dynamicWorld.searchFirst(x1, y1, x2, y2, pred) == null) {
+      return this.#staticWorld.searchFirst(x1, y1, x2, y2, pred) != null;
+    }
+
+    return true;
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): GameObject[] {
-    const collisions = this.#staticWorld.search(minX - 1, minY - 1, maxX + 1, maxY + 1, ({ bbox }) => {
-      const [rx, ry, rw, rh] = bbox;
-      return maxX > rx && minX < rw && maxY > ry && minY < rh;
-    });
+  findDynamicCollision(minX: number, minY: number, maxX: number, maxY: number): Collision | null {
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
 
-    return collisions.map(({ pointer: [kind, i] }) => this.#objectPool.get(kind, i)!)!;
+    const pred: RTreePred = ({ bbox }) =>
+      maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+
+    const collision = this.#dynamicWorld.searchFirst(x1, y1, x2, y2, pred);
+
+    if (collision != null) {
+      return {
+        bbox: collision.bbox,
+        object: this.#objectPool.get(collision.pointer[0], collision.pointer[1])!
+      };
+    }
+
+    return collision;
+  }
+
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
+
+    const pred: RTreePred = ({ bbox }) =>
+      maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+
+    return this.#dynamicWorld
+      .search(x1, y1, x2, y2, pred)
+      .concat(this.#staticWorld.search(x1, y1, x2, y2, pred))
+      .map(({ bbox, pointer: [kind, i] }) => {
+        return {
+          bbox,
+          object: this.#objectPool.get(kind, i)!
+        };
+      })!;
   }
 }

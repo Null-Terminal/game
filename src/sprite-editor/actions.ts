@@ -4,6 +4,7 @@ import { SpriteAnimation } from "#/sprite-animation";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
+import { mergeSprites } from "#sprite-editor/merge-sprites";
 import { Handlers } from "#sprite-editor/handlers";
 
 export class ActionHandlers extends Handlers<SpriteEditor> {
@@ -35,10 +36,10 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     }
 
     const sprite = editor.getSetting("sprite");
-    const length = this.asNum(editor.getSetting("length"));
+    const length = editor.getSetting("length").valueAsNumber;
 
-    const width = this.asNum(editor.getSetting("width"));
-    const height = this.asNum(editor.getSetting("height"));
+    const width = editor.getSetting("width").valueAsNumber;
+    const height = editor.getSetting("height").valueAsNumber;
 
     const sprites = await groupSprites();
 
@@ -55,6 +56,9 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       } else {
         const animation = SpriteAnimation.fromJSON(sprite.animation);
 
+        editor.speed = animation.params.speed;
+        editor.scale = animation.params.scale;
+
         for (const spriteDescriptor of animation) {
           editor.grid?.append(new Sprite(sprite.image, {
             ...spriteDescriptor,
@@ -68,16 +72,17 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     async function groupSprites() {
       const sprites = new Map<string, {image?: File, animation?: string}>;
 
-      const fileExt =  /\..*/;
+      const fileExt =  /\.[^.]*$/;
+      const fileSuffix =  /\..*/;
 
       for (const file of sprite.files!) {
         const fileName = file.name;
         const ext = fileName.match(fileExt)?.[0];
 
-        const groupKey = fileName.replace(fileExt, "");
+        const groupKey = fileName.replace(fileSuffix, "");
         const group = sprites.get(groupKey) ?? {};
 
-        if (ext === ".animation.json") {
+        if (ext === ".json") {
           group.animation = await loadText(file);
 
         } else {
@@ -98,8 +103,13 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
       return;
     }
 
-    const { canvas, animation } = SpriteAnimation.mergeSprites(
-      Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[]
+    const { canvas, animation } = mergeSprites(
+      Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[],
+
+      {
+        speed: editor.speed,
+        scale: editor.scale,
+      }
     );
 
     const image = document.createElement("a");
@@ -115,15 +125,40 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     buffer.click();
   }
 
+  trimSizes() {
+    const editor = this.parent;
+
+    if (!editor.settings.checkValidity()) {
+      return;
+    }
+
+    const sprites = Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[];
+
+    for (const sprite of sprites) {
+      sprite.trimSize();
+      sprite.history.save();
+    }
+
+    editor.history.pushState({
+      undo() {
+        for (const sprite of sprites) {
+          sprite.history.undo();
+        }
+      },
+
+      redo() {
+        for (const sprite of sprites) {
+          sprite.history.redo();
+        }
+      }
+    });
+  }
+
   protected initHandlers() {
     const { settings } = this.parent;
 
     settings.addEventListener("click", this.onAction);
     settings.addEventListener("submit", this.#onSubmit);
-  }
-
-  protected asNum(input: HTMLInputElement) {
-    return parseInt(input.value, 10);
   }
 
   readonly #onSubmit = (e: Event) => {

@@ -1,38 +1,41 @@
-import { MotionObject, type Animations } from "#engine/motion-object";
-import { loadSprite } from "#engine/sprite-loader";
-import { SpriteAnimation } from "#/sprite-animation";
+import { MovableObject, CollisionStatus } from "#engine/game-objects";
+import { loadAnimation } from "#engine/animation-loader";
 
-import run from "#/sprites/run.webp";
+const [stay, run, jump] = await Promise.all([
+  loadAnimation(import("#/sprites/run.webp"), {
+    sprite: { removeBackground: true, tolerance: 120 },
+    animation: import("#/sprites/stay.animation.json")
+  }),
 
-import runAnimation from "#/sprites/run.animation.json";
-import stayAnimation from "#/sprites/stay.animation.json";
-import jumpAnimation from "#/sprites/jump.animation.json";
+  loadAnimation(import("#/sprites/run.webp"), {
+    sprite: { removeBackground: true, tolerance: 120 },
+    animation: import("#/sprites/run.animation.json")
+  }),
 
-const runImage = await loadSprite(run, { removeBackground: true });
+  loadAnimation(import("#/sprites/run.webp"), {
+    sprite: { removeBackground: true, tolerance: 120 },
+    animation: import("#/sprites/jump.animation.json")
+  })
+]);
 
-export class PersonObject extends MotionObject {
-  static override animations = {
-    stay: [runImage, new SpriteAnimation(stayAnimation.sprites)],
-    run: [runImage, new SpriteAnimation(runAnimation.sprites)],
-    jump: [runImage, new SpriteAnimation(jumpAnimation.sprites)],
-  } satisfies Animations;
-
+export class PersonObject extends MovableObject {
+  static override animations = { stay, run, jump };
   declare readonly Animations: (typeof PersonObject)["animations"];
 
   init() {
     this.play(this.animations.stay);
 
     const SPEED = 300;
-    const JUMP_FORCE = -1000;
-    const GRAVITY = 2500;
+    const JUMP_FORCE = 1200;
+    const GRAVITY = -2500;
 
     let vy = 0;
-    let isOnGround = true;
+    let isOnGround = false;
 
     const keys = {
-      ArrowLeft: false,
-      ArrowRight: false,
-      Space: false
+      ArrowLeft: 0,
+      ArrowRight: 0,
+      Space: 0
     };
 
     const { canvas } = this;
@@ -51,84 +54,78 @@ export class PersonObject extends MotionObject {
         }
 
       } else if (e.code in keys) {
-        keys[key as keyof typeof keys] = true;
+        keys[key as keyof typeof keys]++;
         e.preventDefault();
       }
-    });
+    }, { signal: this.abortSignal });
 
     window.addEventListener("keyup", (e) => {
       const key = e.code;
 
       if (key in keys) {
-        keys[key as keyof typeof keys] = false;
+        keys[key as keyof typeof keys] = 0;
         e.preventDefault();
       }
-    });
+    }, { signal: this.abortSignal });
 
     let lastTime = performance.now();
 
-    canvas.emitter.on(canvas.events.redraw, ([now]) => {
-      const delta = Math.min(0.025, (now - lastTime) / 1000);
+    this.register(
+      canvas.emitter.on(this.redrawEvent, ([now]) => {
+        const delta = Math.min(0.025, (now - lastTime) / 1000);
+        lastTime = now;
 
-      lastTime = now;
+        // Горизонтальное движение
+        let dx = SPEED * delta;
 
-      // Горизонтальное движение
-      let dx = 0;
+        if (keys.ArrowLeft) {
+          this.effects.flipX = true;
+          dx *= -1;
 
-      if (keys.ArrowRight) {
-        dx += SPEED * delta;
-      }
-
-      if (keys.ArrowLeft) {
-        dx -= SPEED * delta;
-      }
-
-      // Прыжок
-      if (keys.Space && isOnGround) {
-        vy = JUMP_FORCE;
-        isOnGround = false;
-        this.ensurePlaying(this.animations.jump);
-      }
-
-      if (keys.ArrowLeft) {
-        this.effects.flipX = true;
-      }
-
-      if (keys.ArrowRight) {
-        this.effects.flipX = false;
-      }
-
-      const dy = vy * delta;
-
-      // Запоминаем позицию до движения
-      const oldY = this.y;
-
-      // Двигаем
-      this.move(dx, dy);
-
-      // Врезались в потолок
-      if (oldY + dy < this.y) {
-        vy = 0;
-      }
-
-      isOnGround = dy > 0 && this.y === oldY;
-
-      if (isOnGround) {
-        if (keys.ArrowLeft || keys.ArrowRight) {
-          this.ensurePlaying(this.animations.run);
+        } else if (keys.ArrowRight) {
+          this.effects.flipX = false;
 
         } else {
-          this.ensurePlaying(this.animations.stay);
+          dx = 0;
         }
-      }
 
-      if (isOnGround) {
-        vy = GRAVITY;
+        // Прыжок
+        if (keys.Space === 1 && isOnGround) {
+          vy = JUMP_FORCE;
+          isOnGround = false;
+          this.ensurePlaying(this.animations.jump);
+        }
 
-      } else {
-        // Гравитация
-        vy += GRAVITY * delta;
-      }
-    });
+        const dy = vy * delta;
+
+        // Двигаем
+        const status = this.move(dx, dy);
+
+        // Врезались в потолок
+        if (status & CollisionStatus.TopCollision) {
+          vy = 0;
+
+        } else if (status & CollisionStatus.BottomCollision) {
+          isOnGround = true;
+        }
+
+        if (isOnGround) {
+          if (keys.ArrowLeft || keys.ArrowRight) {
+            this.ensurePlaying(this.animations.run);
+
+          } else {
+            this.ensurePlaying(this.animations.stay);
+          }
+        }
+
+        if (isOnGround) {
+          vy = GRAVITY;
+
+        } else {
+          // Гравитация
+          vy += GRAVITY * delta;
+        }
+      })
+    );
   }
 }

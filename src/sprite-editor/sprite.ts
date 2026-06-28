@@ -100,13 +100,13 @@ export class Sprite extends HTMLElement {
     this.#spriteIdInput.value = value;
   }
 
-  get animationDelay() {
-    return this.#animationDelay;
+  get duration() {
+    return this.#duration;
   }
 
-  set animationDelay(value: number) {
-    this.#animationDelay = value;
-    this.#animationDelayInput.value = value.toString();
+  set duration(value: number) {
+    this.#duration = value;
+    this.#durationInput.valueAsNumber = value;
   }
 
   @cache
@@ -131,11 +131,11 @@ export class Sprite extends HTMLElement {
   }
 
   @cache
-  get #animationDelayInput(): HTMLInputElement {
-    return this.shadowRoot!.getElementById("animationDelay") as HTMLInputElement;
+  get #durationInput(): HTMLInputElement {
+    return this.shadowRoot!.getElementById("duration") as HTMLInputElement;
   }
 
-  #animationDelay!: number;
+  #duration!: number;
 
   #x!: number;
 
@@ -183,7 +183,7 @@ export class Sprite extends HTMLElement {
       y: 0,
 
       spriteId: "",
-      animationDelay: 100,
+      duration: 100,
 
       handleSize: 12,
       handlerColor: "#CCC",
@@ -225,13 +225,16 @@ export class Sprite extends HTMLElement {
       y: this.y,
       width: this.width,
       height: this.height,
-      animationDelay: this.animationDelay
+      duration: this.duration
     });
   }
 
-  resize(width: number, height: number) {
-    this.width = width;
-    this.height = height;
+  resize(newWidth: number, newHeight: number) {
+    const { width, height } = this;
+    this.x -= Math.floor((width - newWidth) / 2);
+    this.y -= Math.floor((height - newHeight) / 2);
+    this.width = newWidth;
+    this.height = newHeight;
   }
 
   redraw(target: Context2D = this.ctx) {
@@ -255,6 +258,73 @@ export class Sprite extends HTMLElement {
 
     if (target === this.ctx) {
       this.#drawGrid();
+    }
+  }
+
+  trimSize() {
+    const { width, height } = this;
+
+    const canvas = new OffscreenCanvas(width, height);
+    const ctx = canvas.getContext("2d")!;
+
+    this.draw(ctx);
+
+    // Получаем данные пикселей
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    // Находим границы содержимого
+    let top = height;
+    let bottom = 0;
+    let left = width;
+    let right = 0;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (!isBackgroundPixel(x, y)) {
+          if (x < left) {
+            left = x;
+          }
+
+          if (x > right) {
+            right = x;
+          }
+
+          if (y < top) {
+            top = y;
+          }
+
+          if (y > bottom) {
+            bottom = y;
+          }
+        }
+      }
+    }
+
+    // Если не нашли ни одного не-фонового пикселя
+    if (left > right || top > bottom) {
+      return;
+    }
+
+    // Вычисляем новую ширину и высоту
+    const newWidth = right - left + 1;
+    const newHeight = bottom - top + 1;
+
+    this.x -= left;
+    this.y -= top;
+    this.width = newWidth;
+    this.height = newHeight;
+
+    function isBackgroundPixel(x: number, y: number) {
+      const idx = (y * width + x) * 4;
+
+      // Сравниваем с небольшим допуском (толерантностью) для отлова шумов
+      const tolerance = 10;
+
+      return Math.abs(data[idx]! - data[0]!) <= tolerance &&
+        Math.abs(data[idx + 1]! - data[1]!) <= tolerance &&
+        Math.abs(data[idx + 2]! - data[2]!) <= tolerance &&
+        Math.abs(data[idx + 3]! - data[3]!) <= tolerance;
     }
   }
 
@@ -302,7 +372,7 @@ export class Sprite extends HTMLElement {
     this.height = this.options.height;
 
     this.spriteId = this.options.spriteId;
-    this.animationDelay = this.options.animationDelay;
+    this.duration = this.options.duration;
 
     this.history.save(false);
 

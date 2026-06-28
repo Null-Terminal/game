@@ -1,16 +1,21 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import type { RenderCanvasOptions } from "#engine/game/render-canvas/types";
+import { Disposable } from "#engine/disposable";
+import type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas/types";
 
 export * from "#engine/game/render-canvas/types";
 
-export class RenderCanvas {
+export class RenderCanvas extends Disposable {
   readonly canvas: HTMLCanvasElement;
   readonly options: Required<RenderCanvasOptions>;
 
   readonly emitter = new EventEmitter({
-    redraw: handler<[now: number, ctx: CanvasRenderingContext2D]>()
+    background: handler<RenderPayload>(),
+    static: handler<RenderPayload>(),
+    dynamic: handler<RenderPayload>(),
+    main: handler<RenderPayload>(),
+    overlay: handler<RenderPayload>()
   });
 
   @cache
@@ -35,6 +40,8 @@ export class RenderCanvas {
   #lastFpsUpdate = 0;
 
   constructor(canvas: HTMLCanvasElement, opts?: RenderCanvasOptions) {
+    super();
+
     this.canvas = canvas;
     this.options = {
       backgroundColor: "#FFF",
@@ -50,7 +57,8 @@ export class RenderCanvas {
     this.start();
   }
 
-  destroy() {
+  override destroy() {
+    super.destroy();
     this.stop();
     this.emitter.off();
   }
@@ -95,7 +103,14 @@ export class RenderCanvas {
       }
 
       this.clear();
-      this.emitter.emit(this.events.redraw, [now, this.#ctx]);
+
+      const payload: RenderPayload = [now, this.#ctx];
+
+      this.emitter.emit(this.events.background, payload);
+      this.emitter.emit(this.events.static, payload);
+      this.emitter.emit(this.events.dynamic, payload);
+      this.emitter.emit(this.events.main, payload);
+      this.emitter.emit(this.events.overlay, payload);
 
       if (this.options.showFPS) {
         this.drawFPS();

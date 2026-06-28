@@ -1,4 +1,4 @@
-import type { GameObject } from "#engine/game-object";
+import type { GameObject } from "#engine/game-objects";
 import type { GameObjectStore, ConcreteGameObjectConstructor, PoolPointer } from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
@@ -19,7 +19,7 @@ export class GameObjectPool {
   add<T extends typeof GameObject, A extends ConstructorParameters<T>>(
     GObject: ConcreteGameObjectConstructor<T>,
     game: A[0],
-    opts: A[1]
+    opts: A[2]
   ): PoolPointer {
     const kind = GObject.kind;
 
@@ -32,14 +32,16 @@ export class GameObjectPool {
 
     const { length, buffer } = store;
 
+    const poolPointer: PoolPointer = [kind, store.length++];
+
     if (buffer.length > length) {
-      buffer[length]!.create(game, opts);
+      buffer[length]!.create(game, poolPointer, opts);
 
     } else {
-      buffer.push(new GObject(game, opts));
+      buffer.push(new GObject(game, poolPointer, opts));
     }
 
-    return [kind, store.length++];
+    return poolPointer;
   }
 
   delete(kind: number, index: number) {

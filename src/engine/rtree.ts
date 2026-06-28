@@ -44,10 +44,9 @@ export class RTree {
   readonly #view: RTreeView;
   readonly #node: RTreeNode;
   readonly #header: Uint16Array;
-  readonly #root: Ptr32;
-
   readonly #buffer;
 
+  #root: Ptr32;
   #size;
 
   get #freePtr32(): Ptr32 {
@@ -87,6 +86,11 @@ export class RTree {
     this.#root = this.#createEmptyNode();
   }
 
+  clear() {
+    this.size = 0;
+    this.#root = this.#createEmptyNode();
+  }
+
   search(
     minX: number,
     minY: number,
@@ -95,6 +99,15 @@ export class RTree {
     pred?: RTreePred
   ): RTreePublicNode[] {
     const results: RTreePublicNode[] = [];
+
+    if (minX > maxX) {
+      [minX, maxX] = [maxX, minX];
+    }
+
+    if (minY > maxY) {
+      [minY, maxY] = [maxY, minY];
+    }
+
     this.#searchNode(this.#root, minX, minY, maxX, maxY, results, pred);
     return results;
   }
@@ -106,6 +119,14 @@ export class RTree {
     maxY: number,
     pred?: RTreePred
   ): RTreePublicNode | null {
+    if (minX > maxX) {
+      [minX, maxX] = [maxX, minX];
+    }
+
+    if (minY > maxY) {
+      [minY, maxY] = [maxY, minY];
+    }
+
     return this.#searchFirstNode(this.#root, minX, minY, maxX, maxY, pred);
   }
 
@@ -117,6 +138,14 @@ export class RTree {
     maxX: number,
     maxY: number,
   ): Ptr32 {
+    if (minX > maxX) {
+      [minX, maxX] = [maxX, minX];
+    }
+
+    if (minY > maxY) {
+      [minY, maxY] = [maxY, minY];
+    }
+
     const node = this.#node;
 
     const ptr = this.#createEmptyNode();

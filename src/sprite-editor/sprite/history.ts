@@ -17,7 +17,7 @@ export class SpriteHistory extends State<Sprite, SpriteDescriptor> {
       width: sprite.width,
       height: sprite.height,
       spriteId: sprite.spriteId,
-      animationDelay: sprite.animationDelay,
+      duration: sprite.duration,
     }, dispatchEvent);
   }
 
@@ -33,6 +33,6 @@ export class SpriteHistory extends State<Sprite, SpriteDescriptor> {
     sprite.width = state.width;
     sprite.height = state.height;
     sprite.spriteId = state.spriteId;
-    sprite.animationDelay = state.animationDelay;
+    sprite.duration = state.duration;
   }
 }
