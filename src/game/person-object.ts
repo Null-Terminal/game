@@ -1,4 +1,4 @@
-import { MovableObject, CollisionStatus } from "#engine/game-object";
+import { MovableObject, CollisionStatus } from "#engine/game-objects";
 import { loadAnimation } from "#engine/animation-loader";
 
 const [stay, run, jump] = await Promise.all([

@@ -5,10 +5,10 @@ import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
-import { KindedObject } from "#engine/game-object/kinded-object";
-import { Movement } from "#engine/game-object/movement";
+import { KindedObject } from "#engine/game-objects/kinded-object";
+import { Movement } from "#engine/game-objects/movement";
 
-import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#engine/game-object/types";
+import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject extends KindedObject {
   static animations: Animations = {};

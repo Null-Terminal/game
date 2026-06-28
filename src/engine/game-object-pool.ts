@@ -1,4 +1,4 @@
-import type { GameObject } from "#engine/game-object";
+import type { GameObject } from "#engine/game-objects";
 import type { GameObjectStore, ConcreteGameObjectConstructor, PoolPointer } from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";

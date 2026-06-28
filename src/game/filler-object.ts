@@ -1,4 +1,4 @@
-import { BackgroundObject } from "#engine/game-object";
+import { BackgroundObject } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 

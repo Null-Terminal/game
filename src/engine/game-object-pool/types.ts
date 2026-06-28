@@ -1,4 +1,4 @@
-import type { GameObject } from "#engine/game-object";
+import type { GameObject } from "#engine/game-objects";
 
 export type PoolPointer = [kind: number, index: number];
 

@@ -1,4 +1,4 @@
-import { StaticObject } from "#engine/game-object";
+import { StaticObject } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 

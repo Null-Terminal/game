@@ -1,7 +1,7 @@
-import { GameObject } from "#engine/game-object/game-object";
-import type { MovePath, MoveAlongPathOptions } from "#engine/game-object/movement/types";
+import { GameObject } from "#engine/game-objects/game-object";
+import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/movement/types";
 
-export type * from  "#engine/game-object/movement/types";
+export type * from  "#engine/game-objects/movement/types";
 
 export class Movement {
   readonly #go;

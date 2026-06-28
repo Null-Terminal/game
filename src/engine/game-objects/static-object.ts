@@ -1,8 +1,8 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { GameObject } from "#engine/game-object/game-object";
-import type { GameObjectOptions } from "#engine/game-object/types";
+import { GameObject } from "#engine/game-objects/game-object";
+import type { GameObjectOptions } from "#engine/game-objects/types";
 
 export abstract class StaticObject extends GameObject {
   override get redrawEvent() {

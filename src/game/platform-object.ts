@@ -1,4 +1,4 @@
-import { DynamicObject } from "#engine/game-object";
+import { DynamicObject } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 

@@ -1,4 +1,4 @@
-import { GameObject } from "#engine/game-object/game-object";
+import { GameObject } from "#engine/game-objects/game-object";
 import type { Collision } from "#engine/game/world";
 
 export enum CollisionStatus {

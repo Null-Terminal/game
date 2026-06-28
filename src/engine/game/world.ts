@@ -4,7 +4,7 @@ import { RTree, type RTreePred } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
-import type { GameObject } from "#engine/game-object";
+import type { GameObject } from "#engine/game-objects";
 
 import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
 

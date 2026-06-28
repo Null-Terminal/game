@@ -1,4 +1,4 @@
-import { GameObject } from "#engine/game-object/game-object";
+import { GameObject } from "#engine/game-objects/game-object";
 
 export abstract class BackgroundObject extends GameObject {
   override get redrawEvent() {
