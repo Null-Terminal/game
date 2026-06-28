@@ -24,7 +24,7 @@ game.world.createObject(PlatformObject, {
       [350, 770]
     ],
 
-    speed: 800
+    speed: 300
   }
 });
 
