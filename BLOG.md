@@ -220,4 +220,6 @@ https://github.com/Null-Terminal/game/releases/tag/step-5-dynamic-and-background
 
 PR: https://github.com/Null-Terminal/game/pull/3
 
+Видео уже записано и после обработки GetCourse скоро станет доступно 🚀
+
 В следующей итерации планирую добавить скроллинг и новые механизмы взаимодействия с окружающей средой: рычаги, шипы и другое.
