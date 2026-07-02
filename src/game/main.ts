@@ -29,18 +29,18 @@ game.world.createObject(PlatformObject, {
 });
 
 game.world.createObject(FillerObject, {
-  animation: "night",
+  show: "night",
   stretchWidth: true,
 });
 
 game.world.createObject(FillerObject, {
-  animation: "asphalt",
+  show: "asphalt",
   stretchWidth: true,
 });
 
 game.world.createObject(FillerObject, {
   y: 140,
-  animation: "meshFence",
+  show: "meshFence",
   stretchWidth: true,
   effects: { scale: 0.7, opacity: 0.7 },
 });

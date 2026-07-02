@@ -128,8 +128,8 @@ export abstract class GameObject extends KindedObject {
     this.nextTick(() => {
       this.init();
 
-      if (opts.animation != null && opts.animation in this.animations) {
-        this.play(this.animations[opts.animation]!);
+      if (opts.show != null && opts.show in this.animations) {
+        this.play(this.animations[opts.show]!);
       }
 
       if (opts.movement != null) {
