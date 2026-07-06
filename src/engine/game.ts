@@ -1,9 +1,8 @@
 import { Disposable } from "#engine/disposable";
-
-import { World, type WorldOptions } from "#engine/game/world";
-import { Camera } from "#engine/game/camera";
-
 import type { RenderCanvas } from "#engine/game/render-canvas";
+
+import { Camera } from "#engine/game/camera";
+import { World, type WorldOptions } from "#engine/game/world";
 
 export { World, type WorldOptions };
 export { RenderCanvas, type RenderCanvasOptions, type RenderPayload } from "#engine/game/render-canvas";
