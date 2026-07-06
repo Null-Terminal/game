@@ -10,6 +10,7 @@ export { RenderCanvas, type RenderCanvasOptions, type RenderPayload } from "#eng
 
 export class Game extends Disposable {
   readonly canvas: RenderCanvas;
+
   readonly camera: Camera;
   readonly world: World;
 

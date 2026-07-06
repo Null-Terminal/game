@@ -27,6 +27,14 @@ export class RenderCanvas extends Disposable {
     return this.#fps;
   }
 
+  get width() {
+    return this.canvas.width;
+  }
+
+  get height() {
+    return this.canvas.height;
+  }
+
   @cache
   get #ctx() {
     return this.canvas.getContext("2d")!;

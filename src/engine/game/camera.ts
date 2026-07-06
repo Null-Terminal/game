@@ -47,7 +47,7 @@ export class Camera extends Disposable {
       return;
     }
 
-    const { canvas } = this.game.canvas;
+    const { canvas } = this.game;
     const target = this.#target;
 
     const targetX = target.x + target.width / 2;
