@@ -70,6 +70,7 @@ export class Camera extends Disposable {
 
     if (targetY > topDeadZone) {
       newY = targetY - (canvas.height - this.deadZone.top);
+
     } else if (targetY < bottomDeadZone) {
       newY = targetY - this.deadZone.bottom;
     }
