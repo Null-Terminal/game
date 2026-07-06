@@ -23,6 +23,7 @@ export class PersonObject extends MovableObject {
   declare readonly Animations: (typeof PersonObject)["animations"];
 
   init() {
+    this.register(this.game.camera.bindTo(this));
     this.play(this.animations.stay);
 
     const SPEED = 300;

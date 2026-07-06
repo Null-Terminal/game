@@ -7,8 +7,8 @@ import { FillerObject } from "#game/filler-object";
 import { staticWorld } from "#game/world";
 
 const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasElement, {
-  width: 1920,
-  height: 1080,
+  width: window.innerWidth,
+  height: window.innerHeight,
   showFPS: true,
 });
 
@@ -18,7 +18,7 @@ game.world.createObject(PlatformObject, {
   bbox: [350, 770, 430, 800],
   movement: {
     path: [
-      [700, 500],
+      [700, 700],
       [400, 500],
       [600, 600],
       [350, 770]
@@ -31,6 +31,7 @@ game.world.createObject(PlatformObject, {
 game.world.createObject(FillerObject, {
   show: "night",
   stretchWidth: true,
+  staticScreen: true
 });
 
 game.world.createObject(FillerObject, {
