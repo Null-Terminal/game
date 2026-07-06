@@ -199,12 +199,21 @@ export abstract class GameObject extends KindedObject {
     this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
 
+      let y = this.y;
+      let x = this.x;
+
+      // Поддержка скроллинга
+      if (!this.options.staticScreen) {
+        x -= this.game.camera.x;
+        y -= this.game.camera.y;
+      }
+
       // Нормализуем y, так как canvas считает 0 верхом, а не низом
-      const y = canvas.height - this.y - this.height;
+      y = canvas.height - y - this.height;
 
       if (this.bbox != null || stretchWidth || stretchHeight) {
         const image = selectedAnimation.getPatternFrame(spriteIndex, this.width, this.height, effects);
-        ctx.drawImage(image, 0, 0, this.width, this.height, this.x, y, this.width, this.height);
+        ctx.drawImage(image, 0, 0, this.width, this.height, x, y, this.width, this.height);
 
       } else {
         const image = selectedAnimation.getSpriteFrame(spriteIndex, effects);
@@ -212,7 +221,7 @@ export abstract class GameObject extends KindedObject {
         // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
         // из-за разницы высот между отдельным фреймом и максимальным
         const diffY = this.height - image.height;
-        ctx.drawImage(image, this.x, y + diffY, image.width, image.height);
+        ctx.drawImage(image, x, y + diffY, image.width, image.height);
       }
 
       if ((!rendered || sprite.spriteId !== "") && selectedAnimation.name in this.animation.events) {

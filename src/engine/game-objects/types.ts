@@ -16,6 +16,7 @@ export interface DefaultGameObjectOptions {
   show?: string;
   stretchWidth?: boolean;
   stretchHeight?: boolean;
+  staticScreen?: boolean;
   effects?: Effects;
 }
 
