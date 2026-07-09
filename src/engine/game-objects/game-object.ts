@@ -242,7 +242,7 @@ export abstract class GameObject extends KindedObject {
 
             const replicaX = x + w * Math.sign(x * -1);
 
-            if (replicaX > x) {
+            if (x < 0 && replicaX > x || x > 0 && replicaX < x) {
               x = replicaX;
               ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
             }
@@ -255,7 +255,7 @@ export abstract class GameObject extends KindedObject {
 
             const replicaY = y + h * Math.sign(y * -1);
 
-            if (replicaY < y) {
+            if (y > 0 && replicaY > y || y < 0 && replicaY < y) {
               y = replicaY;
               ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
             }
