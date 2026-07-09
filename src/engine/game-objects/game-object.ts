@@ -2,6 +2,7 @@ import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import type { Game } from "#engine/game";
+import type { BakedFrame } from "#engine/animation-loader";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
@@ -234,33 +235,7 @@ export abstract class GameObject extends KindedObject {
 
         // Для не статичных изображений нужно создавать реплики,
         // если нужно, чтобы оно растягивалось на весь экран
-        if (!staticScreen) {
-          if (stretchWidth) {
-            if (Math.abs(x) >= w) {
-              this.x = camera.x;
-            }
-
-            const replicaX = x + w * Math.sign(x * -1);
-
-            if (x < 0 && replicaX > x || x > 0 && replicaX < x) {
-              x = replicaX;
-              ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
-            }
-          }
-
-          if (stretchHeight) {
-            if (Math.abs(y) <= h) {
-              this.y = camera.y;
-            }
-
-            const replicaY = y + h * Math.sign(y * -1);
-
-            if (y > 0 && replicaY > y || y < 0 && replicaY < y) {
-              y = replicaY;
-              ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
-            }
-          }
-        }
+        this.#stretchPattern(ctx, image, x, y);
 
       } else {
         const image = selectedAnimation.getSpriteFrame(spriteIndex, effects);
@@ -310,6 +285,42 @@ export abstract class GameObject extends KindedObject {
 
       rendered = true;
     }));
+  }
+
+  #stretchPattern(ctx: CanvasRenderingContext2D, pattern: BakedFrame, x: number, y: number) {
+    const opts = this.options;
+
+    if (opts.staticScreen) {
+      return;
+    }
+
+    const { game, width: w, height: h } = this;
+
+    if (opts.stretchWidth) {
+      if (Math.abs(x) >= w) {
+        this.x = game.camera.x;
+      }
+
+      const replicaX = x + w * Math.sign(x * -1);
+
+      if (x < 0 && replicaX > x || x > 0 && replicaX < x) {
+        x = replicaX;
+        ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
+      }
+    }
+
+    if (opts.stretchHeight) {
+      if (Math.abs(y) <= h) {
+        this.y = game.camera.y;
+      }
+
+      const replicaY = y + h * Math.sign(y * -1);
+
+      if (y > 0 && replicaY > y || y < 0 && replicaY < y) {
+        y = replicaY;
+        ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
+      }
+    }
   }
 }
 
