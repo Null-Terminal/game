@@ -193,7 +193,7 @@ export abstract class MovableObject extends GameObject {
       return newX;
     }
 
-    const step = delta > 0 ? 1 : -1;
+    const step = Math.sign(delta);
 
     let start = this.x;
 
@@ -222,7 +222,7 @@ export abstract class MovableObject extends GameObject {
       return newY;
     }
 
-    const step = delta > 0 ? 1 : -1;
+    const step = Math.sign(delta);
 
     let start = this.y;
 
