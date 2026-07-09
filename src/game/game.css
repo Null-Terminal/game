@@ -1,5 +1,12 @@
 body {
   margin: 0;
   padding: 0;
+  overflow: hidden;
   background: #14283C;
+}
+
+#game {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
