@@ -11,7 +11,7 @@ export class Camera extends Disposable {
   readonly deadZone = {
     left: 350,
     right: 350,
-    top: 150,
+    top: 250,
     bottom: 250,
   };
 
