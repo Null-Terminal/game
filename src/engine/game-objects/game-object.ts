@@ -107,8 +107,19 @@ export abstract class GameObject extends KindedObject {
       this.x = minX;
       this.y = minY;
 
-      this.width = maxX - minX;
-      this.height = maxY - minY;
+      if (isFinite(minX) && isFinite(maxX)) {
+        this.width = maxX - minX;
+
+      } else {
+        this.width = Infinity;
+      }
+
+      if (isFinite(minY) && isFinite(maxY)) {
+        this.height = maxY - minY;
+
+      } else {
+        this.height = Infinity;
+      }
 
     } else {
       if ("x" in opts) {
@@ -173,13 +184,14 @@ export abstract class GameObject extends KindedObject {
     this.#cancelRedrawHandler?.();
     this.#activeAnimation = selectedAnimation;
 
-    const { effects, options: { stretchWidth, stretchHeight } } = this;
+    const { bbox, effects, game: { camera } } = this;
+    const { stretchWidth, stretchHeight, staticScreen } = this.options;
     const { canvas, emitter } = this.canvas;
 
     let rendered = false;
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
-    if (this.bbox == null) {
+    if (bbox == null) {
       this.width = selectedAnimation.maxWidth * effects.scale;
       this.height = selectedAnimation.maxHeight * effects.scale;
     }
@@ -196,31 +208,66 @@ export abstract class GameObject extends KindedObject {
 
     let inc = 1;
 
+    const renderAsPattern = bbox != null || stretchWidth || stretchHeight;
+
     this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ([now, ctx]) => {
       const sprite = animation.at(spriteIndex)!;
+
+      const { width: w, height: h } = this;
 
       let y = this.y;
       let x = this.x;
 
       // Поддержка скроллинга
-      if (!this.options.staticScreen) {
-        x -= this.game.camera.x;
-        y -= this.game.camera.y;
+      if (!staticScreen) {
+        x -= camera.x;
+        y -= camera.y;
       }
 
       // Нормализуем y, так как canvas считает 0 верхом, а не низом
-      y = canvas.height - y - this.height;
+      y = canvas.height - y - h;
 
-      if (this.bbox != null || stretchWidth || stretchHeight) {
-        const image = selectedAnimation.getPatternFrame(spriteIndex, this.width, this.height, effects);
-        ctx.drawImage(image, 0, 0, this.width, this.height, x, y, this.width, this.height);
+      if (renderAsPattern) {
+        const image = selectedAnimation.getPatternFrame(spriteIndex, w, h, effects);
+
+        ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
+
+        // Для не статичных изображений нужно создавать реплики,
+        // если нужно, чтобы оно растягивалось на весь экран
+        if (!staticScreen) {
+          if (stretchWidth) {
+            if (Math.abs(x) >= w) {
+              this.x = camera.x;
+            }
+
+            const replicaX = x + w * Math.sign(x * -1);
+
+            if (replicaX > x) {
+              x = replicaX;
+              ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
+            }
+          }
+
+          if (stretchHeight) {
+            if (Math.abs(y) <= h) {
+              this.y = camera.y;
+            }
+
+            const replicaY = y + h * Math.sign(y * -1);
+
+            if (replicaY < y) {
+              y = replicaY;
+              ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
+            }
+          }
+        }
 
       } else {
         const image = selectedAnimation.getSpriteFrame(spriteIndex, effects);
 
         // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
         // из-за разницы высот между отдельным фреймом и максимальным
-        const diffY = this.height - image.height;
+        const diffY = h - image.height;
         ctx.drawImage(image, x, y + diffY, image.width, image.height);
       }
 

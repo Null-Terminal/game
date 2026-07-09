@@ -37,32 +37,26 @@ export class World extends Disposable {
     });
   }
 
-  createObject(object: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
-    return this.#objectPool.add(object, this.game, opts);
+  createObject(go: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
+    return this.#objectPool.add(go, this.game, opts);
   }
 
-  addToStaticWorld(object: GameObject) {
-    this.#staticWorld.insert(
-      object.poolPointer[0],
-      object.poolPointer[1],
+  addToStaticWorld(go: GameObject) {
+    const ptr = go.poolPointer;
 
-      object.x,
-      object.y,
-      object.x + object.width,
-      object.y + object.height
-    );
+    const width = go.x + go.width || Infinity;
+    const height = go.y + go.height || Infinity;
+
+    this.#staticWorld.insert(ptr[0], ptr[1], go.x, go.y, width, height);
   }
 
-  addToDynamicWorld(object: GameObject) {
-    this.#dynamicWorld.insert(
-      object.poolPointer[0],
-      object.poolPointer[1],
+  addToDynamicWorld(go: GameObject) {
+    const ptr = go.poolPointer;
 
-      object.x,
-      object.y,
-      object.x + object.width,
-      object.y + object.height
-    );
+    const width = go.x + go.width || Infinity;
+    const height = go.y + go.height || Infinity;
+
+    this.#dynamicWorld.insert(ptr[0], ptr[1], go.x, go.y, width, height);
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
