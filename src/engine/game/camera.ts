@@ -9,9 +9,9 @@ export class Camera extends Disposable {
   readonly smoothness = 0.1;
 
   readonly deadZone = {
-    left: 150,
-    right: 150,
-    top: 250,
+    left: 350,
+    right: 350,
+    top: 150,
     bottom: 250,
   };
 
@@ -34,8 +34,8 @@ export class Camera extends Disposable {
     );
   }
 
-  bindTo(obj: MovableObject): () => void {
-    this.#target = obj;
+  bindTo(target: MovableObject): () => void {
+    this.#target = target;
 
     return () => {
       this.#target = null;
