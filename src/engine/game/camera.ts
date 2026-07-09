@@ -6,7 +6,7 @@ import type { MovableObject } from "#engine/game-objects";
 export class Camera extends Disposable {
   readonly game: Game;
 
-  readonly smoothness = 0.1;
+  readonly smoothness = 0.3;
 
   readonly deadZone = {
     left: 350,
