@@ -37,9 +37,9 @@ export abstract class MovableObject extends GameObject {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    let status = this.#updateRiding();
+    let moveStatus = this.#updateRiding();
 
-    if (dy < 0 && status & CollisionStatus.BottomCollision) {
+    if (dy < 0 && moveStatus & CollisionStatus.BottomCollision) {
       dy = 0;
     }
 
@@ -54,7 +54,7 @@ export abstract class MovableObject extends GameObject {
         this.x = newX;
 
       } else {
-        status |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
+        moveStatus |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
       }
     }
 
@@ -65,14 +65,17 @@ export abstract class MovableObject extends GameObject {
         this.y = newY;
 
       } else {
-        status |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
+        moveStatus |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
     }
 
-    return status;
+    return moveStatus;
   }
 
-  protected initPhysics(initializer?: (payload: RenderPayload) => void) {
+  protected initPhysics(
+    initializer?: (payload: RenderPayload) => void,
+    effect?: (moveStatus: number) => void
+  ) {
     const stats = { ...(this.constructor as typeof MovableObject).stats };
     this.stats = stats;
 
@@ -93,6 +96,8 @@ export abstract class MovableObject extends GameObject {
           stats.onGround = true;
           stats.vy = stats.gravity;
         }
+
+        effect?.(moveStatus);
       })
     );
   }
@@ -103,6 +108,10 @@ export abstract class MovableObject extends GameObject {
 
   protected findDynamicCollision(x = this.x, y = this.y): Collision | null {
     return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
+  }
+
+  protected findInteractCollision(x = this.x, y = this.y): Collision | null {
+    return this.world.findInteractCollision(x, y, x + this.width, y + this.height);
   }
 
   protected findCollisions(x = this.x, y = this.y): Collision[] {
