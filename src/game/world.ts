@@ -1,5 +1,5 @@
 import { WallObject } from "#game/wall-object";
-import type { WorldObjects } from "#engine/game/world";
+import type { WorldObjects } from "#engine/game";
 
 export const staticWorld: WorldObjects = [
   [WallObject, { bbox: [-Infinity, 130, Infinity, 135] }],
