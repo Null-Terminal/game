@@ -10,6 +10,11 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
   showFPS: true,
 });
 
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
 const game = new Game(canvas, { staticWorld } );
 
 game.world.createObject(PersonObject, { y: 1000, x: 300 });

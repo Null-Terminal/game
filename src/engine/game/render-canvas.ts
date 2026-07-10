@@ -33,8 +33,16 @@ export class RenderCanvas extends Disposable {
     return this.canvas.width;
   }
 
+  set width(value: number) {
+    this.canvas.width = value;
+  }
+
   get height() {
     return this.canvas.height;
+  }
+
+  set height(value: number) {
+    this.canvas.height = value;
   }
 
   @cache
