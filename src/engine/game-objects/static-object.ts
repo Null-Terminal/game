@@ -11,6 +11,6 @@ export abstract class StaticObject extends GameObject {
 
   override create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
     super.create(game, poolPointer, opts);
-    this.world.addToStaticWorld(this);
+    this.world.addToWorld(this, this.world.statics);
   }
 }

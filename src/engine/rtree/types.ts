@@ -6,7 +6,7 @@ export interface RTreePublicNode {
   pointer: DataPointer;
 }
 
-export type RTreePred = (node: RTreePublicNode) => boolean;
+export type RTreePredicate = (node: RTreePublicNode) => boolean;
 
 export interface RTreeView {
   uints8: Uint8Array;
