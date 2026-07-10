@@ -113,6 +113,7 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         this.width = Infinity;
+        opts.stretchWidth = true;
       }
 
       if (isFinite(minY) && isFinite(maxY)) {
@@ -120,6 +121,7 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         this.height = Infinity;
+        opts.stretchHeight = true;
       }
 
     } else {
@@ -301,10 +303,8 @@ export abstract class GameObject extends KindedObject {
         this.x = game.camera.x;
       }
 
-      const replicaX = x + w * Math.sign(x * -1);
-
-      if (x < 0 && replicaX > x || x > 0 && replicaX < x) {
-        x = replicaX;
+      if (x != 0) {
+        x = x + w * Math.sign(x * -1);
         ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
       }
     }
@@ -314,10 +314,8 @@ export abstract class GameObject extends KindedObject {
         this.y = game.camera.y;
       }
 
-      const replicaY = y + h * Math.sign(y * -1);
-
-      if (y > 0 && replicaY > y || y < 0 && replicaY < y) {
-        y = replicaY;
+      if (y != 0) {
+        y = y + h * Math.sign(y * -1);
         ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
       }
     }
