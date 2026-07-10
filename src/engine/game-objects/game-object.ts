@@ -21,9 +21,9 @@ export abstract class GameObject extends KindedObject {
     return entries;
   }
 
-  readonly Animations = GameObject.animations;
+  readonly animations = GameObject.animations;
 
-  readonly animation: EventEmitter<AnimationEvents<this["Animations"]>> = new EventEmitter({
+  readonly animation: EventEmitter<AnimationEvents<this["animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
       map[name] = handler<string>();
       return map;
@@ -58,9 +58,8 @@ export abstract class GameObject extends KindedObject {
     return this.game.world;
   }
 
-  @cache
-  get animations(): this["Animations"] {
-    return (this.constructor as typeof GameObject).animations;
+  get nowPlaying(): Animations[keyof Animations] | null {
+    return this.#nowPlaying;
   }
 
   get width() {
@@ -79,12 +78,12 @@ export abstract class GameObject extends KindedObject {
     this.#height = value;
   }
 
+  #paused = false;
+
   #width = 0;
   #height = 0;
 
-  #paused = false;
-  #activeAnimation: Animations[keyof Animations] | null = null;
-
+  #nowPlaying: Animations[keyof Animations] | null = null;
   #cancelRedrawHandler: Function | null = null;
 
   constructor(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
@@ -172,20 +171,21 @@ export abstract class GameObject extends KindedObject {
     this.#paused = false;
   }
 
-  ensurePlaying(selectedAnimation: Animations[keyof Animations]) {
-    if (this.#activeAnimation !== selectedAnimation) {
-      this.play(selectedAnimation);
+  ensurePlaying(animation: Animations[keyof Animations]) {
+    if (this.#nowPlaying !== animation) {
+      this.play(animation);
     }
   }
 
-  play(selectedAnimation: Animations[keyof Animations]) {
-    const { animation, animation: { params } } = selectedAnimation;
+  play(animation: Animations[keyof Animations]) {
+    const spriteAnimation = animation.animation;
+    const params = spriteAnimation.params;
 
     let lastFrameTime = 0;
-    let spriteIndex = params.randomOrder ? animation.randomIndex() : 0;
+    let spriteIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
 
     this.#cancelRedrawHandler?.();
-    this.#activeAnimation = selectedAnimation;
+    this.#nowPlaying = animation;
 
     const { bbox, effects, game: { camera } } = this;
     const { stretchWidth, stretchHeight, staticScreen } = this.options;
@@ -195,8 +195,8 @@ export abstract class GameObject extends KindedObject {
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     if (bbox == null) {
-      this.width = selectedAnimation.maxWidth * effects.scale;
-      this.height = selectedAnimation.maxHeight * effects.scale;
+      this.width = animation.maxWidth * effects.scale;
+      this.height = animation.maxHeight * effects.scale;
     }
 
     if (stretchWidth || stretchHeight) {
@@ -214,7 +214,7 @@ export abstract class GameObject extends KindedObject {
     const renderAsPattern = bbox != null || stretchWidth || stretchHeight;
 
     this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ({ now, ctx }) => {
-      const sprite = animation.at(spriteIndex)!;
+      const sprite = spriteAnimation.at(spriteIndex)!;
 
       const { width: w, height: h } = this;
 
@@ -231,7 +231,7 @@ export abstract class GameObject extends KindedObject {
       y = canvas.height - y - h;
 
       if (renderAsPattern) {
-        const image = selectedAnimation.getPatternFrame(spriteIndex, w, h, effects);
+        const image = animation.getPatternFrame(spriteIndex, w, h, effects);
 
         ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
 
@@ -240,7 +240,7 @@ export abstract class GameObject extends KindedObject {
         this.#stretchPattern(ctx, image, x, y);
 
       } else {
-        const image = selectedAnimation.getSpriteFrame(spriteIndex, effects);
+        const image = animation.getSpriteFrame(spriteIndex, effects);
 
         // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
         // из-за разницы высот между отдельным фреймом и максимальным
@@ -248,8 +248,8 @@ export abstract class GameObject extends KindedObject {
         ctx.drawImage(image, x, y + diffY, image.width, image.height);
       }
 
-      if ((!rendered || sprite.spriteId !== "") && selectedAnimation.name in this.animation.events) {
-        this.animation.emit(this.animation.events[selectedAnimation.name]!, sprite.spriteId);
+      if ((!rendered || sprite.spriteId !== "") && animation.name in this.animation.events) {
+        this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
       }
 
       let duration;
@@ -267,11 +267,11 @@ export abstract class GameObject extends KindedObject {
 
       if (!this.isPaused() && (now - lastFrameTime >= duration)) {
         if (params.randomOrder) {
-          spriteIndex = animation.randomIndex();
+          spriteIndex = spriteAnimation.randomIndex();
 
         } else {
           if (params.loopReverse) {
-            if (spriteIndex + inc === animation.length) {
+            if (spriteIndex + inc === spriteAnimation.length) {
               inc = -1;
 
             } else if (spriteIndex + inc === -1) {
@@ -279,7 +279,7 @@ export abstract class GameObject extends KindedObject {
             }
           }
 
-          spriteIndex = (spriteIndex + inc) % animation.length;
+          spriteIndex = (spriteIndex + inc) % spriteAnimation.length;
         }
 
         lastFrameTime = now;
