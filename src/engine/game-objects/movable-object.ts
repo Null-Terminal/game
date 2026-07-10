@@ -157,7 +157,9 @@ export abstract class MovableObject extends GameObject {
 
       // Корректирую позицию объекта под позицию платформы на которой он стоит
       this.x += riding.x - riding.prevX;
-      this.y = riding.y + riding.height;
+
+      // Ставим объект чуть-чуть выше, чтобы не провоцировать рассчеты коллизий
+      this.y = riding.y + riding.height + 0.0001;
 
       status |= CollisionStatus.BottomCollision;
 
