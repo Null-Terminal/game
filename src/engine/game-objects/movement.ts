@@ -22,14 +22,9 @@ export class Movement {
       return;
     }
 
-    let lastTime = performance.now();
-
     let pathIndex = 0;
 
-    this.#cancelMovementHandler = go.register(go.canvas.emitter.on(go.redrawEvent, ([now]) => {
-      const delta = Math.min(0.025, (now - lastTime) / 1000);
-      lastTime = now;
-
+    this.#cancelMovementHandler = go.register(go.canvas.emitter.on(go.redrawEvent, ({ delta }) => {
       const target = path[pathIndex]!;
 
       const dx = target[0] - go.x;

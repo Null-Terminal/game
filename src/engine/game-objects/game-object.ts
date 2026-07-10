@@ -213,7 +213,7 @@ export abstract class GameObject extends KindedObject {
 
     const renderAsPattern = bbox != null || stretchWidth || stretchHeight;
 
-    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ([now, ctx]) => {
+    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ({ now, ctx }) => {
       const sprite = animation.at(spriteIndex)!;
 
       const { width: w, height: h } = this;
