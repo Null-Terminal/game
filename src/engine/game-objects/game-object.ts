@@ -12,7 +12,7 @@ import { Movement } from "#engine/game-objects/movement";
 import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject extends KindedObject {
-  static animations: Animations = {};
+  static readonly animations: Animations = {};
 
   @cache
   static get animationEntries(){
@@ -21,7 +21,7 @@ export abstract class GameObject extends KindedObject {
     return entries;
   }
 
-  declare readonly Animations: (typeof GameObject)["animations"];
+  readonly Animations = GameObject.animations;
 
   readonly animation: EventEmitter<AnimationEvents<this["Animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {

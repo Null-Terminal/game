@@ -19,10 +19,10 @@ const [stay, run, jump] = await Promise.all([
 ]);
 
 export class PersonObject extends MovableObject {
-  static override animations = { stay, run, jump };
-  declare readonly Animations: (typeof PersonObject)["animations"];
+  static override readonly animations = { stay, run, jump };
+  override readonly Animations = PersonObject.animations;
 
-  static override stats = {
+  static override readonly stats = {
     ...MovableObject.stats,
     speed: 300,
     jump: 2500,
