@@ -1,5 +1,6 @@
 import { GameObject } from "#engine/game-objects/game-object";
-import type { Collision } from "#engine/game/world";
+
+import type { RenderPayload, Collision } from "#engine/game";
 
 export enum CollisionStatus {
   NoCollision     = 0b00000,
@@ -11,6 +12,15 @@ export enum CollisionStatus {
 }
 
 export abstract class MovableObject extends GameObject {
+  static readonly stats = {
+    vx: 0,
+    vy: 0,
+    gravity: -1800,
+    onGround: false,
+  };
+
+  stats = MovableObject.stats;
+
   override get redrawEvent() {
     return this.canvas.events.main;
   }
@@ -21,18 +31,6 @@ export abstract class MovableObject extends GameObject {
   override destroy() {
     super.destroy();
     this.#riding = null;
-  }
-
-  hasCollision(x = this.x, y = this.y): boolean {
-    return this.world.hasCollision(x, y, x + this.width, y + this.height);
-  }
-
-  findDynamicCollision(x = this.x, y = this.y): Collision | null {
-    return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
-  }
-
-  findCollisions(x = this.x, y = this.y): Collision[] {
-    return this.world.findCollisions(x, y, x + this.width, y + this.height);
   }
 
   override move(dx: number, dy: number): number {
@@ -72,6 +70,43 @@ export abstract class MovableObject extends GameObject {
     }
 
     return status;
+  }
+
+  protected initPhysics(initializer?: (payload: RenderPayload) => void) {
+    const stats = { ...(this.constructor as typeof MovableObject).stats };
+    this.stats = stats;
+
+    this.register(
+      this.canvas.emitter.on(this.redrawEvent, (payload) => {
+        initializer?.(payload);
+
+        // Гравитация
+        stats.vy = Math.max(stats.gravity, stats.vy + stats.gravity * payload.delta);
+
+        const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
+
+        // Врезались в потолок
+        if (moveStatus & CollisionStatus.TopCollision) {
+          stats.vy = 0;
+
+        } else if (moveStatus & CollisionStatus.BottomCollision) {
+          stats.onGround = true;
+          stats.vy = stats.gravity;
+        }
+      })
+    );
+  }
+
+  protected hasCollision(x = this.x, y = this.y): boolean {
+    return this.world.hasCollision(x, y, x + this.width, y + this.height);
+  }
+
+  protected findDynamicCollision(x = this.x, y = this.y): Collision | null {
+    return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
+  }
+
+  protected findCollisions(x = this.x, y = this.y): Collision[] {
+    return this.world.findCollisions(x, y, x + this.width, y + this.height);
   }
 
   #updateRiding() {
