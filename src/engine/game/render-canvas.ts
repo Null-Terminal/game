@@ -40,12 +40,9 @@ export class RenderCanvas extends Disposable {
     return this.canvas.getContext("2d")!;
   }
 
-  #paused = false;
   #redrawId = 0;
-
+  #paused = false;
   #fps = 0;
-  #frameCount = 0;
-  #lastFpsUpdate = 0;
 
   constructor(canvas: HTMLCanvasElement, opts?: RenderCanvasOptions) {
     super();
@@ -90,8 +87,10 @@ export class RenderCanvas extends Disposable {
   start() {
     this.stop();
 
-    this.#lastFpsUpdate = performance.now();
-    this.#frameCount = 0;
+    let lastRedraw = performance.now();
+    let lastFpsUpdate = lastRedraw;
+
+    let frameCount = 0;
 
     const animate = (now?: number) => {
       this.#redrawId = requestAnimationFrame(animate);
@@ -101,18 +100,25 @@ export class RenderCanvas extends Disposable {
       }
 
       // Обновляем FPS
-      this.#frameCount++;
-      const elapsed = now - this.#lastFpsUpdate;
+      frameCount++;
+      const elapsed = now - lastFpsUpdate;
 
       if (elapsed >= 1000) {
-        this.#fps = Math.round((this.#frameCount * 1000) / elapsed);
-        this.#frameCount = 0;
-        this.#lastFpsUpdate = now;
+        this.#fps = Math.round((frameCount * 1000) / elapsed);
+        frameCount = 0;
+        lastFpsUpdate = now;
       }
 
       this.clear();
 
-      const payload: RenderPayload = [now, this.#ctx];
+      const delta = Math.min(0.025, (now - lastRedraw) / 1000);
+      lastRedraw = now;
+
+      const payload: RenderPayload = {
+        now,
+        delta,
+        ctx: this.#ctx
+      };
 
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);
@@ -140,7 +146,6 @@ export class RenderCanvas extends Disposable {
   protected drawFPS() {
     this.#ctx.font = "16px monospace";
     this.#ctx.fillStyle = "#00FF00";
-    this.#ctx.shadowBlur = 0;
     this.#ctx.fillText(`FPS: ${this.#fps}`, 10, 30);
   }
 }
