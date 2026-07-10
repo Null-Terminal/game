@@ -14,8 +14,10 @@ export class RenderCanvas extends Disposable {
     background: handler<RenderPayload>(),
     static: handler<RenderPayload>(),
     dynamic: handler<RenderPayload>(),
+    interact: handler<RenderPayload>(),
     main: handler<RenderPayload>(),
-    overlay: handler<RenderPayload>()
+    overlay: handler<RenderPayload>(),
+    ui: handler<RenderPayload>(),
   });
 
   @cache
@@ -123,8 +125,10 @@ export class RenderCanvas extends Disposable {
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);
       this.emitter.emit(this.events.dynamic, payload);
+      this.emitter.emit(this.events.interact, payload);
       this.emitter.emit(this.events.main, payload);
       this.emitter.emit(this.events.overlay, payload);
+      this.emitter.emit(this.events.ui, payload);
 
       if (this.options.showFPS) {
         this.drawFPS();
