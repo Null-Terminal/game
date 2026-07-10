@@ -1,4 +1,4 @@
-import { MovableObject, CollisionStatus } from "#engine/game-objects";
+import { MovableObject } from "#engine/game-objects";
 import { loadAnimation } from "#engine/animation-loader";
 
 const [stay, run, jump] = await Promise.all([
@@ -22,14 +22,17 @@ export class PersonObject extends MovableObject {
   static override animations = { stay, run, jump };
   declare readonly Animations: (typeof PersonObject)["animations"];
 
-  readonly stats = {
+  static override stats = {
+    ...MovableObject.stats,
     speed: 300,
-    gravity: -1800,
     jump: 2500,
     jetpack: 35,
+    usingJetpack: false,
     fuel: 100,
     fuelPerTick: 0.1
   };
+
+  override readonly stats = PersonObject.stats;
 
   readonly actions = {
     left: 0,
@@ -50,91 +53,62 @@ export class PersonObject extends MovableObject {
     this.play(this.animations.stay);
 
     this.#initControls();
-    this.#initPhysics();
+    this.initPhysics(this.#initPhysics);
 
     this.register(
-      this.canvas.emitter.on(this.canvas.events.overlay, ([, ctx]) => {
+      this.canvas.emitter.on(this.canvas.events.overlay, ({ ctx }) => {
         this.#renderStats(ctx);
       })
     );
   }
 
-  #initPhysics() {
-    const { actions, stats } = this;
+  #initPhysics = () => {
+    const { stats, actions } = this;
 
-    let isOnGround = false;
-    let usingJetpack = false;
+    // Горизонтальное движение
+    stats.vx = stats.speed;
 
-    let vy = 0;
-    let lastTime = performance.now();
+    if (actions.left) {
+      this.effects.flipX = true;
+      stats.vx *= -1;
 
-    this.register(
-      this.canvas.emitter.on(this.redrawEvent, ([now]) => {
-        const delta = Math.min(0.025, (now - lastTime) / 1000);
-        lastTime = now;
+    } else if (actions.right) {
+      this.effects.flipX = false;
 
-        // Горизонтальное движение
-        let dx = stats.speed * delta;
+    } else {
+      stats.vx = 0;
+    }
 
-        if (actions.left) {
-          this.effects.flipX = true;
-          dx *= -1;
+    if (actions.jump === 1 && stats.onGround) {
+      stats.vy += stats.jump;
+      stats.onGround = false;
+      this.ensurePlaying(this.animations.jump);
 
-        } else if (actions.right) {
-          this.effects.flipX = false;
+    } else if (actions.jetpack && stats.fuel > 0) {
+      stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack);
 
-        } else {
-          dx = 0;
-        }
+      stats.onGround = false;
+      stats.usingJetpack = true;
 
-        if (actions.jump === 1 && isOnGround) {
-          vy += stats.jump;
-          isOnGround = false;
-          this.ensurePlaying(this.animations.jump);
+      stats.fuel = Math.max(0, stats.fuel - stats.fuelPerTick);
+      actions.jump = 0;
 
-        } else if (actions.jetpack && stats.fuel > 0) {
-          vy = Math.max(stats.jetpack, vy + stats.jetpack);
+      this.ensurePlaying(this.animations.jump);
 
-          isOnGround = false;
-          usingJetpack = true;
+    } else if (stats.usingJetpack) {
+      stats.usingJetpack = false;
+      stats.vy = 0;
+    }
 
-          stats.fuel = Math.max(0, stats.fuel - stats.fuelPerTick);
-          actions.jump = 0;
+    if (stats.onGround) {
+      if (actions.left || actions.right) {
+        this.ensurePlaying(this.animations.run);
 
-          this.ensurePlaying(this.animations.jump);
-
-        } else if (usingJetpack) {
-          usingJetpack = false;
-          vy = 0;
-        }
-
-        // Гравитация
-        vy = Math.max(stats.gravity, vy + stats.gravity * delta);
-
-        const dy = vy * delta;
-
-        const moveStatus = this.move(dx, dy);
-
-        // Врезались в потолок
-        if (moveStatus & CollisionStatus.TopCollision) {
-          vy = 0;
-
-        } else if (moveStatus & CollisionStatus.BottomCollision) {
-          isOnGround = true;
-          vy = stats.gravity;
-        }
-
-        if (isOnGround) {
-          if (actions.left || actions.right) {
-            this.ensurePlaying(this.animations.run);
-
-          } else {
-            this.ensurePlaying(this.animations.stay);
-          }
-        }
-      })
-    );
-  }
+      } else {
+        this.ensurePlaying(this.animations.stay);
+      }
+    }
+  };
 
   #initControls() {
     const { canvas, actions, controls } = this;
