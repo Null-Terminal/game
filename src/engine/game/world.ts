@@ -18,7 +18,7 @@ export class World extends Disposable {
   readonly dynamics = new RTree();
   readonly interacts = new RTree();
 
-  readonly #objectPool = new GameObjectPool();
+  readonly #objects = new GameObjectPool();
 
   constructor(game: Game, opts: WorldOptions) {
     super();
@@ -41,7 +41,7 @@ export class World extends Disposable {
   }
 
   createObject(go: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
-    return this.#objectPool.add(go, this.game, opts);
+    return this.#objects.add(go, this.game, opts);
   }
 
   addToWorld(go: GameObject, world: RTree) {
@@ -76,7 +76,7 @@ export class World extends Disposable {
     if (collision != null) {
       return {
         bbox: collision.bbox,
-        object: this.#objectPool.get(collision.pointer[0], collision.pointer[1])!
+        object: this.#objects.get(collision.pointer[0], collision.pointer[1])!
       };
     }
 
@@ -93,7 +93,7 @@ export class World extends Disposable {
     if (collision != null) {
       return {
         bbox: collision.bbox,
-        object: this.#objectPool.get(collision.pointer[0], collision.pointer[1])!
+        object: this.#objects.get(collision.pointer[0], collision.pointer[1])!
       };
     }
 
@@ -112,7 +112,7 @@ export class World extends Disposable {
       .map(({ bbox, pointer: [kind, i] }) => {
         return {
           bbox,
-          object: this.#objectPool.get(kind, i)!
+          object: this.#objects.get(kind, i)!
         };
       })!;
   }
