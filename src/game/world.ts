@@ -3,6 +3,7 @@ import type { WorldObjects } from "#engine/game/world";
 
 export const staticWorld: WorldObjects = [
   [WallObject, { bbox: [-Infinity, 130, Infinity, 135] }],
+  [WallObject, { bbox: [0, -Infinity, 1, Infinity] }],
   [WallObject, { show: "bricks", bbox: [100, 500, 300, 520] }],
   [WallObject, { show: "bricks", bbox: [360, 280, 560, 340] }],
   [WallObject, { show: "bricks", bbox: [700, 320, 900, 380] }],
