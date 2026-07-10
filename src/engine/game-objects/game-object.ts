@@ -13,6 +13,7 @@ import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#e
 
 export abstract class GameObject extends KindedObject {
   static readonly animations: Animations = {};
+  readonly animations = GameObject.animations;
 
   @cache
   static get animationEntries(){
@@ -20,8 +21,6 @@ export abstract class GameObject extends KindedObject {
     entries.forEach(([name, value]) => value.name = name);
     return entries;
   }
-
-  readonly animations = GameObject.animations;
 
   readonly animation: EventEmitter<AnimationEvents<this["animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
