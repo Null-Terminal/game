@@ -8,7 +8,7 @@ const bricks = await loadAnimation(import("#/sprites/bricks.webp"), {
 
 export class WallObject extends StaticObject {
   static override readonly animations = { bricks };
-  override readonly Animations = WallObject.animations;
+  override readonly animations = WallObject.animations;
 
   init() {}
 }

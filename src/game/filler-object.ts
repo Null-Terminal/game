@@ -19,7 +19,7 @@ const [night, asphalt, meshFence] = await Promise.all([
 
 export class FillerObject extends BackgroundObject {
   static override readonly animations = { night, asphalt, meshFence };
-  override readonly Animations = FillerObject.animations;
+  override readonly animations = FillerObject.animations;
 
   init() {}
 }

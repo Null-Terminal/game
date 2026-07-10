@@ -1,14 +1,15 @@
 {
   "params": {
-    "scale": 0.7
+    "speed": 1,
+    "scale": 0.2
   },
 
   "sprites": [
     {
       "x": 0,
       "y": 0,
-      "width": 1055,
-      "height": 181,
+      "width": 175,
+      "height": 227,
       "duration": 100,
       "spriteId": ""
     }

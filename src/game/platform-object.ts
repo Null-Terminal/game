@@ -8,7 +8,7 @@ const wall = await loadAnimation(import("#/sprites/bricks.webp"), {
 
 export class PlatformObject extends DynamicObject {
   static override readonly animations = { wall };
-  override readonly Animations = PlatformObject.animations;
+  override readonly animations = PlatformObject.animations;
 
   init() {
     this.play(this.animations.wall);

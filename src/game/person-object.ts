@@ -1,5 +1,8 @@
 import { MovableObject } from "#engine/game-objects";
+
 import { loadAnimation } from "#engine/animation-loader";
+
+import { UsefulObject } from "#game/useful-object";
 
 const [stay, run, jump] = await Promise.all([
   loadAnimation(import("#/sprites/run.webp"), {
@@ -20,7 +23,7 @@ const [stay, run, jump] = await Promise.all([
 
 export class PersonObject extends MovableObject {
   static override readonly animations = { stay, run, jump };
-  override readonly Animations = PersonObject.animations;
+  override readonly animations = PersonObject.animations;
 
   static override readonly stats = {
     ...MovableObject.stats,
@@ -45,7 +48,7 @@ export class PersonObject extends MovableObject {
     ArrowLeft: "left",
     ArrowRight: "right",
     Space: "jump",
-    AltLeft: "jetpack",
+    ShiftLeft: "jetpack",
   };
 
   init() {
@@ -53,10 +56,10 @@ export class PersonObject extends MovableObject {
     this.play(this.animations.stay);
 
     this.#initControls();
-    this.initPhysics(this.#initPhysics);
+    this.initPhysics(this.#initPhysics, this.#initEffects);
 
     this.register(
-      this.canvas.emitter.on(this.canvas.events.overlay, ({ ctx }) => {
+      this.canvas.emitter.on(this.canvas.events.ui, ({ ctx }) => {
         this.#renderStats(ctx);
       })
     );
@@ -107,6 +110,14 @@ export class PersonObject extends MovableObject {
       } else {
         this.ensurePlaying(this.animations.stay);
       }
+    }
+  };
+
+  #initEffects = () => {
+    const interact = this.findInteractCollision()?.object;
+
+    if (interact instanceof UsefulObject) {
+      interact.apply(this);
     }
   };
 
