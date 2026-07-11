@@ -41,7 +41,8 @@ export class PersonObject extends MovableObject {
     left: 0,
     right: 0,
     jump: 0,
-    jetpack: 0
+    jetpack: 0,
+    use: 0
   };
 
   readonly controls: Record<string, keyof PersonObject["actions"]> = {
@@ -49,6 +50,7 @@ export class PersonObject extends MovableObject {
     ArrowRight: "right",
     Space: "jump",
     ShiftLeft: "jetpack",
+    KeyE: "use",
   };
 
   init() {
@@ -114,11 +116,11 @@ export class PersonObject extends MovableObject {
   };
 
   #initEffects = () => {
-    const interact = this.findInteractCollision()?.object;
-
-    if (interact instanceof UsefulObject) {
-      interact.apply(this);
-    }
+    this.findInteractCollisions().forEach(({ object }) => {
+      if (object instanceof UsefulObject) {
+        object.visit(this);
+      }
+    });
   };
 
   #initControls() {

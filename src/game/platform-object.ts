@@ -1,6 +1,8 @@
-import { DynamicObject } from "#engine/game-objects";
+import { DynamicObject, GameObject } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
+
+import { UsefulObject } from "#game/useful-object";
 
 const wall = await loadAnimation(import("#/sprites/bricks.webp"), {
   animation: import("#/sprites/bricks.animation.json")
@@ -12,5 +14,16 @@ export class PlatformObject extends DynamicObject {
 
   init() {
     this.play(this.animations.wall);
+  }
+
+  override visit(go: GameObject) {
+    if (go instanceof UsefulObject && go.nowPlaying === go.animations.trigger) {
+      if (this.isPaused()) {
+        this.resume();
+
+      } else {
+        this.pause();
+      }
+    }
   }
 }

@@ -27,10 +27,11 @@ export const world: WorldObjects = [
   [UsefulObject, { show: "fuel", y: 1000, x: 500 }],
   [UsefulObject, { show: "fuel", y: 1000, x: 600 }],
   [UsefulObject, { show: "fuel", y: 1000, x: 700 }],
-  [UsefulObject, { show: "fuel", y: 1000, x: 800 }],
+
 
   [PlatformObject, {
     bbox: [350, 770, 430, 800],
+
     movement: {
       path: [
         [700, 700],
@@ -40,6 +41,10 @@ export const world: WorldObjects = [
       ],
 
       speed: 300
+    },
+
+    with: {
+      trigger: [UsefulObject, { show: "trigger", y: 1000, x: 800 }],
     }
   }],
 ];
