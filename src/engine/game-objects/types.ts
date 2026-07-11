@@ -9,8 +9,9 @@ export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
 export type With = Record<string, WorldObject>;
+
 export type Refs<T extends With> = {
-  [K in keyof T]: InstanceType<T[K][0]>;
+  [K in keyof T]?: InstanceType<T[K][0]> | null;
 };
 
 export interface Effects extends FrameEffects {

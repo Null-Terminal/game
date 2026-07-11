@@ -177,7 +177,13 @@ export abstract class GameObject extends KindedObject {
         }
       }
 
-      this.refs[name] = game.world.objects.get(...game.world.createObject(go, resolvedOpts))!;
+      const instance = game.world.objects.get(...game.world.createObject(go, resolvedOpts))!;
+      this.refs[name] = instance;
+
+      this.register(() => {
+        instance.destroy();
+        this.refs[name] = null;
+      });
     });
   }
 
