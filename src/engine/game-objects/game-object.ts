@@ -231,6 +231,15 @@ export abstract class GameObject extends KindedObject {
     this.#paused = false;
   }
 
+  togglePause() {
+    if (this.isPaused()) {
+      this.resume();
+
+    } else {
+      this.pause();
+    }
+  }
+
   ensurePlaying(animation: Animations[keyof Animations]) {
     if (this.#nowPlaying !== animation) {
       this.play(animation);

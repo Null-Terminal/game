@@ -90,6 +90,15 @@ export class RenderCanvas extends Disposable {
     this.#paused = false;
   }
 
+  togglePause() {
+    if (this.isPaused()) {
+      this.resume();
+
+    } else {
+      this.pause();
+    }
+  }
+
   switchFPS(show: boolean = true) {
     this.options.showFPS = show;
   }

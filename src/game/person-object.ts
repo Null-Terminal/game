@@ -131,17 +131,10 @@ export class PersonObject extends MovableObject {
 
       if (e.code === "Escape") {
         e.preventDefault();
-
-        if (canvas.isPaused()) {
-          canvas.resume();
-
-        } else {
-          canvas.pause();
-        }
+        canvas.togglePause();
 
       } else if (key in controls) {
         e.preventDefault();
-
         const control = controls[key]!;
 
         if (control in actions) {
