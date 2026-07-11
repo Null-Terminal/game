@@ -37,6 +37,10 @@ export abstract class MovableObject extends GameObject {
     this.prevX = this.x;
     this.prevY = this.y;
 
+    if (this.isPaused()) {
+      return CollisionStatus.NoCollision;
+    }
+
     let moveStatus = this.#updateRiding();
 
     if (dy < 0 && moveStatus & CollisionStatus.BottomCollision) {

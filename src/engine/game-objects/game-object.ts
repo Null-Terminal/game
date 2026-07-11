@@ -211,6 +211,10 @@ export abstract class GameObject extends KindedObject {
     this.prevX = this.x;
     this.prevY = this.y;
 
+    if (this.isPaused()) {
+      return;
+    }
+
     this.x = this.x + dx;
     this.y = this.y + dy;
   }
