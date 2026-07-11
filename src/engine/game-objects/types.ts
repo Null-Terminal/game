@@ -12,11 +12,13 @@ export interface Effects extends FrameEffects {
 }
 
 export interface DefaultGameObjectOptions {
-  movement?: { path: MovePath } & MoveAlongPathOptions;
   show?: string;
+  movement?: { path: MovePath } & MoveAlongPathOptions;
+
   stretchWidth?: boolean;
   stretchHeight?: boolean;
   staticScreen?: boolean;
+
   effects?: Effects;
 }
 

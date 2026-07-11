@@ -16,7 +16,7 @@ export abstract class GameObject extends KindedObject {
   readonly animations = GameObject.animations;
 
   @cache
-  static get animationEntries(){
+  static get animationEntries() {
     const entries = Object.entries(this.animations);
     entries.forEach(([name, value]) => value.name = name);
     return entries;
