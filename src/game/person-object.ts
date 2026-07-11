@@ -2,8 +2,6 @@ import { MovableObject } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
-import { UsefulObject } from "#game/useful-object";
-
 const [stay, run, jump] = await Promise.all([
   loadAnimation(import("#/sprites/run.webp"), {
     sprite: { removeBackground: true, tolerance: 120 },
@@ -117,9 +115,7 @@ export class PersonObject extends MovableObject {
 
   #initEffects = () => {
     this.findInteractCollisions().forEach(({ object }) => {
-      if (object instanceof UsefulObject) {
-        object.visit(this);
-      }
+      object.visit(this);
     });
   };
 
