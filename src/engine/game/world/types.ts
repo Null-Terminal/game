@@ -7,7 +7,7 @@ export type WorldObject = [GameObject: ConcreteGameObjectConstructor<typeof Game
 export type WorldObjects = WorldObject[];
 
 export interface WorldOptions {
-  staticWorld: WorldObjects
+  objects: WorldObjects
 }
 
 export interface Collision {

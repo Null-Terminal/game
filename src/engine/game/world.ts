@@ -34,7 +34,7 @@ export class World extends Disposable {
     );
 
     this.nextTick(() => {
-      for (const elem of opts.staticWorld) {
+      for (const elem of opts.objects) {
         this.createObject(elem[0], elem[1]);
       }
     });

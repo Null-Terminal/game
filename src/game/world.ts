@@ -6,7 +6,7 @@ import { PlatformObject } from "#game/platform-object";
 
 import type { WorldObjects } from "#engine/game";
 
-export const staticWorld: WorldObjects = [
+export const world: WorldObjects = [
   [FillerObject, { show: "night", stretchWidth: true, staticScreen: true }],
 
   [WallObject, { bbox: [0, -Infinity, 1, Infinity] }],

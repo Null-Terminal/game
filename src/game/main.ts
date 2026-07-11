@@ -1,6 +1,6 @@
 import { Game, RenderCanvas } from "#engine/game";
 
-import { staticWorld } from "#game/world";
+import { world } from "#game/world";
 
 import { PersonObject } from "#game/person-object";
 
@@ -15,6 +15,6 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
 });
 
-const game = new Game(canvas, { staticWorld } );
+const game = new Game(canvas, { objects: world } );
 
 game.world.createObject(PersonObject, { y: 1000, x: 300 });
