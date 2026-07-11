@@ -8,8 +8,8 @@ import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/moveme
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
-export type Composition = Record<string, WorldObject>;
-export type CompositionInstances<T extends Record<string, WorldObject>> = {
+export type With = Record<string, WorldObject>;
+export type Refs<T extends With> = {
   [K in keyof T]: InstanceType<T[K][0]>;
 };
 
@@ -19,6 +19,8 @@ export interface Effects extends FrameEffects {
 
 export interface DefaultGameObjectOptions {
   show?: string;
+
+  with?: With | null;
   movement?: { path: MovePath } & MoveAlongPathOptions;
 
   stretchWidth?: boolean;

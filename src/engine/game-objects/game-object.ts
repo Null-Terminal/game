@@ -10,11 +10,11 @@ import { KindedObject } from "#engine/game-objects/kinded-object";
 import { Movement } from "#engine/game-objects/movement";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
-import type { Composition, CompositionInstances, GameObjectOptions, Effects } from "#engine/game-objects/types";
+import type { With, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject extends KindedObject {
-  static readonly composition: Composition = {};
-  readonly composition: CompositionInstances<(typeof GameObject)["composition"]> = {};
+  static readonly with: With = {};
+  readonly refs: Refs<(typeof GameObject)["with"]> = {};
 
   static readonly animations: Animations = {};
   readonly animations = GameObject.animations;
@@ -159,10 +159,12 @@ export abstract class GameObject extends KindedObject {
       }
     });
 
-    const composition = Object.entries((this.constructor as typeof GameObject).composition);
+    const refs = Object.entries(
+      opts.with ?? (this.constructor as typeof GameObject).with
+    );
 
-    composition.forEach(([name, [go, opts]]) => {
-      const resolvedOpts = { ...this.options, x: 0, y: 0, ...opts };
+    refs.forEach(([name, [go, opts]]) => {
+      const resolvedOpts = { ...this.options, with: null, x: 0, y: 0, ...opts };
 
       if (opts != null) {
         if ("bbox" in opts && "bbox" in resolvedOpts) {
@@ -175,7 +177,7 @@ export abstract class GameObject extends KindedObject {
         }
       }
 
-      this.composition[name] = game.world.objects.get(...game.world.createObject(go, resolvedOpts))!;
+      this.refs[name] = game.world.objects.get(...game.world.createObject(go, resolvedOpts))!;
     });
   }
 
