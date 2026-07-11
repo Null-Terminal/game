@@ -11,6 +11,8 @@ export enum CollisionStatus {
   Crashed         = 0b10000,
 }
 
+const ridingTolerance: Record<number, number> = {};
+
 export abstract class MovableObject extends GameObject {
   static readonly stats = {
     vx: 0,
@@ -26,7 +28,6 @@ export abstract class MovableObject extends GameObject {
   }
 
   #riding: GameObject | null = null;
-  #ridingTolerance: Record<number, number> = {};
 
   override destroy() {
     super.destroy();
@@ -127,8 +128,8 @@ export abstract class MovableObject extends GameObject {
 
     // Для разных FPS стартовое значение погрешности будет отличаться.
     // Например, при 60 FPS платформа будет двигаться куда большими шагами, нежели при 144 FPS.
-    const RIDING_TOLERANCE = this.#ridingTolerance[fps] ?? Math.min(5 * (144 / fps), 10);
-    this.#ridingTolerance[fps] = RIDING_TOLERANCE;
+    const RIDING_TOLERANCE = ridingTolerance[fps] ?? Math.min(5 * (144 / fps), 10);
+    ridingTolerance[fps] = RIDING_TOLERANCE;
 
     // Платформа, на которой стоял игрок в прошлый раз
     const lastRiding = this.#riding;
