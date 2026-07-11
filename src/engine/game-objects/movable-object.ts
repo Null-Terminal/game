@@ -161,10 +161,16 @@ export abstract class MovableObject extends GameObject {
       // Ставим объект чуть-чуть выше, чтобы не провоцировать рассчеты коллизий
       this.y = riding.y + riding.height + 0.0001;
 
+      // Из-за потери точности на дробных числах
+      // иногда возникает эффект "парения в воздухе" при движении на быстрой платформе.
+      // Данное значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
+      this.correctionY = riding.y - riding.prevY;
+
       status |= CollisionStatus.BottomCollision;
 
     } else {
       this.#riding = null;
+      this.correctionY = 0;
     }
 
     return status;

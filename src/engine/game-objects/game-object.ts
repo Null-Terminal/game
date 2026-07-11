@@ -40,6 +40,7 @@ export abstract class GameObject extends KindedObject {
 
   y = 0;
   prevY = 0;
+  protected correctionY = 0;
 
   bbox: BBoxTuple | null = null;
 
@@ -217,7 +218,7 @@ export abstract class GameObject extends KindedObject {
 
       const { width: w, height: h } = this;
 
-      let y = this.y;
+      let y = this.y - this.correctionY;
       let x = this.x;
 
       // Поддержка скроллинга
