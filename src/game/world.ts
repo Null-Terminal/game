@@ -4,15 +4,16 @@ import { FillerObject } from "#game/filler-object";
 import { UsefulObject } from "#game/useful-object";
 import { PlatformObject } from "#game/platform-object";
 
+import { FloorObject } from "#game/floor-object";
+
 import type { WorldObjects } from "#engine/game";
 
 export const world: WorldObjects = [
   [FillerObject, { show: "night", stretchWidth: true, staticScreen: true }],
 
   [WallObject, { bbox: [0, -Infinity, 1, Infinity] }],
-  [WallObject, { bbox: [-Infinity, 130, Infinity, 135] }],
 
-  [FillerObject, { show: "asphalt", stretchWidth: true }],
+  [FloorObject, { show: "asphalt" }],
   [FillerObject, { show: "meshFence", y: 140, stretchWidth: true, effects: { opacity: 0.7 } }],
 
   [WallObject, { show: "bricks", bbox: [100, 500, 300, 520] }],
