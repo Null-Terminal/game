@@ -28,7 +28,6 @@ export const world: WorldObjects = [
   [UsefulObject, { show: "fuel", y: 1000, x: 600 }],
   [UsefulObject, { show: "fuel", y: 1000, x: 700 }],
 
-
   [PlatformObject, {
     bbox: [350, 770, 430, 800],
 
