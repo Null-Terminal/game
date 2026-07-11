@@ -14,7 +14,9 @@ import type { With, Refs, GameObjectOptions, Effects } from "#engine/game-object
 
 export abstract class GameObject extends KindedObject {
   static readonly with: With = {};
+
   readonly refs: Refs<(typeof GameObject)["with"]> = {};
+  recipient: GameObject | null = null;
 
   static readonly animations: Animations = {};
   readonly animations = GameObject.animations;
@@ -48,6 +50,10 @@ export abstract class GameObject extends KindedObject {
   bbox: BBoxTuple | null = null;
 
   readonly movement = new Movement(this);
+
+  get name(): string {
+    return this.constructor.name;
+  }
 
   get canvas() {
     return this.game.canvas;
@@ -159,32 +165,46 @@ export abstract class GameObject extends KindedObject {
       }
     });
 
+    this.recipient = opts.recipient ?? null;
+
     const refs = Object.entries(
       opts.with ?? (this.constructor as typeof GameObject).with
     );
 
     refs.forEach(([name, [go, opts]]) => {
-      const resolvedOpts = { ...this.options, with: null, x: 0, y: 0, ...opts };
+      if (this.options.with != null) {
+        opts = { ...opts, recipient: this };
 
-      if (opts != null) {
-        if ("bbox" in opts && "bbox" in resolvedOpts) {
-          const { bbox } = opts;
-          resolvedOpts.bbox = [bbox[0] + this.x, bbox[1] + this.y, bbox[2] + this.x, bbox[3] + this.y];
+      } else {
+        const resolvedOpts = { ...this.options, with: null, x: 0, y: 0, ...opts, recipient: this } ;
 
-        } else {
-          resolvedOpts.x += this.x;
-          resolvedOpts.y += this.y;
+        if (opts != null) {
+          if ("bbox" in opts && "bbox" in resolvedOpts) {
+            const { bbox } = opts;
+            resolvedOpts.bbox = [bbox[0] + this.x, bbox[1] + this.y, bbox[2] + this.x, bbox[3] + this.y];
+
+          } else {
+            resolvedOpts.x += this.x;
+            resolvedOpts.y += this.y;
+          }
         }
+
+        opts = resolvedOpts;
       }
 
-      const instance = game.world.objects.get(...game.world.createObject(go, resolvedOpts))!;
+      const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
       this.refs[name] = instance;
 
       this.register(() => {
         instance.destroy();
+        instance.recipient = null;
         this.refs[name] = null;
       });
     });
+  }
+
+  visit(_go: GameObject) {
+    // Ничего не делаю по умолчанию
   }
 
   move(dx: number, dy: number) {

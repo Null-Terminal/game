@@ -3,6 +3,8 @@ import type { Handlers } from "#/event-emitter";
 import type { BBoxTuple } from "#engine/rtree";
 import type { WorldObject } from "#engine/game";
 import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
+
+import type { GameObject } from "#engine/game-objects/game-object";
 import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/movement/types";
 
 export type Animations = Record<string, LoadedAnimation>;
@@ -20,9 +22,10 @@ export interface Effects extends FrameEffects {
 
 export interface DefaultGameObjectOptions {
   show?: string;
+  movement?: { path: MovePath } & MoveAlongPathOptions;
 
   with?: With | null;
-  movement?: { path: MovePath } & MoveAlongPathOptions;
+  recipient?: GameObject | null;
 
   stretchWidth?: boolean;
   stretchHeight?: boolean;
