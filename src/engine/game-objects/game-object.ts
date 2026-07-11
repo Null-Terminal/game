@@ -106,6 +106,12 @@ export abstract class GameObject extends KindedObject {
 
   abstract init(): void;
 
+  override destroy() {
+    super.destroy();
+    this.#paused = false;
+    this.#nowPlaying = null;
+  }
+
   create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
     this.game = game;
     this.poolPointer = poolPointer;

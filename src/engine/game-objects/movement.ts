@@ -16,7 +16,6 @@ export class Movement {
     const go = this.#go;
 
     this.#cancelMovementHandler?.();
-    this.#cancelMovementHandler = null;
 
     if (path.length === 0) {
       return;
