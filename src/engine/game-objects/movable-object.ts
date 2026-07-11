@@ -114,8 +114,8 @@ export abstract class MovableObject extends GameObject {
     return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
   }
 
-  protected findInteractCollision(x = this.x, y = this.y): Collision | null {
-    return this.world.findInteractCollision(x, y, x + this.width, y + this.height);
+  protected findInteractCollisions(x = this.x, y = this.y): Collision[] {
+    return this.world.findInteractCollisions(x, y, x + this.width, y + this.height);
   }
 
   protected findCollisions(x = this.x, y = this.y): Collision[] {

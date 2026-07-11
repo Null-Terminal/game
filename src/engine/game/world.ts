@@ -1,6 +1,6 @@
 import { Disposable } from "#engine/disposable";
 
-import { RTree, type RTreePredicate } from "#engine/rtree";
+import { RTree, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
@@ -74,30 +74,21 @@ export class World extends Disposable {
     const collision = this.dynamics.searchFirst(x1, y1, x2, y2, pred);
 
     if (collision != null) {
-      return {
-        bbox: collision.bbox,
-        object: this.objects.get(collision.pointer[0], collision.pointer[1])!
-      };
+      return { bbox: collision.bbox, object: this.objects.get(collision.pointer[0], collision.pointer[1])! };
     }
 
     return collision;
   }
 
-  findInteractCollision(minX: number, minY: number, maxX: number, maxY: number): Collision | null {
+  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
-    const collision = this.interacts.searchFirst(x1, y1, x2, y2, pred);
 
-    if (collision != null) {
-      return {
-        bbox: collision.bbox,
-        object: this.objects.get(collision.pointer[0], collision.pointer[1])!
-      };
-    }
-
-    return collision;
+    return this.interacts
+      .search(x1, y1, x2, y2, pred)
+      .map(this.#collisionMapper);
   }
 
   findCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
@@ -109,15 +100,14 @@ export class World extends Disposable {
     return this.dynamics
       .search(x1, y1, x2, y2, pred)
       .concat(this.statics.search(x1, y1, x2, y2, pred))
-      .map(({ bbox, pointer: [kind, i] }) => {
-        return {
-          bbox,
-          object: this.objects.get(kind, i)!
-        };
-      })!;
+      .map(this.#collisionMapper);
   }
 
   #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number): RTreePredicate {
     return ({ bbox }) => maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
   }
+
+  #collisionMapper = ({ bbox, pointer: [kind, i] }: RTreePublicNode): Collision => {
+    return { bbox, object: this.objects.get(kind, i)! };
+  };
 }
