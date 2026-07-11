@@ -24,6 +24,9 @@ export const staticWorld: WorldObjects = [
   [WallObject, { show: "bricks", bbox: [900, 540, 950, 620] }],
 
   [UsefulObject, { show: "fuel", y: 1000, x: 500 }],
+  [UsefulObject, { show: "fuel", y: 1000, x: 600 }],
+  [UsefulObject, { show: "fuel", y: 1000, x: 700 }],
+  [UsefulObject, { show: "fuel", y: 1000, x: 800 }],
 
   [PlatformObject, {
     bbox: [350, 770, 430, 800],
