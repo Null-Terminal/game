@@ -41,10 +41,6 @@ export abstract class GameObject extends KindedObject {
   y = 0;
   prevY = 0;
 
-  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
-  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
-  protected correctionY = 0;
-
   bbox: BBoxTuple | null = null;
 
   readonly movement = new Movement(this);
@@ -72,6 +68,10 @@ export abstract class GameObject extends KindedObject {
   get height() {
     return this.#height;
   }
+
+  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
+  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
+  protected correctionY = 0;
 
   protected set width(value: number) {
     this.#width = value;
