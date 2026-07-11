@@ -127,6 +127,8 @@ export abstract class GameObject extends KindedObject {
       }
 
     } else {
+      this.bbox = null;
+
       if ("x" in opts) {
         this.x = opts.x;
       }
