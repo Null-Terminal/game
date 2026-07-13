@@ -41,7 +41,7 @@ export class UsefulObject extends InteractObject {
         if (actions.use) {
           if (!this.#used) {
             this.#used = true;
-            this.recipient?.visit(this);
+            this.acceptor?.visit(this);
           }
 
         } else {

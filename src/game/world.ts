@@ -42,7 +42,7 @@ export const world: WorldObjects = [
       speed: 300
     },
 
-    with: {
+    accept: {
       trigger: [UsefulObject, { show: "trigger", y: 1000, x: 800 }],
     }
   }],

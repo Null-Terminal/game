@@ -10,13 +10,13 @@ import { KindedObject } from "#engine/game-objects/kinded-object";
 import { Movement } from "#engine/game-objects/movement";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
-import type { With, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
+import type { Accept, Visitors, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject extends KindedObject {
-  static readonly with: With = {};
+  static readonly visitors: Accept = {};
 
-  readonly refs: Refs<(typeof GameObject)["with"]> = {};
-  recipient: GameObject | null = null;
+  readonly visitors: Visitors<(typeof GameObject)["visitors"]> = {};
+  acceptor: GameObject | null = null;
 
   static readonly animations: Animations = {};
   readonly animations = GameObject.animations;
@@ -171,15 +171,19 @@ export abstract class GameObject extends KindedObject {
       }
     });
 
-    this.recipient = opts.recipient ?? null;
+    this.acceptor = opts.acceptor ?? null;
 
-    const refs = Object.entries(
-      opts.with ?? (this.constructor as typeof GameObject).with
+    const visitors = Object.entries(
+      (this.constructor as typeof GameObject).visitors
     );
 
-    refs.forEach(([name, [go, opts]]) => {
-      if (this.options.with != null) {
-        opts = { ...opts, recipient: this };
+    if (opts.accept != null) {
+      visitors.push(...Object.entries(opts.accept));
+    }
+
+    visitors.forEach(([name, [go, opts]]) => {
+      if (this.options.accept != null) {
+        opts = { ...opts, acceptor: this };
 
       } else {
         const resolvedOpts = { ...this.options, with: null, x: 0, y: 0, ...opts, recipient: this } ;
@@ -199,12 +203,12 @@ export abstract class GameObject extends KindedObject {
       }
 
       const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
-      this.refs[name] = instance;
+      this.visitors[name] = instance;
 
       this.register(() => {
         instance.destroy();
-        instance.recipient = null;
-        this.refs[name] = null;
+        instance.acceptor = null;
+        this.visitors[name] = null;
       });
     });
   }

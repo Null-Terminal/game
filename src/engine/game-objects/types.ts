@@ -10,9 +10,9 @@ import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/moveme
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
-export type With = Record<string, WorldObject>;
+export type Accept = Record<string, WorldObject>;
 
-export type Refs<T extends With> = {
+export type Visitors<T extends Accept> = {
   [K in keyof T]?: InstanceType<T[K][0]> | null;
 };
 
@@ -24,8 +24,8 @@ export interface DefaultGameObjectOptions {
   show?: string;
   movement?: { path: MovePath } & MoveAlongPathOptions;
 
-  with?: With | null;
-  recipient?: GameObject | null;
+  accept?: Accept | null;
+  acceptor?: GameObject | null;
 
   stretchWidth?: boolean;
   stretchHeight?: boolean;
