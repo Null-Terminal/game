@@ -1,7 +1,7 @@
 {
   "params": {
     "speed": 1,
-    "height": 145
+    "maxHeight": 145
   },
 
   "sprites": [

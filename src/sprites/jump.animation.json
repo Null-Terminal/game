@@ -1,7 +1,7 @@
 {
   "params": {
     "speed": 2,
-    "height": 100,
+    "maxHeight": 100,
     "randomDuration": [100, 500]
   },
   "sprites": [

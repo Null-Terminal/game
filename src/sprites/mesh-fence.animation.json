@@ -1,7 +1,7 @@
 {
   "params": {
     "speed": 1,
-    "height": 120,
+    "maxHeight": 120,
     "opacity": 0.7
   },
 
