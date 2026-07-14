@@ -29,6 +29,10 @@ export abstract class MovableObject extends GameObject {
 
   #riding: GameObject | null = null;
 
+  readonly #MAX_RIDING_TOLERANCE = 10;
+  readonly #INITIAL_RIDING_TOLERANCE = 5;
+  readonly #COLLISION_EPSILON = 0.001;
+
   override destroy() {
     super.destroy();
     this.#riding = null;
@@ -128,7 +132,11 @@ export abstract class MovableObject extends GameObject {
 
     // Для разных FPS стартовое значение погрешности будет отличаться.
     // Например, при 60 FPS платформа будет двигаться куда большими шагами, нежели при 144 FPS.
-    const RIDING_TOLERANCE = ridingTolerance[fps] ?? Math.min(5 * (144 / fps), 10);
+    const RIDING_TOLERANCE = ridingTolerance[fps] ?? Math.min(
+      this.#INITIAL_RIDING_TOLERANCE * (144 / fps),
+      this.#MAX_RIDING_TOLERANCE
+    );
+
     ridingTolerance[fps] = RIDING_TOLERANCE;
 
     // Платформа, на которой стоял игрок в прошлый раз
@@ -164,7 +172,7 @@ export abstract class MovableObject extends GameObject {
       this.x += riding.x - riding.prevX;
 
       // Ставим объект чуть-чуть выше, чтобы не провоцировать рассчеты коллизий
-      this.y = riding.y + riding.height + 0.0001;
+      this.y = riding.y + riding.height + this.#COLLISION_EPSILON;
 
       // Из‑за потери точности при работе с дробными числами иногда возникает
       // эффект "парения в воздухе" при движении на быстрой платформе.
