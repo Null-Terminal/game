@@ -1,4 +1,4 @@
-import { MovableObject } from "#engine/game-objects";
+import { MovableObject, type RenderPayload } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -27,7 +27,7 @@ export class PersonObject extends MovableObject {
     ...MovableObject.stats,
     speed: 300,
     jump: 2500,
-    jetpack: 35,
+    jetpack: 250,
     usingJetpack: false,
     fuel: 100,
     fuelPerTick: 0.1
@@ -65,7 +65,7 @@ export class PersonObject extends MovableObject {
     );
   }
 
-  #initPhysics = () => {
+  #initPhysics = ({ delta }: RenderPayload) => {
     const { stats, actions } = this;
 
     // Горизонтальное движение
@@ -88,7 +88,7 @@ export class PersonObject extends MovableObject {
       this.ensurePlaying(this.animations.jump);
 
     } else if (actions.jetpack && stats.fuel > 0) {
-      stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack);
+      stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack * delta);
 
       stats.onGround = false;
       stats.usingJetpack = true;
