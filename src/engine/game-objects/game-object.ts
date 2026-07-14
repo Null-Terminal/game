@@ -173,15 +173,15 @@ export abstract class GameObject extends KindedObject {
 
     this.acceptor = opts.acceptor ?? null;
 
-    const visitors = Object.entries(
+    const refs = Object.entries(
       (this.constructor as typeof GameObject).with
     );
 
     if (opts.accept != null) {
-      visitors.push(...Object.entries(opts.accept));
+      refs.push(...Object.entries(opts.accept));
     }
 
-    visitors.forEach(([name, [go, opts]]) => {
+    refs.forEach(([name, [go, opts]]) => {
       if (this.options.accept != null) {
         opts = { ...opts, acceptor: this };
 
