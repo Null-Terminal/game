@@ -13,8 +13,8 @@ export interface SpriteDescriptor {
 }
 
 export interface OptionalAnimationParameters {
-  width?: number;
-  height?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   loopReverse?: boolean;
   randomOrder?: boolean;
   randomDuration?: number[];

@@ -26,12 +26,12 @@ export class LoadedAnimation {
     let scaleX = 0;
     let scaleY = 0;
 
-    if (params.width != null) {
-      scaleX = params.width / this.#maxWidth;
+    if (params.maxWidth != null) {
+      scaleX = params.maxWidth / this.#maxWidth;
     }
 
-    if (params.height != null) {
-      scaleY = params.height / this.#maxHeight;
+    if (params.maxHeight != null) {
+      scaleY = params.maxHeight / this.#maxHeight;
     }
 
     if (scaleX > 0 && scaleY > 0) {
