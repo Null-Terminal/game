@@ -9,7 +9,7 @@ import { FloorObject } from "#game/floor-object";
 import type { WorldObjects } from "#engine/game";
 
 export const world: WorldObjects = [
-  [FillerObject, { show: "night", stretchWidth: true, staticScreen: true }],
+  [FillerObject, { show: "night", stretchWidth: true, stretchHeight: true, staticScreen: true }],
 
   [WallObject, { bbox: [0, -Infinity, 1, Infinity] }],
 
