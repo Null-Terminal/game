@@ -1,3 +1,5 @@
+export type { RenderPayload } from "#engine/game";
+
 export { GameObject } from "#engine/game-objects/game-object";
 
 export { BackgroundObject } from "#engine/game-objects/background-object";
