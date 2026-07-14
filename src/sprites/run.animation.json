@@ -1,7 +1,7 @@
 {
   "params": {
     "speed": 2,
-    "scale": 0.15
+    "height": 100
   },
   "sprites": [
     {

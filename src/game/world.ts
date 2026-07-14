@@ -14,7 +14,7 @@ export const world: WorldObjects = [
   [WallObject, { bbox: [0, -Infinity, 1, Infinity] }],
 
   [FloorObject, { show: "asphalt" }],
-  [FillerObject, { show: "meshFence", y: 140, stretchWidth: true, effects: { opacity: 0.7 } }],
+  [FillerObject, { show: "meshFence", y: 140, stretchWidth: true }],
 
   [WallObject, { show: "bricks", bbox: [100, 500, 300, 520] }],
   [WallObject, { show: "bricks", bbox: [360, 280, 560, 340] }],

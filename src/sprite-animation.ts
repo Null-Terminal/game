@@ -55,6 +55,9 @@ export class SpriteAnimation {
     this.params = {
       speed: 1,
       scale: 1,
+      opacity: 1,
+      loopReverse: false,
+      randomOrder: false,
       ...animation.params
     };
   }

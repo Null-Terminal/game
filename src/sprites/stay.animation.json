@@ -1,7 +1,6 @@
 {
   "params": {
-    "speed": 1,
-    "scale": 0.15,
+    "height": 100,
     "loopReverse": true
   },
   "sprites": [
