@@ -10,12 +10,12 @@ import { KindedObject } from "#engine/game-objects/kinded-object";
 import { Movement } from "#engine/game-objects/movement";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
-import type { Accept, Visitors, GameObjectOptions, Effects } from "#engine/game-objects/types";
+import type { Accept, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject extends KindedObject {
-  static readonly visitors: Accept = {};
+  static readonly with: Accept = {};
 
-  readonly visitors: Visitors<(typeof GameObject)["visitors"]> = {};
+  readonly refs: Refs<(typeof GameObject)["with"]> = {};
   acceptor: GameObject | null = null;
 
   static readonly animations: Animations = {};
@@ -174,7 +174,7 @@ export abstract class GameObject extends KindedObject {
     this.acceptor = opts.acceptor ?? null;
 
     const visitors = Object.entries(
-      (this.constructor as typeof GameObject).visitors
+      (this.constructor as typeof GameObject).with
     );
 
     if (opts.accept != null) {
@@ -203,12 +203,12 @@ export abstract class GameObject extends KindedObject {
       }
 
       const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
-      this.visitors[name] = instance;
+      this.refs[name] = instance;
 
       this.register(() => {
         instance.destroy();
         instance.acceptor = null;
-        this.visitors[name] = null;
+        this.refs[name] = null;
       });
     });
   }

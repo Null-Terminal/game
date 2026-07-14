@@ -12,7 +12,7 @@ export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<s
 
 export type Accept = Record<string, WorldObject>;
 
-export type Visitors<T extends Accept> = {
+export type Refs<T extends Accept> = {
   [K in keyof T]?: InstanceType<T[K][0]> | null;
 };
 
