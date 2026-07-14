@@ -169,13 +169,13 @@ export abstract class MovableObject extends GameObject {
       // Из‑за потери точности при работе с дробными числами иногда возникает
       // эффект "парения в воздухе" при движении на быстрой платформе.
       // Это значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
-      this.correctionY = riding.y - riding.prevY;
+      this.visualOffsetY = riding.y - riding.prevY;
 
       status |= CollisionStatus.BottomCollision;
 
     } else {
       this.#riding = null;
-      this.correctionY = 0;
+      this.visualOffsetY = 0;
     }
 
     return status;

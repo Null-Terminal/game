@@ -81,7 +81,7 @@ export abstract class GameObject extends KindedObject {
 
   // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
   // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
-  protected correctionY = 0;
+  protected visualOffsetY = 0;
 
   protected set width(value: number) {
     this.#width = value;
@@ -297,7 +297,7 @@ export abstract class GameObject extends KindedObject {
 
       const { width: w, height: h } = this;
 
-      let y = this.y - this.correctionY;
+      let y = this.y - this.visualOffsetY;
       let x = this.x;
 
       // Поддержка скроллинга
