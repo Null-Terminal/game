@@ -10,25 +10,57 @@ export class LoadedAnimation {
   readonly animation: Readonly<SpriteAnimation>;
 
   @cache
-  get maxWidth() {
+  get maxWidth(): number {
+    return this.#maxWidth * this.scale;
+  }
+
+  @cache
+  get maxHeight(): number {
+    return this.#maxHeight * this.scale;
+  }
+
+  @cache
+  get scale(): number {
+    const { params } = this.animation;
+
+    let scaleX = 0;
+    let scaleY = 0;
+
+    if (params.width != null) {
+      scaleX = params.width / this.#maxWidth;
+    }
+
+    if (params.height != null) {
+      scaleY = params.height / this.#maxHeight;
+    }
+
+    if (scaleX > 0 && scaleY > 0) {
+      return Math.min(scaleX, scaleY) * params.scale;
+    }
+
+    return (scaleX || scaleY || 1) * params.scale;
+  }
+
+  @cache
+  get #maxWidth(): number {
     let maxWidth = 0;
 
     for (const sprite of this.animation) {
       maxWidth = Math.max(maxWidth, sprite.width);
     }
 
-    return maxWidth * this.animation.params.scale;
+    return maxWidth;
   }
 
   @cache
-  get maxHeight() {
+  get #maxHeight(): number {
     let maxHeight = 0;
 
     for (const sprite of this.animation) {
       maxHeight = Math.max(maxHeight, sprite.height);
     }
 
-    return maxHeight * this.animation.params.scale;
+    return maxHeight;
   }
 
   readonly #images: Record<string, ImageBitmap | OffscreenCanvas> = {};
@@ -52,7 +84,7 @@ export class LoadedAnimation {
       throw new Error(`${this.constructor.name}: Sprite frame ${index} not found (total: ${this.animation.length})`);
     }
 
-    const resolvedScale = this.animation.params.scale * (effects.scale ?? 1);
+    const resolvedScale = this.scale * (effects.scale ?? 1);
 
     const spriteWidth = sprite.width * resolvedScale;
     const spriteHeight = sprite.height * resolvedScale;
@@ -64,7 +96,7 @@ export class LoadedAnimation {
     const flipY = effects.flipY ? -1 : 1;
 
     ctx.scale(flipX, flipY);
-    ctx.globalAlpha = effects.opacity ?? 1;
+    ctx.globalAlpha = effects.opacity ?? this.animation.params.opacity;
 
     ctx.drawImage(
       this.image,
