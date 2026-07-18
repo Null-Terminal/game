@@ -2,25 +2,35 @@ import { MovableObject, type RenderPayload } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
-const [stay, run, jump] = await Promise.all([
-  loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true, tolerance: 120 },
+const [stay, run, jump, fly, flyEnd] = await Promise.all([
+  loadAnimation(import("#/sprites/stay.webp"), {
+    sprite: { removeBackground: true },
     animation: import("#/sprites/stay.animation.json")
   }),
 
   loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true, tolerance: 120 },
+    sprite: { removeBackground: true },
     animation: import("#/sprites/run.animation.json")
   }),
 
   loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true, tolerance: 120 },
+    sprite: { removeBackground: true } ,
     animation: import("#/sprites/jump.animation.json")
+  }),
+
+  loadAnimation(import("#/sprites/fly.webp"), {
+    sprite: { removeBackground: true },
+    animation: import("#/sprites/fly.animation.json")
+  }),
+
+  loadAnimation(import("#/sprites/fly.webp"), {
+    sprite: { removeBackground: true },
+    animation: import("#/sprites/fly-end.animation.json")
   })
 ]);
 
 export class PersonObject extends MovableObject {
-  static override readonly animations = { stay, run, jump };
+  static override readonly animations = { stay, run, jump, fly, flyEnd };
   override readonly animations = PersonObject.animations;
 
   static override readonly stats = {
@@ -96,11 +106,13 @@ export class PersonObject extends MovableObject {
       stats.fuel = Math.max(0, stats.fuel - stats.fuelPerTick);
       actions.jump = 0;
 
-      this.ensurePlaying(this.animations.jump);
+      this.ensurePlaying(this.animations.fly);
 
     } else if (stats.usingJetpack) {
       stats.usingJetpack = false;
       stats.vy = 0;
+
+      this.ensurePlaying(this.animations.flyEnd);
     }
 
     if (stats.onGround) {

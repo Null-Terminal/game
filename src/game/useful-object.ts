@@ -5,13 +5,13 @@ import { loadAnimation } from "#engine/animation-loader";
 import type { PersonObject } from "#game/person-object";
 
 const [fuel, trigger] = await Promise.all([
-  await loadAnimation(import("#/sprites/fuel.jpg"), {
-    sprite: { removeBackground: true, tolerance: 10 },
+  await loadAnimation(import("#/sprites/fuel.webp"), {
+    sprite: { removeBackground: true },
     animation: import("#/sprites/fuel.animation.json"),
   }),
 
-  await loadAnimation(import("#/sprites/trigger.jpg"), {
-    sprite: { removeBackground: true, tolerance: 10 },
+  await loadAnimation(import("#/sprites/trigger.webp"), {
+    sprite: { removeBackground: true },
     animation: import("#/sprites/trigger.animation.json"),
   }),
 ]);

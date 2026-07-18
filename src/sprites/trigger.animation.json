@@ -1,15 +1,14 @@
 {
   "params": {
-    "speed": 1,
-    "scale": 0.05
+    "maxHeight": 70
   },
 
   "sprites": [
     {
       "x": 0,
       "y": 0,
-      "width": 865,
-      "height": 980,
+      "width": 573,
+      "height": 803,
       "duration": 100,
       "spriteId": ""
     }
