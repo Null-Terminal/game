@@ -1,7 +1,5 @@
 {
   "params": {
-    "speed": 1,
-    "scale": 1,
     "randomOrder": true,
     "randomDuration": [1000, 3000]
   },
