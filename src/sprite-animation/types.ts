@@ -15,8 +15,6 @@ export interface SpriteDescriptor {
 export interface OptionalAnimationParameters {
   maxWidth?: number;
   maxHeight?: number;
-  loopReverse?: boolean;
-  randomOrder?: boolean;
   randomDuration?: number[];
 }
 
@@ -24,6 +22,9 @@ export interface RequiredAnimationParameters {
   speed: number;
   scale: number;
   opacity: number;
+  loopFrom: number;
+  loopReverse: boolean;
+  randomOrder: boolean;
 }
 
 export interface RawAnimationParameters extends Partial<RequiredAnimationParameters>, OptionalAnimationParameters {}

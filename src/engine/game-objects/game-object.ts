@@ -270,8 +270,6 @@ export abstract class GameObject extends KindedObject {
     const { stretchWidth, stretchHeight, staticScreen } = this.options;
     const { canvas, emitter } = this.canvas;
 
-    let rendered = false;
-
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     if (bbox == null) {
       this.width = animation.maxWidth * effects.scale;
@@ -289,6 +287,7 @@ export abstract class GameObject extends KindedObject {
     }
 
     let inc = 1;
+    let rendered = 0;
 
     const renderAsPattern = bbox != null || stretchWidth || stretchHeight;
 
@@ -353,18 +352,26 @@ export abstract class GameObject extends KindedObject {
             if (spriteIndex + inc === spriteAnimation.length) {
               inc = -1;
 
-            } else if (spriteIndex + inc === -1) {
+            } else if (spriteIndex + inc === params.loopFrom - 1) {
               inc = 1;
             }
           }
 
+          if (spriteIndex === spriteAnimation.length - 1) {
+            rendered = 2;
+          }
+
           spriteIndex = (spriteIndex + inc) % spriteAnimation.length;
+
+          if (spriteIndex === 0 && rendered > 1) {
+            spriteIndex += params.loopFrom;
+          }
         }
 
         lastFrameTime = now;
       }
 
-      rendered = true;
+      rendered ||= 1;
     }));
   }
 
