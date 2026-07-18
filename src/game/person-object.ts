@@ -57,7 +57,7 @@ export class PersonObject extends MovableObject {
     ArrowLeft: "left",
     ArrowRight: "right",
     Space: "jump",
-    ShiftLeft: "jetpack",
+    ArrowUp: "jetpack",
     KeyE: "use",
   };
 
