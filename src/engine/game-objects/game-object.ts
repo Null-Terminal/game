@@ -1,7 +1,7 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import type { Game } from "#engine/game";
+import type { Game, WorldObject } from "#engine/game";
 import type { BakedFrame } from "#engine/animation-loader";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
@@ -173,35 +173,7 @@ export abstract class GameObject extends KindedObject {
 
     this.acceptor = opts.acceptor ?? null;
 
-    const refs = Object.entries(
-      (this.constructor as typeof GameObject).with
-    );
-
-    if (opts.accept != null) {
-      refs.push(...Object.entries(opts.accept));
-    }
-
-    refs.forEach(([name, [go, opts]]) => {
-      if (this.options.accept != null) {
-        opts = { ...opts, acceptor: this };
-
-      } else {
-        const resolvedOpts = { ...this.options, with: null, x: 0, y: 0, ...opts, recipient: this } ;
-
-        if (opts != null) {
-          if ("bbox" in opts && "bbox" in resolvedOpts) {
-            const { bbox } = opts;
-            resolvedOpts.bbox = [bbox[0] + this.x, bbox[1] + this.y, bbox[2] + this.x, bbox[3] + this.y];
-
-          } else {
-            resolvedOpts.x += this.x;
-            resolvedOpts.y += this.y;
-          }
-        }
-
-        opts = resolvedOpts;
-      }
-
+    const createRef = (name: string, go: WorldObject[0], opts: WorldObject[1]) => {
       const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
       this.refs[name] = instance;
 
@@ -210,7 +182,30 @@ export abstract class GameObject extends KindedObject {
         instance.acceptor = null;
         this.refs[name] = null;
       });
+    };
+
+    Object.entries((this.constructor as typeof GameObject).with).forEach(([name, [go, opts]]) => {
+      const resolvedOpts = { ...this.options, x: 0, y: 0, ...opts, acceptor: this };
+
+      if (opts != null) {
+        if ("bbox" in opts && "bbox" in resolvedOpts) {
+          const { bbox } = opts;
+          resolvedOpts.bbox = [bbox[0] + this.x, bbox[1] + this.y, bbox[2] + this.x, bbox[3] + this.y];
+
+        } else {
+          resolvedOpts.x += this.x;
+          resolvedOpts.y += this.y;
+        }
+      }
+
+      createRef(name, go, resolvedOpts);
     });
+
+    if (opts.accept != null) {
+      Object.entries(opts.accept).forEach(([name, [go, opts]]) => {
+        createRef(name, go, { ...opts, acceptor: this });
+      });
+    }
   }
 
   visit(_go: GameObject) {
@@ -407,4 +402,3 @@ export abstract class GameObject extends KindedObject {
     }
   }
 }
-
