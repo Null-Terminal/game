@@ -7,6 +7,6 @@ export abstract class DynamicObject extends GameObject {
 
   override move(dx: number, dy: number) {
     super.move(dx, dy);
-    this.world.addToDynamicWorld(this);
+    this.world.addToWorld(this, this.world.dynamics);
   }
 }

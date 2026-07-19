@@ -1,9 +1,9 @@
 import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
-import type { RTreePublicNode, RTreePred, RTreeView, Ptr32 } from "#engine/rtree/types";
+import type { RTreePublicNode, RTreePredicate, RTreeView, Ptr32 } from "#engine/rtree/types";
 
-export type { RTreePublicNode, RTreePred };
+export type { RTreePublicNode, RTreePredicate };
 export type { BBoxTuple } from "#engine/rtree/bbox";
 
 export const header = tuple("header", [
@@ -96,7 +96,7 @@ export class RTree {
     minY: number,
     maxX: number,
     maxY: number,
-    pred?: RTreePred
+    pred?: RTreePredicate
   ): RTreePublicNode[] {
     const results: RTreePublicNode[] = [];
 
@@ -117,7 +117,7 @@ export class RTree {
     minY: number,
     maxX: number,
     maxY: number,
-    pred?: RTreePred
+    pred?: RTreePredicate
   ): RTreePublicNode | null {
     if (minX > maxX) {
       [minX, maxX] = [maxX, minX];
@@ -204,7 +204,7 @@ export class RTree {
     maxX: number,
     maxY: number,
     results: RTreePublicNode[],
-    pred?: RTreePred
+    pred?: RTreePredicate
   ) {
     const node = this.#node;
 
@@ -236,7 +236,7 @@ export class RTree {
     minY: number,
     maxX: number,
     maxY: number,
-    pred?: RTreePred
+    pred?: RTreePredicate
   ): RTreePublicNode | null  {
     const node = this.#node;
 

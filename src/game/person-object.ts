@@ -1,131 +1,177 @@
-import { MovableObject, CollisionStatus } from "#engine/game-objects";
+import { MovableObject, type RenderPayload } from "#engine/game-objects";
+
 import { loadAnimation } from "#engine/animation-loader";
 
-const [stay, run, jump] = await Promise.all([
-  loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true, tolerance: 120 },
+const [stay, run, jump, fly, flyEnd] = await Promise.all([
+  loadAnimation(import("#/sprites/stay.webp"), {
+    sprite: { removeBackground: true },
     animation: import("#/sprites/stay.animation.json")
   }),
 
   loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true, tolerance: 120 },
+    sprite: { removeBackground: true },
     animation: import("#/sprites/run.animation.json")
   }),
 
   loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true, tolerance: 120 },
+    sprite: { removeBackground: true } ,
     animation: import("#/sprites/jump.animation.json")
+  }),
+
+  loadAnimation(import("#/sprites/fly.webp"), {
+    sprite: { removeBackground: true },
+    animation: import("#/sprites/fly.animation.json")
+  }),
+
+  loadAnimation(import("#/sprites/fly.webp"), {
+    sprite: { removeBackground: true },
+    animation: import("#/sprites/fly-end.animation.json")
   })
 ]);
 
 export class PersonObject extends MovableObject {
-  static override animations = { stay, run, jump };
-  declare readonly Animations: (typeof PersonObject)["animations"];
+  static override readonly animations = { stay, run, jump, fly, flyEnd };
+  override readonly animations = PersonObject.animations;
+
+  static override readonly stats = {
+    ...MovableObject.stats,
+    speed: 300,
+    jump: 2500,
+    jetpack: 250,
+    usingJetpack: false,
+    fuel: 100,
+    fuelPerTick: 0.1
+  };
+
+  override readonly stats = PersonObject.stats;
+
+  readonly actions = {
+    left: 0,
+    right: 0,
+    jump: 0,
+    jetpack: 0,
+    use: 0
+  };
+
+  readonly controls: Record<string, keyof PersonObject["actions"]> = {
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    Space: "jump",
+    ArrowUp: "jetpack",
+    KeyE: "use",
+  };
 
   init() {
+    this.register(this.game.camera.bindTo(this));
     this.play(this.animations.stay);
 
-    const SPEED = 300;
-    const JUMP_FORCE = 1200;
-    const GRAVITY = -2500;
+    this.#initControls();
+    this.initPhysics(this.#initPhysics, this.#initEffects);
 
-    let vy = 0;
-    let isOnGround = false;
+    this.register(
+      this.canvas.emitter.on(this.canvas.events.ui, ({ ctx }) => {
+        this.#renderStats(ctx);
+      })
+    );
+  }
 
-    const keys = {
-      ArrowLeft: 0,
-      ArrowRight: 0,
-      Space: 0
-    };
+  #initPhysics = ({ delta }: RenderPayload) => {
+    const { stats, actions } = this;
 
-    const { canvas } = this;
+    // Горизонтальное движение
+    stats.vx = stats.speed;
+
+    if (actions.left) {
+      this.effects.flipX = true;
+      stats.vx *= -1;
+
+    } else if (actions.right) {
+      this.effects.flipX = false;
+
+    } else {
+      stats.vx = 0;
+    }
+
+    if (actions.jump === 1 && stats.onGround) {
+      stats.vy += stats.jump;
+      stats.onGround = false;
+      this.ensurePlaying(this.animations.jump);
+
+    } else if (actions.jetpack && stats.fuel > 0) {
+      stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack * delta);
+
+      stats.onGround = false;
+      stats.usingJetpack = true;
+
+      stats.fuel = Math.max(0, stats.fuel - stats.fuelPerTick);
+      actions.jump = 0;
+
+      this.ensurePlaying(this.animations.fly);
+
+    } else if (stats.usingJetpack) {
+      stats.usingJetpack = false;
+      stats.vy = 0;
+
+      this.ensurePlaying(this.animations.flyEnd);
+    }
+
+    if (stats.onGround) {
+      if (actions.left || actions.right) {
+        this.ensurePlaying(this.animations.run);
+
+      } else {
+        this.ensurePlaying(this.animations.stay);
+      }
+    }
+  };
+
+  #initEffects = () => {
+    this.findInteractCollisions().forEach(({ object }) => {
+      object.visit(this);
+    });
+  };
+
+  #initControls() {
+    const { canvas, actions, controls } = this;
 
     window.addEventListener("keydown", (e) => {
       const key = e.code;
 
       if (e.code === "Escape") {
         e.preventDefault();
+        canvas.togglePause();
 
-        if (canvas.isPaused()) {
-          canvas.resume();
-
-        } else {
-          canvas.pause();
-        }
-
-      } else if (e.code in keys) {
-        keys[key as keyof typeof keys]++;
+      } else if (key in controls) {
         e.preventDefault();
+        const control = controls[key]!;
+
+        if (control in actions) {
+          actions[control] = Math.min(2, actions[control] + 1);
+        }
       }
     }, { signal: this.abortSignal });
 
     window.addEventListener("keyup", (e) => {
       const key = e.code;
 
-      if (key in keys) {
-        keys[key as keyof typeof keys] = 0;
+      if (key in controls) {
         e.preventDefault();
+
+        const control = controls[key]!;
+
+        if (control in actions) {
+          actions[control] = 0;
+        }
       }
     }, { signal: this.abortSignal });
+  }
 
-    let lastTime = performance.now();
+  #renderStats(ctx: CanvasRenderingContext2D) {
+    const left = this.canvas.width - 100;
+    const top = 30;
 
-    this.register(
-      canvas.emitter.on(this.redrawEvent, ([now]) => {
-        const delta = Math.min(0.025, (now - lastTime) / 1000);
-        lastTime = now;
-
-        // Горизонтальное движение
-        let dx = SPEED * delta;
-
-        if (keys.ArrowLeft) {
-          this.effects.flipX = true;
-          dx *= -1;
-
-        } else if (keys.ArrowRight) {
-          this.effects.flipX = false;
-
-        } else {
-          dx = 0;
-        }
-
-        // Прыжок
-        if (keys.Space === 1 && isOnGround) {
-          vy = JUMP_FORCE;
-          isOnGround = false;
-          this.ensurePlaying(this.animations.jump);
-        }
-
-        const dy = vy * delta;
-
-        // Двигаем
-        const status = this.move(dx, dy);
-
-        // Врезались в потолок
-        if (status & CollisionStatus.TopCollision) {
-          vy = 0;
-
-        } else if (status & CollisionStatus.BottomCollision) {
-          isOnGround = true;
-        }
-
-        if (isOnGround) {
-          if (keys.ArrowLeft || keys.ArrowRight) {
-            this.ensurePlaying(this.animations.run);
-
-          } else {
-            this.ensurePlaying(this.animations.stay);
-          }
-        }
-
-        if (isOnGround) {
-          vy = GRAVITY;
-
-        } else {
-          // Гравитация
-          vy += GRAVITY * delta;
-        }
-      })
-    );
+    ctx.font = "16px monospace";
+    ctx.fillStyle = "#00FF00";
+    ctx.fillText(`FUEL: ${this.stats.fuel.toFixed(0)}`, left, top);
   }
 }

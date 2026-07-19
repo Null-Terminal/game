@@ -1,13 +1,16 @@
 import type { BBoxTuple } from "#engine/rtree/bbox";
-import type { GameObject, GameObjectOptions } from "#engine/game-objects";
+import type { GameObject } from "#engine/game-objects";
 import type { ConcreteGameObjectConstructor  } from "#engine/game-object-pool";
 
-export type WorldObject = [GameObject: ConcreteGameObjectConstructor<typeof GameObject>, GameObjectOptions?];
+export type WorldObject<T extends typeof GameObject = typeof GameObject> = [
+  GameObject: ConcreteGameObjectConstructor<T>,
+  ConstructorParameters<T>[2]?
+];
 
 export type WorldObjects = WorldObject[];
 
 export interface WorldOptions {
-  staticWorld: WorldObjects
+  objects: WorldObjects
 }
 
 export interface Collision {

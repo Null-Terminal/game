@@ -3,7 +3,7 @@ import type { LoadSpriteOptions } from "#engine/animation-loader/types";
 const spriteCache = new Map<string, Promise<ImageBitmap>>();
 
 export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
-  const { removeBackground = false, tolerance = 15 } = options ?? {};
+  const { removeBackground = false, tolerance = 5 } = options ?? {};
 
   const cacheKey = [url, removeBackground && tolerance].join("_");
 

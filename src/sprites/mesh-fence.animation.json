@@ -1,4 +1,10 @@
 {
+  "params": {
+    "speed": 1,
+    "maxHeight": 120,
+    "opacity": 0.7
+  },
+
   "sprites": [
     {
       "x": 0,

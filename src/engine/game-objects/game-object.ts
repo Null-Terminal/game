@@ -1,28 +1,34 @@
 import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
-import type { Game } from "#engine/game";
+import type { Game, WorldObject } from "#engine/game";
+import type { BakedFrame } from "#engine/animation-loader";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
 import { KindedObject } from "#engine/game-objects/kinded-object";
 import { Movement } from "#engine/game-objects/movement";
 
-import type { Animations, AnimationEvents, GameObjectOptions, Effects } from "#engine/game-objects/types";
+import type { Animations, AnimationEvents } from "#engine/game-objects/types";
+import type { Accept, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject extends KindedObject {
-  static animations: Animations = {};
+  static readonly with: Accept = {};
+
+  readonly refs: Refs<(typeof GameObject)["with"]> = {};
+  acceptor: GameObject | null = null;
+
+  static readonly animations: Animations = {};
+  readonly animations = GameObject.animations;
 
   @cache
-  static get animationEntries(){
+  static get animationEntries() {
     const entries = Object.entries(this.animations);
     entries.forEach(([name, value]) => value.name = name);
     return entries;
   }
 
-  declare readonly Animations: (typeof GameObject)["animations"];
-
-  readonly animation: EventEmitter<AnimationEvents<this["Animations"]>> = new EventEmitter({
+  readonly animation: EventEmitter<AnimationEvents<this["animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
       map[name] = handler<string>();
       return map;
@@ -45,6 +51,10 @@ export abstract class GameObject extends KindedObject {
 
   readonly movement = new Movement(this);
 
+  get name(): string {
+    return this.constructor.name;
+  }
+
   get canvas() {
     return this.game.canvas;
   }
@@ -57,9 +67,8 @@ export abstract class GameObject extends KindedObject {
     return this.game.world;
   }
 
-  @cache
-  get animations(): this["Animations"] {
-    return (this.constructor as typeof GameObject).animations;
+  get nowPlaying(): Animations[keyof Animations] | null {
+    return this.#nowPlaying;
   }
 
   get width() {
@@ -70,6 +79,10 @@ export abstract class GameObject extends KindedObject {
     return this.#height;
   }
 
+  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
+  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
+  protected visualOffsetY = 0;
+
   protected set width(value: number) {
     this.#width = value;
   }
@@ -78,12 +91,12 @@ export abstract class GameObject extends KindedObject {
     this.#height = value;
   }
 
+  #paused = false;
+
   #width = 0;
   #height = 0;
 
-  #paused = false;
-  #activeAnimation: Animations[keyof Animations] | null = null;
-
+  #nowPlaying: Animations[keyof Animations] | null = null;
   #cancelRedrawHandler: Function | null = null;
 
   constructor(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
@@ -92,6 +105,12 @@ export abstract class GameObject extends KindedObject {
   }
 
   abstract init(): void;
+
+  override destroy() {
+    super.destroy();
+    this.#paused = false;
+    this.#nowPlaying = null;
+  }
 
   create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
     this.game = game;
@@ -107,10 +126,25 @@ export abstract class GameObject extends KindedObject {
       this.x = minX;
       this.y = minY;
 
-      this.width = maxX - minX;
-      this.height = maxY - minY;
+      if (isFinite(minX) && isFinite(maxX)) {
+        this.width = maxX - minX;
+
+      } else {
+        this.width = Infinity;
+        opts.stretchWidth = true;
+      }
+
+      if (isFinite(minY) && isFinite(maxY)) {
+        this.height = maxY - minY;
+
+      } else {
+        this.height = Infinity;
+        opts.stretchHeight = true;
+      }
 
     } else {
+      this.bbox = null;
+
       if ("x" in opts) {
         this.x = opts.x;
       }
@@ -128,19 +162,63 @@ export abstract class GameObject extends KindedObject {
     this.nextTick(() => {
       this.init();
 
-      if (opts.animation != null && opts.animation in this.animations) {
-        this.play(this.animations[opts.animation]!);
+      if (opts.show != null && opts.show in this.animations) {
+        this.play(this.animations[opts.show]!);
       }
 
       if (opts.movement != null) {
         this.movement.moveAlongPath(opts.movement.path, opts.movement);
       }
     });
+
+    this.acceptor = opts.acceptor ?? null;
+
+    const createRef = (name: string, go: WorldObject[0], opts: WorldObject[1]) => {
+      const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
+      this.refs[name] = instance;
+
+      this.register(() => {
+        instance.destroy();
+        instance.acceptor = null;
+        this.refs[name] = null;
+      });
+    };
+
+    Object.entries((this.constructor as typeof GameObject).with).forEach(([name, [go, opts]]) => {
+      const resolvedOpts = { ...this.options, x: 0, y: 0, ...opts, acceptor: this };
+
+      if (opts != null) {
+        if ("bbox" in opts && "bbox" in resolvedOpts) {
+          const { bbox } = opts;
+          resolvedOpts.bbox = [bbox[0] + this.x, bbox[1] + this.y, bbox[2] + this.x, bbox[3] + this.y];
+
+        } else {
+          resolvedOpts.x += this.x;
+          resolvedOpts.y += this.y;
+        }
+      }
+
+      createRef(name, go, resolvedOpts);
+    });
+
+    if (opts.accept != null) {
+      Object.entries(opts.accept).forEach(([name, [go, opts]]) => {
+        createRef(name, go, { ...opts, acceptor: this });
+      });
+    }
+  }
+
+  visit(_go: GameObject) {
+    // Ничего не делаю по умолчанию
   }
 
   move(dx: number, dy: number) {
     this.prevX = this.x;
     this.prevY = this.y;
+
+    if (this.isPaused()) {
+      return;
+    }
 
     this.x = this.x + dx;
     this.y = this.y + dy;
@@ -158,30 +236,39 @@ export abstract class GameObject extends KindedObject {
     this.#paused = false;
   }
 
-  ensurePlaying(selectedAnimation: Animations[keyof Animations]) {
-    if (this.#activeAnimation !== selectedAnimation) {
-      this.play(selectedAnimation);
+  togglePause() {
+    if (this.isPaused()) {
+      this.resume();
+
+    } else {
+      this.pause();
     }
   }
 
-  play(selectedAnimation: Animations[keyof Animations]) {
-    const { animation, animation: { params } } = selectedAnimation;
+  ensurePlaying(animation: Animations[keyof Animations]) {
+    if (this.#nowPlaying !== animation) {
+      this.play(animation);
+    }
+  }
+
+  play(animation: Animations[keyof Animations]) {
+    const spriteAnimation = animation.animation;
+    const params = spriteAnimation.params;
 
     let lastFrameTime = 0;
-    let spriteIndex = params.randomOrder ? animation.randomIndex() : 0;
+    let spriteIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
 
     this.#cancelRedrawHandler?.();
-    this.#activeAnimation = selectedAnimation;
+    this.#nowPlaying = animation;
 
-    const { effects, options: { stretchWidth, stretchHeight } } = this;
+    const { bbox, effects, game: { camera } } = this;
+    const { stretchWidth, stretchHeight, staticScreen } = this.options;
     const { canvas, emitter } = this.canvas;
 
-    let rendered = false;
-
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
-    if (this.bbox == null) {
-      this.width = selectedAnimation.maxWidth * effects.scale;
-      this.height = selectedAnimation.maxHeight * effects.scale;
+    if (bbox == null) {
+      this.width = animation.maxWidth * effects.scale;
+      this.height = animation.maxHeight * effects.scale;
     }
 
     if (stretchWidth || stretchHeight) {
@@ -195,28 +282,47 @@ export abstract class GameObject extends KindedObject {
     }
 
     let inc = 1;
+    let rendered = 0;
 
-    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ([now, ctx]) => {
-      const sprite = animation.at(spriteIndex)!;
+    const renderAsPattern = bbox != null || stretchWidth || stretchHeight;
+
+    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ({ now, ctx }) => {
+      const sprite = spriteAnimation.at(spriteIndex)!;
+
+      const { width: w, height: h } = this;
+
+      let y = this.y - this.visualOffsetY;
+      let x = this.x;
+
+      // Поддержка скроллинга
+      if (!staticScreen) {
+        x -= camera.x;
+        y -= camera.y;
+      }
 
       // Нормализуем y, так как canvas считает 0 верхом, а не низом
-      const y = canvas.height - this.y - this.height;
+      y = canvas.height - y - h;
 
-      if (this.bbox != null || stretchWidth || stretchHeight) {
-        const image = selectedAnimation.getPatternFrame(spriteIndex, this.width, this.height, effects);
-        ctx.drawImage(image, 0, 0, this.width, this.height, this.x, y, this.width, this.height);
+      if (renderAsPattern) {
+        const image = animation.getPatternFrame(spriteIndex, w, h, effects);
+
+        ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
+
+        // Для не статичных изображений нужно создавать реплики,
+        // если нужно, чтобы оно растягивалось на весь экран
+        this.#stretchPattern(ctx, image, x, y);
 
       } else {
-        const image = selectedAnimation.getSpriteFrame(spriteIndex, effects);
+        const image = animation.getSpriteFrame(spriteIndex, effects);
 
         // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
         // из-за разницы высот между отдельным фреймом и максимальным
-        const diffY = this.height - image.height;
-        ctx.drawImage(image, this.x, y + diffY, image.width, image.height);
+        const diffY = h - image.height;
+        ctx.drawImage(image, x, y + diffY, image.width, image.height);
       }
 
-      if ((!rendered || sprite.spriteId !== "") && selectedAnimation.name in this.animation.events) {
-        this.animation.emit(this.animation.events[selectedAnimation.name]!, sprite.spriteId);
+      if ((!rendered || sprite.spriteId !== "") && animation.name in this.animation.events) {
+        this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
       }
 
       let duration;
@@ -234,26 +340,65 @@ export abstract class GameObject extends KindedObject {
 
       if (!this.isPaused() && (now - lastFrameTime >= duration)) {
         if (params.randomOrder) {
-          spriteIndex = animation.randomIndex();
+          spriteIndex = spriteAnimation.randomIndex();
 
         } else {
           if (params.loopReverse) {
-            if (spriteIndex + inc === animation.length) {
+            if (spriteIndex + inc === spriteAnimation.length) {
               inc = -1;
 
-            } else if (spriteIndex + inc === -1) {
+            } else if (spriteIndex + inc === params.loopFrom - 1) {
               inc = 1;
             }
           }
 
-          spriteIndex = (spriteIndex + inc) % animation.length;
+          if (spriteIndex === spriteAnimation.length - 1) {
+            rendered = 2;
+          }
+
+          spriteIndex = (spriteIndex + inc) % spriteAnimation.length;
+
+          if (spriteIndex === 0 && rendered > 1) {
+            spriteIndex += params.loopFrom;
+          }
         }
 
         lastFrameTime = now;
       }
 
-      rendered = true;
+      rendered ||= 1;
     }));
   }
-}
 
+  #stretchPattern(ctx: CanvasRenderingContext2D, pattern: BakedFrame, x: number, y: number) {
+    const opts = this.options;
+
+    if (opts.staticScreen) {
+      return;
+    }
+
+    const { game, width: w, height: h } = this;
+
+    if (opts.stretchWidth) {
+      if (Math.abs(x) >= w) {
+        this.x = game.camera.x;
+      }
+
+      if (x != 0) {
+        x = x + w * Math.sign(x * -1);
+        ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
+      }
+    }
+
+    if (opts.stretchHeight) {
+      if (Math.abs(y) <= h) {
+        this.y = game.camera.y;
+      }
+
+      if (y != 0) {
+        y = y + h * Math.sign(y * -1);
+        ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
+      }
+    }
+  }
+}

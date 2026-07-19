@@ -18,10 +18,8 @@ const [night, asphalt, meshFence] = await Promise.all([
 ]);
 
 export class FillerObject extends BackgroundObject {
-  static override animations = { night, asphalt, meshFence };
-  declare readonly Animations: (typeof FillerObject)["animations"];
+  static override readonly animations = { night, asphalt, meshFence };
+  override readonly animations = FillerObject.animations;
 
-  init() {
-    // Ничего не делаю
-  }
+  init() {}
 }

@@ -1,6 +1,6 @@
 export interface Animation {
   sprites: SpriteDescriptor[];
-  params?: AnimationParameters | undefined;
+  params?: RawAnimationParameters | undefined;
 }
 
 export interface SpriteDescriptor {
@@ -12,13 +12,24 @@ export interface SpriteDescriptor {
   spriteId: string;
 }
 
-export interface AnimationParameters {
-  speed: number;
-  scale: number;
-  loopReverse?: boolean;
-  randomOrder?: boolean;
+export interface OptionalAnimationParameters {
+  maxWidth?: number;
+  maxHeight?: number;
   randomDuration?: number[];
 }
+
+export interface RequiredAnimationParameters {
+  speed: number;
+  scale: number;
+  opacity: number;
+  loopFrom: number;
+  loopReverse: boolean;
+  randomOrder: boolean;
+}
+
+export interface RawAnimationParameters extends Partial<RequiredAnimationParameters>, OptionalAnimationParameters {}
+
+export interface AnimationParameters extends RequiredAnimationParameters, OptionalAnimationParameters {}
 
 export interface TexturePacker {
   frames: Record<string, {

@@ -14,8 +14,10 @@ export class RenderCanvas extends Disposable {
     background: handler<RenderPayload>(),
     static: handler<RenderPayload>(),
     dynamic: handler<RenderPayload>(),
+    interact: handler<RenderPayload>(),
     main: handler<RenderPayload>(),
-    overlay: handler<RenderPayload>()
+    overlay: handler<RenderPayload>(),
+    ui: handler<RenderPayload>(),
   });
 
   @cache
@@ -27,17 +29,30 @@ export class RenderCanvas extends Disposable {
     return this.#fps;
   }
 
+  get width() {
+    return this.canvas.width;
+  }
+
+  set width(value: number) {
+    this.canvas.width = value;
+  }
+
+  get height() {
+    return this.canvas.height;
+  }
+
+  set height(value: number) {
+    this.canvas.height = value;
+  }
+
   @cache
   get #ctx() {
     return this.canvas.getContext("2d")!;
   }
 
-  #paused = false;
   #redrawId = 0;
-
+  #paused = false;
   #fps = 0;
-  #frameCount = 0;
-  #lastFpsUpdate = 0;
 
   constructor(canvas: HTMLCanvasElement, opts?: RenderCanvasOptions) {
     super();
@@ -75,6 +90,15 @@ export class RenderCanvas extends Disposable {
     this.#paused = false;
   }
 
+  togglePause() {
+    if (this.isPaused()) {
+      this.resume();
+
+    } else {
+      this.pause();
+    }
+  }
+
   switchFPS(show: boolean = true) {
     this.options.showFPS = show;
   }
@@ -82,8 +106,10 @@ export class RenderCanvas extends Disposable {
   start() {
     this.stop();
 
-    this.#lastFpsUpdate = performance.now();
-    this.#frameCount = 0;
+    let lastRedraw = performance.now();
+    let lastFpsUpdate = lastRedraw;
+
+    let frameCount = 0;
 
     const animate = (now?: number) => {
       this.#redrawId = requestAnimationFrame(animate);
@@ -93,24 +119,33 @@ export class RenderCanvas extends Disposable {
       }
 
       // Обновляем FPS
-      this.#frameCount++;
-      const elapsed = now - this.#lastFpsUpdate;
+      frameCount++;
+      const elapsed = now - lastFpsUpdate;
 
       if (elapsed >= 1000) {
-        this.#fps = Math.round((this.#frameCount * 1000) / elapsed);
-        this.#frameCount = 0;
-        this.#lastFpsUpdate = now;
+        this.#fps = Math.round((frameCount * 1000) / elapsed);
+        frameCount = 0;
+        lastFpsUpdate = now;
       }
 
       this.clear();
 
-      const payload: RenderPayload = [now, this.#ctx];
+      const delta = Math.min(0.025, (now - lastRedraw) / 1000);
+      lastRedraw = now;
+
+      const payload: RenderPayload = {
+        now,
+        delta,
+        ctx: this.#ctx
+      };
 
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);
       this.emitter.emit(this.events.dynamic, payload);
+      this.emitter.emit(this.events.interact, payload);
       this.emitter.emit(this.events.main, payload);
       this.emitter.emit(this.events.overlay, payload);
+      this.emitter.emit(this.events.ui, payload);
 
       if (this.options.showFPS) {
         this.drawFPS();
@@ -132,7 +167,6 @@ export class RenderCanvas extends Disposable {
   protected drawFPS() {
     this.#ctx.font = "16px monospace";
     this.#ctx.fillStyle = "#00FF00";
-    this.#ctx.shadowBlur = 0;
     this.#ctx.fillText(`FPS: ${this.#fps}`, 10, 30);
   }
 }
