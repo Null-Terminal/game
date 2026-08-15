@@ -84,7 +84,7 @@ export class RTree {
     this.#header = new Uint16Array(this.#buffer, 0, header.size / 2);
 
     this.#size = this.#header[header.at.size.index]!;
-    this.#root = this.#createEmptyNode();
+    this.#root = this.#size === 0 ? this.#createEmptyNode() : HEADER32_OFFSET;
   }
 
   clear() {
