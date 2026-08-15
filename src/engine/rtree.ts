@@ -13,6 +13,7 @@ export const header = tuple("header", [
 
 const BLOCKS32_PER_ELEMENT = RTreeNode.BYTES_PER_ELEMENT / 4;
 const HEADER32_OFFSET = header.size / 4;
+const EMPTY_RESULTS = Object.freeze([] as RTreePublicNode[]);
 
 export class RTree {
   static readonly Header = header;
@@ -52,7 +53,7 @@ export class RTree {
   get #freePtr32(): Ptr32 {
     const ptr = this.size * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET;
 
-    if (ptr >= this.#view.uints32.length - 1) {
+    if (ptr + BLOCKS32_PER_ELEMENT > this.#view.uints32.length) {
       throw new Error(`${this.constructor.name}: Out of memory - maximum nodes reached (${this.size})`);
     }
 
@@ -97,9 +98,7 @@ export class RTree {
     maxX: number,
     maxY: number,
     pred?: RTreePredicate
-  ): RTreePublicNode[] {
-    const results: RTreePublicNode[] = [];
-
+  ): readonly RTreePublicNode[] {
     if (minX > maxX) {
       [minX, maxX] = [maxX, minX];
     }
@@ -108,8 +107,7 @@ export class RTree {
       [minY, maxY] = [maxY, minY];
     }
 
-    this.#searchNode(this.#root, minX, minY, maxX, maxY, results, pred);
-    return results;
+    return this.#searchNode(this.#root, minX, minY, maxX, maxY, null, pred) ?? EMPTY_RESULTS;
   }
 
   searchFirst(
@@ -203,13 +201,13 @@ export class RTree {
     minY: number,
     maxX: number,
     maxY: number,
-    results: RTreePublicNode[],
+    results: RTreePublicNode[] | null,
     pred?: RTreePredicate
-  ) {
+  ): RTreePublicNode[] | null {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
-      return;
+      return results;
     }
 
     if (node.isLeaf(ptr)) {
@@ -218,16 +216,18 @@ export class RTree {
           const childNode = { bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) };
 
           if (pred == null || pred(childNode)) {
-            results.push(childNode);
+            (results ??= []).push(childNode);
           }
         }
       });
 
     } else {
       node.forEachChild(ptr, (childPtr) => {
-        this.#searchNode(childPtr, minX, minY, maxX, maxY, results, pred);
+        results = this.#searchNode(childPtr, minX, minY, maxX, maxY, results, pred);
       });
     }
+
+    return results;
   }
 
   #searchFirstNode(
@@ -366,7 +366,7 @@ export class RTree {
         this.#updateBBox(parent);
       }
 
-    // Если родитель - корень
+    // Если корень
     } else {
       node.createEmpty(root, node.getLevel(ptr) + 1);
 
