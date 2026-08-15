@@ -19,9 +19,10 @@ export class BBox extends BinView {
   static override readonly BYTES_PER_ELEMENT = this.Scheme.size;
 
   isNull(ptr: Ptr32): boolean {
-    // Bbox считается null, если оба max-а равны 0.
-    // При этом min-ы всегда тоже 0 (гарантируется логикой вставки/обновления).
-    return this.getMaxX(ptr) === 0 && this.getMaxY(ptr) === 0;
+    return this.getMinX(ptr) === 0 &&
+      this.getMinY(ptr) === 0 &&
+      this.getMaxX(ptr) === 0 &&
+      this.getMaxY(ptr) === 0;
   }
 
   hasIntersection(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number) {
