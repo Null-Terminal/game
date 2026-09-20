@@ -1,3 +1,4 @@
+import { cast } from "#/tstools";
 import { Disposable } from "#engine/disposable";
 
 import { RTree, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
@@ -80,27 +81,35 @@ export class World extends Disposable {
     return collision;
   }
 
-  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
+  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
 
-    return this.interacts
-      .search(x1, y1, x2, y2, pred)
-      .map(this.#collisionMapper);
+    const collisions = this.interacts.search(x1, y1, x2, y2, pred);
+
+    if (collisions.length === 0) {
+      return cast(collisions);
+    }
+
+    return collisions.map(this.#collisionMapper);
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
 
-    return this.dynamics
-      .search(x1, y1, x2, y2, pred)
-      .concat(this.statics.search(x1, y1, x2, y2, pred))
-      .map(this.#collisionMapper);
+    const dynamicCollisions = this.dynamics.search(x1, y1, x2, y2, pred);
+    const staticCollisions = this.statics.search(x1, y1, x2, y2, pred);
+
+    if (dynamicCollisions.length === 0 && staticCollisions.length === 0) {
+      return cast(dynamicCollisions);
+    }
+
+    return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
   #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number): RTreePredicate {
