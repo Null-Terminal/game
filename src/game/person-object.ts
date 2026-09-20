@@ -37,9 +37,10 @@ export class PersonObject extends MovableObject {
     ...MovableObject.stats,
     speed: 300,
     jump: 2500,
-    jetpack: 250,
+    jetpack: 350,
     usingJetpack: false,
-    fuel: 100,
+    fuel: 1000,
+    fuelMax: 1000,
     fuelPerTick: 0.1
   };
 
@@ -167,11 +168,11 @@ export class PersonObject extends MovableObject {
   }
 
   #renderStats(ctx: CanvasRenderingContext2D) {
-    const left = this.canvas.width - 100;
-    const top = 30;
+    const padding = 10;
+    const text = `FUEL: ${this.stats.fuel.toFixed(0)}/${this.stats.fuelMax}`;
 
     ctx.font = "16px monospace";
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`FUEL: ${this.stats.fuel.toFixed(0)}`, left, top);
+    ctx.fillText(text, this.canvas.width - ctx.measureText(text).width - padding, 30);
   }
 }

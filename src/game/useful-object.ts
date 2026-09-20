@@ -30,8 +30,8 @@ export class UsefulObject extends InteractObject {
   override visit({ stats, actions }: PersonObject) {
     switch (this.nowPlaying) {
       case this.animations.fuel:
-        if (stats.fuel < 100) {
-          stats.fuel = Math.min(100, stats.fuel + 20);
+        if (stats.fuel < stats.fuelMax) {
+          stats.fuel = Math.min(stats.fuelMax, stats.fuel + 20);
           return this.destroy();
         }
 
