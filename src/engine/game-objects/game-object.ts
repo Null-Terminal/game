@@ -380,23 +380,27 @@ export abstract class GameObject extends KindedObject {
     const { game, width: w, height: h } = this;
 
     if (opts.stretchWidth) {
+      // Бесконечный фон — оригинал + копия; если оригинал уже за кадром, ставим его на координаты камеры
       if (Math.abs(x) >= w) {
         this.x = game.camera.x;
       }
 
       if (x != 0) {
-        x = x + w * Math.sign(x * -1);
+        const sign = Math.sign(x * -1);
+        x = x + w * sign - sign;
         ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
       }
     }
 
     if (opts.stretchHeight) {
+      // Бесконечный фон — оригинал + копия; если оригинал уже за кадром, ставим его на координаты камеры
       if (Math.abs(y) <= h) {
         this.y = game.camera.y;
       }
 
       if (y != 0) {
-        y = y + h * Math.sign(y * -1);
+        const sign = Math.sign(y * -1);
+        y = y + h * sign - sign;
         ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
       }
     }
