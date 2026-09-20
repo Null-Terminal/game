@@ -7,7 +7,7 @@ import { FillerObject } from "#game/filler-object";
 export class FloorObject extends GameObject {
   static override readonly with = {
     wall: [WallObject, { bbox: [-Infinity, 130, Infinity, 135] }],
-    filler: [FillerObject, { stretchWidth: true }]
+    filler: [FillerObject, { stretch: "w" }]
   } satisfies Accept;
 
   override refs = {} as Refs<(typeof FloorObject)["with"]>;

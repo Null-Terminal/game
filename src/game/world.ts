@@ -9,13 +9,13 @@ import { FloorObject } from "#game/floor-object";
 import type { WorldObjects } from "#engine/game";
 
 export const world: WorldObjects = [
-  [FillerObject, { show: "night", stretchWidth: true, stretchHeight: true, staticScreen: true }],
-  [FillerObject, { show: "night", stretchWidth: true, staticScreen: true }],
+  [FillerObject, { show: "night", stretch: "wh", static: "h", scrollFactor: [0.5] }],
+  [FillerObject, { show: "night", stretch: "w", static: "h", scrollFactor: [0.5] }],
 
   [WallObject, { bbox: [0, -Infinity, 1, Infinity] }],
 
   [FloorObject, { show: "asphalt" }],
-  [FillerObject, { show: "meshFence", y: 140, stretchWidth: true }],
+  [FillerObject, { show: "meshFence", y: 140, stretch: "w" }],
 
   [WallObject, { show: "bricks", bbox: [100, 500, 300, 520] }],
   [WallObject, { show: "bricks", bbox: [360, 280, 560, 340] }],
