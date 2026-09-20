@@ -131,7 +131,8 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         this.width = Infinity;
-        opts.stretchWidth = true;
+        opts.stretch ??= "";
+        opts.stretch += "w";
       }
 
       if (isFinite(minY) && isFinite(maxY)) {
@@ -139,7 +140,8 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         this.height = Infinity;
-        opts.stretchHeight = true;
+        opts.stretch ??= "";
+        opts.stretch += "h";
       }
 
     } else {
@@ -261,8 +263,7 @@ export abstract class GameObject extends KindedObject {
     this.#cancelRedrawHandler?.();
     this.#nowPlaying = animation;
 
-    const { bbox, effects, game: { camera } } = this;
-    const { stretchWidth, stretchHeight, staticScreen } = this.options;
+    const { bbox, effects, options: opts } = this;
     const { canvas, emitter } = this.canvas;
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
@@ -271,15 +272,14 @@ export abstract class GameObject extends KindedObject {
       this.height = animation.maxHeight * effects.scale;
     }
 
-    if (stretchWidth || stretchHeight) {
-      if (stretchWidth) {
-        this.width = canvas.width;
-      }
+    const stretchWidth = opts.stretch?.includes("w");
+    const stretchHeight = opts.stretch?.includes("h");
 
-      if (stretchHeight) {
-        this.height = canvas.height;
-      }
-    }
+    const staticWidth = opts.static?.includes("w");
+    const staticHeight = opts.static?.includes("h");
+
+    const { game: { camera } } = this;
+    const [scrollFactorX, scrollFactorY = scrollFactorX] = opts.scrollFactor ?? [1];
 
     let inc = 1;
     let rendered = 0;
@@ -289,15 +289,27 @@ export abstract class GameObject extends KindedObject {
     this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ({ now, ctx }) => {
       const sprite = spriteAnimation.at(spriteIndex)!;
 
+      // Синхронизируемся с размером холста, чтобы поддержать ресайз окна
+      if (stretchWidth) {
+        this.width = canvas.width;
+      }
+
+      if (stretchHeight) {
+        this.height = canvas.height;
+      }
+
       const { width: w, height: h } = this;
 
       let y = this.y - this.visualOffsetY;
       let x = this.x;
 
       // Поддержка скроллинга
-      if (!staticScreen) {
-        x -= camera.x;
-        y -= camera.y;
+      if (!staticWidth) {
+        x -= camera.x * scrollFactorX;
+      }
+
+      if (!staticHeight) {
+        y -= camera.y * scrollFactorY;
       }
 
       // Нормализуем y, так как canvas считает 0 верхом, а не низом
@@ -306,11 +318,15 @@ export abstract class GameObject extends KindedObject {
       if (renderAsPattern) {
         const image = animation.getPatternFrame(spriteIndex, w, h, effects);
 
-        ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
+        const wrapWidth = stretchWidth && !staticWidth;
+        const wrapHeight = stretchHeight && !staticHeight;
 
-        // Для не статичных изображений нужно создавать реплики,
-        // если нужно, чтобы оно растягивалось на весь экран
-        this.#stretchPattern(ctx, image, x, y);
+        if (wrapWidth || wrapHeight) {
+          this.#stretchPattern(ctx, image, x, y, wrapWidth, wrapHeight);
+
+        } else {
+          ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
+        }
 
       } else {
         const image = animation.getSpriteFrame(spriteIndex, effects);
@@ -370,39 +386,49 @@ export abstract class GameObject extends KindedObject {
     }));
   }
 
-  #stretchPattern(ctx: CanvasRenderingContext2D, pattern: BakedFrame, x: number, y: number) {
-    const opts = this.options;
+  #stretchPattern(
+    ctx: CanvasRenderingContext2D,
+    pattern: BakedFrame,
+    x: number,
+    y: number,
+    stretchWidth: boolean | undefined,
+    stretchHeight: boolean | undefined
+  ) {
+    const { width: w, height: h, canvas: view } = this;
 
-    if (opts.staticScreen) {
-      return;
-    }
+    const xs = stretchWidth ? axisCopies(x, w, view.width) : [x];
+    const ys = stretchHeight ? axisCopies(y, h, view.height) : [y];
 
-    const { game, width: w, height: h } = this;
-
-    if (opts.stretchWidth) {
-      // Бесконечный фон — оригинал + копия; если оригинал уже за кадром, ставим его на координаты камеры
-      if (Math.abs(x) >= w) {
-        this.x = game.camera.x;
-      }
-
-      if (x != 0) {
-        const sign = Math.sign(x * -1);
-        x = x + w * sign - sign;
-        ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
+    for (const dx of xs) {
+      for (const dy of ys) {
+        ctx.drawImage(pattern, 0, 0, w, h, dx, dy, w, h);
       }
     }
 
-    if (opts.stretchHeight) {
-      // Бесконечный фон — оригинал + копия; если оригинал уже за кадром, ставим его на координаты камеры
-      if (Math.abs(y) <= h) {
-        this.y = game.camera.y;
+    function axisCopies(origin: number, size: number, viewEnd: number) {
+      if (size <= 1) {
+        return [origin];
       }
 
-      if (y != 0) {
-        const sign = Math.sign(y * -1);
-        y = y + h * sign - sign;
-        ctx.drawImage(pattern, 0, 0, w, h, x, y, w, h);
+      // Шаг size-1: 1px перекрытие, чтобы на дробных координатах не просвечивал шов
+      const step = size - 1;
+
+      // В JS остаток от деления отрицательного числа даст отрицательный результат
+      let start = origin % step;
+
+      // Положительный остаток сдвигаем на шаг влево, чтобы копия начиналась левее экрана
+      if (start > 0) {
+        start -= step;
       }
+
+      const copies: number[] = [];
+
+      // От самой левой копии, которая ещё цепляет экран, шагаем вправо пока p не уедет за viewEnd
+      for (let point = start; point < viewEnd; point += step) {
+        copies.push(point);
+      }
+
+      return copies.length > 0 ? copies : [origin];
     }
   }
 }

@@ -20,6 +20,10 @@ export interface Effects extends FrameEffects {
   speed?: number;
 }
 
+export type Axis = "w" | "h";
+export type AxisFlags = "" | Axis | `${Axis}${Axis}`;
+export type ScrollFactor = [both: number] | [x: number, y: number];
+
 export interface DefaultGameObjectOptions {
   show?: string;
   movement?: { path: MovePath } & MoveAlongPathOptions;
@@ -27,9 +31,9 @@ export interface DefaultGameObjectOptions {
   accept?: Accept | null;
   acceptor?: GameObject | null;
 
-  stretchWidth?: boolean;
-  stretchHeight?: boolean;
-  staticScreen?: boolean;
+  stretch?: AxisFlags;
+  static?: AxisFlags;
+  scrollFactor?: ScrollFactor;
 
   effects?: Effects;
 }
