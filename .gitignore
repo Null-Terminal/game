@@ -31,6 +31,7 @@ target
 .vscode/*
 !.vscode/extensions.json
 .idea
+.junie
 .DS_Store
 *.suo
 *.ntvs*
