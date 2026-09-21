@@ -111,6 +111,12 @@ export class RenderCanvas extends Disposable {
 
     let frameCount = 0;
 
+    const payload = {
+      now: 0,
+      delta: 0,
+      ctx: this.#ctx
+    };
+
     const animate = (now?: number) => {
       this.#redrawId = requestAnimationFrame(animate);
 
@@ -133,11 +139,8 @@ export class RenderCanvas extends Disposable {
       const delta = Math.min(0.025, (now - lastRedraw) / 1000);
       lastRedraw = now;
 
-      const payload: RenderPayload = {
-        now,
-        delta,
-        ctx: this.#ctx
-      };
+      payload.now = now;
+      payload.delta = delta;
 
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);

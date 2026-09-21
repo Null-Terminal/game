@@ -6,9 +6,9 @@ import { PlatformObject } from "#game/platform-object";
 
 import { FloorObject } from "#game/floor-object";
 
-import type { WorldObjects } from "#engine/game";
+import { World } from "#engine/game";
 
-export const world: WorldObjects = [
+export const world = World.of([
   [FillerObject, { show: "night", stretch: "wh", static: "h", scrollFactor: [0.5] }],
   [FillerObject, { show: "night", stretch: "w", static: "h", scrollFactor: [0.5] }],
 
@@ -43,8 +43,9 @@ export const world: WorldObjects = [
       speed: 300
     },
 
+
     accept: {
       trigger: [UsefulObject, { show: "trigger", y: 1000, x: 800 }],
     }
   }],
-];
+]);

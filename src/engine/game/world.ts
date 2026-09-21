@@ -11,7 +11,23 @@ import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/ty
 
 export * from "#engine/game/world/types";
 
+type OptionsOf<C extends abstract new (...args: any) => GameObject> =
+  InstanceType<C>["options"];
+
 export class World extends Disposable {
+  static of<
+    const T extends [abstract new (...args: any[]) => GameObject, unknown?][]
+  >(entries: {
+    [I in keyof T]: T[I] extends [
+        infer C extends abstract new (...args: any[]) => GameObject,
+        ...any
+      ]
+      ? [C, OptionsOf<C>?]
+      : T[I]
+  }): T {
+    return entries as T;
+  }
+
   readonly game: Game;
   readonly options: Required<WorldOptions>;
 

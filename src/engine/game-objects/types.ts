@@ -1,7 +1,7 @@
 import type { Handlers } from "#/event-emitter";
-
 import type { BBoxTuple } from "#engine/rtree";
-import type { WorldObject } from "#engine/game";
+
+import type { WorldObject, RenderPayload } from "#engine/game";
 import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
 
 import type { GameObject } from "#engine/game-objects/game-object";
@@ -20,10 +20,6 @@ export interface Effects extends FrameEffects {
   speed?: number;
 }
 
-export type Axis = "w" | "h";
-export type AxisFlags = "" | Axis | `${Axis}${Axis}`;
-export type ScrollFactor = [both: number] | [x: number, y: number];
-
 export interface DefaultGameObjectOptions {
   show?: string;
   movement?: { path: MovePath } & MoveAlongPathOptions;
@@ -31,13 +27,23 @@ export interface DefaultGameObjectOptions {
   accept?: Accept | null;
   acceptor?: GameObject | null;
 
-  stretch?: AxisFlags;
-  static?: AxisFlags;
-  scrollFactor?: ScrollFactor;
-
   effects?: Effects;
 }
 
-export type GameObjectOptions =
-  { x?: number; y?: number } & DefaultGameObjectOptions |
-  { bbox?: BBoxTuple } & DefaultGameObjectOptions;
+export type GameObjectOptions<T = DefaultGameObjectOptions> =
+  { x?: number; y?: number } & T |
+  { bbox?: BBoxTuple } & T;
+
+export interface RenderFramePayload extends RenderPayload {
+  pattern: boolean;
+
+  frameIndex: number;
+  animation: Animations[keyof Animations];
+
+  x: number;
+  y: number;
+
+  resolveY(y: number): number;
+}
+
+export type RenderFrame = (payload: RenderFramePayload) => void;

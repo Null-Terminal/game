@@ -2,7 +2,6 @@ import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import type { Game, WorldObject } from "#engine/game";
-import type { BakedFrame } from "#engine/animation-loader";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
@@ -10,9 +9,10 @@ import { KindedObject } from "#engine/game-objects/kinded-object";
 import { Movement } from "#engine/game-objects/movement";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
+import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
 import type { Accept, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
-export abstract class GameObject extends KindedObject {
+export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
   static readonly with: Accept = {};
 
   readonly refs: Refs<(typeof GameObject)["with"]> = {};
@@ -38,7 +38,7 @@ export abstract class GameObject extends KindedObject {
   game!: Game;
   poolPointer!: PoolPointer;
 
-  options!: GameObjectOptions;
+  options!: T;
   effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
 
   x = 0;
@@ -99,7 +99,7 @@ export abstract class GameObject extends KindedObject {
   #nowPlaying: Animations[keyof Animations] | null = null;
   #cancelRedrawHandler: Function | null = null;
 
-  constructor(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
+  constructor(game: Game, poolPointer: PoolPointer, opts?: T) {
     super();
     this.create(game, poolPointer, opts);
   }
@@ -112,14 +112,14 @@ export abstract class GameObject extends KindedObject {
     this.#nowPlaying = null;
   }
 
-  create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions) {
+  create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     this.game = game;
     this.poolPointer = poolPointer;
 
-    opts = { ...opts };
+    opts = { ...opts! };
     this.options = opts;
 
-    if ("bbox" in opts) {
+    if ("bbox" in opts!) {
       this.bbox = opts.bbox;
       const [minX, minY, maxX, maxY] = this.bbox;
 
@@ -131,8 +131,6 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         this.width = Infinity;
-        opts.stretch ??= "";
-        opts.stretch += "w";
       }
 
       if (isFinite(minY) && isFinite(maxY)) {
@@ -140,8 +138,6 @@ export abstract class GameObject extends KindedObject {
 
       } else {
         this.height = Infinity;
-        opts.stretch ??= "";
-        opts.stretch += "h";
       }
 
     } else {
@@ -208,6 +204,8 @@ export abstract class GameObject extends KindedObject {
         createRef(name, go, { ...opts, acceptor: this });
       });
     }
+
+    return opts;
   }
 
   visit(_go: GameObject) {
@@ -258,13 +256,12 @@ export abstract class GameObject extends KindedObject {
     const params = spriteAnimation.params;
 
     let lastFrameTime = 0;
-    let spriteIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
+    let frameIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
 
     this.#cancelRedrawHandler?.();
     this.#nowPlaying = animation;
 
-    const { bbox, effects, options: opts } = this;
-    const { canvas, emitter } = this.canvas;
+    const { game: { camera }, canvas: { canvas, emitter }, bbox, effects } = this;
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     if (bbox == null) {
@@ -272,70 +269,57 @@ export abstract class GameObject extends KindedObject {
       this.height = animation.maxHeight * effects.scale;
     }
 
-    const stretchWidth = opts.stretch?.includes("w");
-    const stretchHeight = opts.stretch?.includes("h");
-
-    const staticWidth = opts.static?.includes("w");
-    const staticHeight = opts.static?.includes("h");
-
-    const { game: { camera } } = this;
-    const [scrollFactorX, scrollFactorY = scrollFactorX] = opts.scrollFactor ?? [1];
-
     let inc = 1;
     let rendered = 0;
 
-    const renderAsPattern = bbox != null || stretchWidth || stretchHeight;
+    // Нормализует y, так как canvas считает 0 верхом, а не низом
+    const resolveY = (y: number) => canvas.height - y - this.height;
 
-    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, ({ now, ctx }) => {
-      const sprite = spriteAnimation.at(spriteIndex)!;
+    const framePayload = {
+      ctx: null as CanvasRenderingContext2D | null,
+      now: 0,
+      delta: 0,
+      pattern: false,
+      frameIndex: 0,
+      animation: null as typeof animation | null,
+      x: 0,
+      y: 0,
+      resolveY
+    } as RenderFramePayload;
 
-      // Синхронизируемся с размером холста, чтобы поддержать ресайз окна
-      if (stretchWidth) {
-        this.width = canvas.width;
-      }
-
-      if (stretchHeight) {
-        this.height = canvas.height;
-      }
-
+    const renderFrame: RenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, resolveY }) => {
       const { width: w, height: h } = this;
 
-      let y = this.y - this.visualOffsetY;
-      let x = this.x;
-
-      // Поддержка скроллинга
-      if (!staticWidth) {
-        x -= camera.x * scrollFactorX;
-      }
-
-      if (!staticHeight) {
-        y -= camera.y * scrollFactorY;
-      }
-
-      // Нормализуем y, так как canvas считает 0 верхом, а не низом
-      y = canvas.height - y - h;
-
-      if (renderAsPattern) {
-        const image = animation.getPatternFrame(spriteIndex, w, h, effects);
-
-        const wrapWidth = stretchWidth && !staticWidth;
-        const wrapHeight = stretchHeight && !staticHeight;
-
-        if (wrapWidth || wrapHeight) {
-          this.#stretchPattern(ctx, image, x, y, wrapWidth, wrapHeight);
-
-        } else {
-          ctx.drawImage(image, 0, 0, w, h, x, y, w, h);
-        }
+      if (pattern) {
+        const image = animation.getPatternFrame(frameIndex, w, h, effects);
+        ctx.drawImage(image, 0, 0, w, h, x, resolveY(y), w, h);
 
       } else {
-        const image = animation.getSpriteFrame(spriteIndex, effects);
+        const image = animation.getSpriteFrame(frameIndex, effects);
 
         // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
         // из-за разницы высот между отдельным фреймом и максимальным
         const diffY = h - image.height;
-        ctx.drawImage(image, x, y + diffY, image.width, image.height);
+        ctx.drawImage(image, x, resolveY(y) + diffY, image.width, image.height);
       }
+    };
+
+    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, (payload) => {
+      const sprite = spriteAnimation.at(frameIndex)!;
+
+      const x = this.x - camera.x;
+      const y = this.y - camera.y - this.visualOffsetY;
+
+      framePayload.ctx = payload.ctx;
+      framePayload.now = payload.now;
+      framePayload.delta = payload.delta;
+      framePayload.pattern = bbox != null;
+      framePayload.frameIndex = frameIndex;
+      framePayload.animation = animation;
+      framePayload.x = x;
+      framePayload.y = y;
+
+      this.renderFrame(framePayload, renderFrame);
 
       if ((!rendered || sprite.spriteId !== "") && animation.name in this.animation.events) {
         this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
@@ -354,81 +338,39 @@ export abstract class GameObject extends KindedObject {
 
       duration /= (params.speed * effects.speed);
 
-      if (!this.isPaused() && (now - lastFrameTime >= duration)) {
+      if (!this.isPaused() && (payload.now - lastFrameTime >= duration)) {
         if (params.randomOrder) {
-          spriteIndex = spriteAnimation.randomIndex();
+          frameIndex = spriteAnimation.randomIndex();
 
         } else {
           if (params.loopReverse) {
-            if (spriteIndex + inc === spriteAnimation.length) {
+            if (frameIndex + inc === spriteAnimation.length) {
               inc = -1;
 
-            } else if (spriteIndex + inc === params.loopFrom - 1) {
+            } else if (frameIndex + inc === params.loopFrom - 1) {
               inc = 1;
             }
           }
 
-          if (spriteIndex === spriteAnimation.length - 1) {
+          if (frameIndex === spriteAnimation.length - 1) {
             rendered = 2;
           }
 
-          spriteIndex = (spriteIndex + inc) % spriteAnimation.length;
+          frameIndex = (frameIndex + inc) % spriteAnimation.length;
 
-          if (spriteIndex === 0 && rendered > 1) {
-            spriteIndex += params.loopFrom;
+          if (frameIndex === 0 && rendered > 1) {
+            frameIndex += params.loopFrom;
           }
         }
 
-        lastFrameTime = now;
+        lastFrameTime = payload.now;
       }
 
       rendered ||= 1;
     }));
   }
 
-  #stretchPattern(
-    ctx: CanvasRenderingContext2D,
-    pattern: BakedFrame,
-    x: number,
-    y: number,
-    stretchWidth: boolean | undefined,
-    stretchHeight: boolean | undefined
-  ) {
-    const { width: w, height: h, canvas: view } = this;
-
-    const xs = stretchWidth ? axisCopies(x, w, view.width) : [x];
-    const ys = stretchHeight ? axisCopies(y, h, view.height) : [y];
-
-    for (const dx of xs) {
-      for (const dy of ys) {
-        ctx.drawImage(pattern, 0, 0, w, h, dx, dy, w, h);
-      }
-    }
-
-    function axisCopies(origin: number, size: number, viewEnd: number) {
-      if (size <= 1) {
-        return [origin];
-      }
-
-      // Шаг size-1: 1px перекрытие, чтобы на дробных координатах не просвечивал шов
-      const step = size - 1;
-
-      // В JS остаток от деления отрицательного числа даст отрицательный результат
-      let start = origin % step;
-
-      // Положительный остаток сдвигаем на шаг влево, чтобы копия начиналась левее экрана
-      if (start > 0) {
-        start -= step;
-      }
-
-      const copies: number[] = [];
-
-      // От самой левой копии, которая ещё цепляет экран, шагаем вправо пока p не уедет за viewEnd
-      for (let point = start; point < viewEnd; point += step) {
-        copies.push(point);
-      }
-
-      return copies.length > 0 ? copies : [origin];
-    }
+  protected renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
+    defaultRender(payload);
   }
 }
