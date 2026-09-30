@@ -74,6 +74,7 @@ export class AnimationPreview extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.pause();
     this.#actionHandlers.destroy();
   }
 

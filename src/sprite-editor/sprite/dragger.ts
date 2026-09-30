@@ -18,7 +18,7 @@ export class SpriteDragger {
   }
 
   destroy() {
-    this.#sprite.canvas.removeEventListener("keydown", this.#onArrowNavigation);
+    this.#sprite.removeEventListener("keydown", this.#onArrowNavigation);
     this.#sprite.canvas.removeEventListener("pointerdown", this.#onDragSprite);
     window.removeEventListener("pointermove", this.#onDraggingSprite);
     window.removeEventListener("pointerup", this.#onDropSprite);

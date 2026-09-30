@@ -4,6 +4,7 @@ type ResizeType = "ns-resize" | "nw-resize" | "w-resize";
 
 export class SpriteResizer {
   readonly #sprite: Sprite;
+  #handles: HTMLElement[] = [];
 
   #resizing: ResizeType | null = null;
   #resizeStartX = 0;
@@ -20,6 +21,10 @@ export class SpriteResizer {
   destroy() {
     window.removeEventListener("pointermove", this.#onResizeMove);
     window.removeEventListener("pointerup", this.#onResizeEnd);
+
+    this.#handles.splice(0).forEach((handle) => {
+      handle.remove();
+    });
   }
 
   #makeCanvasResizable() {
@@ -50,6 +55,8 @@ export class SpriteResizer {
 
       handle.addEventListener("pointerdown", this.#onResizeStart.bind(this, style.cursor));
       sprite.append(handle);
+
+      this.#handles.push(handle);
     }
 
     window.addEventListener("pointermove", this.#onResizeMove);
