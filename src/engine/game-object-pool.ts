@@ -12,8 +12,11 @@ export class GameObjectPool {
   }
 
   get(kind: number, index: number): GameObject | undefined {
-    const store = this.objects[kind];
-    return store?.buffer[index];
+    if (!this.has(kind, index)) {
+      return undefined;
+    }
+
+    return this.objects[kind]!.buffer[index];
   }
 
   add<T extends typeof GameObject, A extends ConstructorParameters<T>>(
@@ -45,20 +48,39 @@ export class GameObjectPool {
   }
 
   delete(kind: number, index: number) {
-    const store = this.objects[kind];
-
-    if (store != null) {
-      if (index < store.length - 1) {
-        store.buffer[index] = store.buffer[store.length - 1]!;
-      }
-
-      store.length--;
+    if (!this.has(kind, index)) {
+      return;
     }
+
+    const store = this.objects[kind]!;
+    const removed = store.buffer[index]!;
+
+    removed.destroy();
+
+    const [, removedIndex] = removed.poolPointer;
+
+    if (removedIndex >= store.length || store.buffer[removedIndex] !== removed) {
+      return;
+    }
+
+    const last = store.length - 1;
+
+    if (removedIndex < last) {
+      const moved = store.buffer[last]!;
+
+      store.buffer[removedIndex] = moved;
+      store.buffer[last] = removed;
+
+      moved.poolPointer = [kind, removedIndex];
+      removed.poolPointer = [kind, last];
+    }
+
+    store.length = last;
   }
 
   destroy() {
     for (const store of Object.values(this.objects)) {
-      for (let i = 0; i < store.length; i++) {
+      for (let i = store.length; i--;) {
         store.buffer[i]!.destroy();
       }
 

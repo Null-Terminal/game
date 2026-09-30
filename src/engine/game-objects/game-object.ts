@@ -188,7 +188,9 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       this.refs[name] = instance;
 
       this.register(() => {
-        instance.destroy();
+        const [kind, index] = instance.poolPointer;
+        game.world.objects.delete(kind, index);
+
         instance.acceptor = null;
         this.refs[name] = null;
       });

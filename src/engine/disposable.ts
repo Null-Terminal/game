@@ -1,6 +1,6 @@
 export abstract class Disposable {
   readonly #destructors: Function[] = [];
-  readonly #abortController = new AbortController();
+  #abortController = new AbortController();
 
   get abortSignal() {
     return this.#abortController.signal;
@@ -33,6 +33,7 @@ export abstract class Disposable {
     }
 
     this.#abortController.abort();
+    this.#abortController = new AbortController();
   }
 
   [Symbol.dispose]() {
