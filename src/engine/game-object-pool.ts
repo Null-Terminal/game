@@ -55,4 +55,15 @@ export class GameObjectPool {
       store.length--;
     }
   }
+
+  destroy() {
+    for (const store of Object.values(this.objects)) {
+      for (let i = 0; i < store.length; i++) {
+        store.buffer[i]!.destroy();
+      }
+
+      store.length = 0;
+      store.buffer.length = 0;
+    }
+  }
 }

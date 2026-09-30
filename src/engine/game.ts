@@ -24,7 +24,8 @@ export class Game extends Disposable {
 
   override destroy() {
     super.destroy();
-    this.canvas.destroy();
     this.world.destroy();
+    this.camera.destroy();
+    this.canvas.destroy();
   }
 }

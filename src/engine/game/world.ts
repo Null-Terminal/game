@@ -52,6 +52,11 @@ export class World extends Disposable {
     });
   }
 
+  override destroy() {
+    super.destroy();
+    this.objects.destroy();
+  }
+
   createObject(go: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
     return this.objects.add(go, this.game, opts);
   }

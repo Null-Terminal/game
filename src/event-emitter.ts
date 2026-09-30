@@ -24,11 +24,12 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     let deleted = false;
 
     return () => {
-      if (deleted) {
+      const { ptr } = box;
+
+      if (deleted || event[ptr] !== box) {
+        deleted = true;
         return;
       }
-
-      const { ptr } = box;
 
       if (ptr !== event.length - 1) {
         event[ptr] = event[event.length - 1]!;
@@ -44,11 +45,12 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     let deleted = false;
 
     const destructor = () => {
-      if (deleted) {
+      const { ptr } = box;
+
+      if (deleted || event[ptr] !== box) {
+        deleted = true;
         return;
       }
-
-      const { ptr } = box;
 
       if (ptr !== event.length - 1) {
         event[ptr] = event[event.length - 1]!;
