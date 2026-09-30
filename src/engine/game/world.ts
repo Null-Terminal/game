@@ -5,21 +5,16 @@ import { RTree, type RTreePredicate, type RTreePublicNode } from "#engine/rtree"
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
-import type { GameObject } from "#engine/game-objects";
+import type { GameObject, OptionsOf } from "#engine/game-objects";
 
 import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
 
 export * from "#engine/game/world/types";
 
-type OptionsOf<C extends abstract new (...args: any) => GameObject> =
-  InstanceType<C>["options"];
-
 export class World extends Disposable {
-  static of<
-    const T extends [abstract new (...args: any[]) => GameObject, unknown?][]
-  >(entries: {
+  static of<const T extends WorldObject[]>(entries: {
     [I in keyof T]: T[I] extends [
-        infer C extends abstract new (...args: any[]) => GameObject,
+        infer C extends new (...args: any[]) => GameObject,
         ...any
       ]
       ? [C, OptionsOf<C>?]

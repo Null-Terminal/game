@@ -10,12 +10,24 @@ import { Movement } from "#engine/game-objects/movement";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
 import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
-import type { Accept, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
+import type { OptionsOf, Accept, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
 
 export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
+  static refs<const T extends Accept>(entries: {
+    [I in keyof T]: T[I] extends [
+        infer C extends new (...args: any[]) => GameObject,
+        ...any
+      ]
+      ? [C, OptionsOf<C>?]
+      : T[I]
+  }): T {
+    return entries as T;
+  }
+
   static readonly with: Accept = {};
 
   readonly refs: Refs<(typeof GameObject)["with"]> = {};
+
   acceptor: GameObject | null = null;
 
   static readonly animations: Animations = {};

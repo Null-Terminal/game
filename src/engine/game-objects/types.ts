@@ -1,16 +1,23 @@
 import type { Handlers } from "#/event-emitter";
 import type { BBoxTuple } from "#engine/rtree";
 
-import type { WorldObject, RenderPayload } from "#engine/game";
+import type { RenderPayload } from "#engine/game";
+import type { ConcreteGameObjectConstructor  } from "#engine/game-object-pool";
 import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/movement/types";
 
+export type OptionsOf<C extends abstract new (...args: any) => GameObject> =
+  InstanceType<C>["options"];
+
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
-export type Accept = Record<string, WorldObject>;
+export type Accept = Record<string, [
+  ConcreteGameObjectConstructor<typeof GameObject>,
+  Tb.IntersectionOf<GameObjectOptions> & Record<string, unknown>
+]>;
 
 export type Refs<T extends Accept> = {
   [K in keyof T]?: InstanceType<T[K][0]> | null;

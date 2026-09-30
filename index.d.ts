@@ -17,4 +17,7 @@ namespace Tb {
 
   export type BuildTuple<N extends number, Acc extends unknown[] = []> =
     Acc["length"] extends N ? Acc : BuildTuple<N, [...Acc, unknown]>;
+
+  type IntersectionOf<U> =
+    (U extends unknown ? (arg: U) => void : never) extends (arg: infer I) => void ? I : never;
 }
