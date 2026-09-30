@@ -1,4 +1,4 @@
-import { SpriteAnimation, type AnimationParameters } from "#/sprite-animation";
+import { SpriteAnimation, type RawAnimationParameters } from "#/sprite-animation";
 
 import type { Sprite } from "#sprite-editor/sprite";
 
@@ -7,7 +7,7 @@ export interface MergedSprite {
   animation: SpriteAnimation;
 }
 
-export function mergeSprites(sprites: Sprite[], params?: AnimationParameters): MergedSprite {
+export function mergeSprites(sprites: Sprite[], params?: RawAnimationParameters): MergedSprite {
   // Максимальная ширина конечного спрайта
   const MAX_WIDTH = 2048;
 

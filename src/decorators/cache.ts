@@ -10,12 +10,14 @@ export function cache<This, Value>(target: (this: This) => Value) {
 
     const value = target.call(this);
 
-    Object.defineProperty(store, key, {
-      value,
-      enumerable: false,
-      configurable: true,
-      writable: true
-    });
+    if (value != null) {
+      Object.defineProperty(store, key, {
+        value,
+        enumerable: false,
+        configurable: true,
+        writable: true
+      });
+    }
 
     return value;
   };

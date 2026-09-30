@@ -3,17 +3,23 @@ export abstract class Handlers<Parent> {
 
   readonly attr: string = "action";
 
+  #destroyed = false;
+
   protected constructor(parent: Parent) {
     this.parent = parent;
 
     queueMicrotask(() => {
-      this.initHandlers();
+      if (!this.#destroyed) {
+        this.initHandlers();
+      }
     });
   }
 
-  protected abstract initHandlers(): void;
+  destroy() {
+    this.#destroyed = true;
+  }
 
-  protected abstract destroy(): void;
+  protected abstract initHandlers(): void;
 
   protected readonly onAction = (e: Event) => {
     const { target } = e;

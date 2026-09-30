@@ -7,7 +7,9 @@ export class ActionHandlers extends Handlers<Sprite> {
     super(parent);
   }
 
-  destroy() {
+  override destroy() {
+    super.destroy();
+
     this.parent.controls.removeEventListener("click", this.onAction);
     this.parent.controls.removeEventListener("input", this.onAction, { capture: true });
   }
