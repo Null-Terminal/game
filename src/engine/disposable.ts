@@ -26,7 +26,7 @@ export abstract class Disposable {
   }
 
   destroy() {
-    const destructors = this.#destructors.splice(0, this.#destructors.length);
+    const destructors = this.#destructors.splice(0);
 
     for (let i = destructors.length; i--;) {
       destructors[i]!();
