@@ -28,7 +28,9 @@ export class World extends Disposable {
 
   readonly statics = new RTree();
   readonly dynamics = new RTree();
-  readonly interacts = new RTree();
+
+  readonly staticInteracts = new RTree();
+  readonly dynamicInteracts = new RTree();
 
   readonly objects = new GameObjectPool();
 
@@ -103,13 +105,14 @@ export class World extends Disposable {
 
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
 
-    const collisions = this.interacts.search(x1, y1, x2, y2, pred);
+    const dynamicCollisions = this.dynamicInteracts.search(x1, y1, x2, y2, pred);
+    const staticCollisions = this.staticInteracts.search(x1, y1, x2, y2, pred);
 
-    if (collisions.length === 0) {
-      return cast(collisions);
+    if (dynamicCollisions.length === 0 && staticCollisions.length === 0) {
+      return cast(dynamicCollisions);
     }
 
-    return collisions.map(this.#collisionMapper);
+    return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
   findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {

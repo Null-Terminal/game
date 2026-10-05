@@ -1,4 +1,4 @@
-import { InteractObject } from "#engine/game-objects";
+import { DynamicInteractObject } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -16,7 +16,7 @@ const [fuel, trigger] = await Promise.all([
   }),
 ]);
 
-export class UsefulObject extends InteractObject {
+export class UsefulObject extends DynamicInteractObject {
   static override readonly animations = { fuel, trigger };
   override readonly animations = UsefulObject.animations;
 
