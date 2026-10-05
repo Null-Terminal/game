@@ -1,4 +1,4 @@
-import { DynamicInteractObject } from "#engine/game-objects";
+import { DynamicInteractObject, ifAlive } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -27,6 +27,7 @@ export class UsefulObject extends DynamicInteractObject {
     this.#used = false;
   }
 
+  @ifAlive
   override visit({ stats, actions }: PersonObject) {
     switch (this.nowPlaying) {
       case this.animations.fuel:
