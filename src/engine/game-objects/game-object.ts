@@ -5,6 +5,7 @@ import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
+import { ifAlive } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 import { Movement } from "#engine/game-objects/movement";
 
@@ -67,6 +68,10 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     return this.constructor.name;
   }
 
+  get paused() {
+    return this.#paused;
+  }
+
   get canvas() {
     return this.game.canvas;
   }
@@ -111,20 +116,36 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   #nowPlaying: Animations[keyof Animations] | null = null;
   #cancelRedrawHandler: Function | null = null;
 
-  constructor(game: Game, poolPointer: PoolPointer, opts?: T) {
+  // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
+  constructor() {
     super();
-    this.create(game, poolPointer, opts);
+    this.destroyed = true;
   }
 
   abstract init(): void;
 
   override destroy() {
+    if (this.destroyed) {
+      return;
+    }
+
     super.destroy();
+
     this.#paused = false;
     this.#nowPlaying = null;
   }
 
+  reindex(index: number) {
+    this.poolPointer = [this.poolPointer[0], index];
+  }
+
   create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+    if (!this.destroyed) {
+      throw new Error(`${this.constructor.name}.create: called on a live object`);
+    }
+
+    this.destroyed = false;
+
     this.game = game;
     this.poolPointer = poolPointer;
 
@@ -168,26 +189,13 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.prevY = this.y;
 
     this.effects = { scale: 1, speed: 1, ...opts.effects };
-
-    this.nextTick(() => {
-      this.init();
-
-      if (opts.show != null && opts.show in this.animations) {
-        this.play(this.animations[opts.show]!);
-      }
-
-      if (opts.movement != null) {
-        this.movement.moveAlongPath(opts.movement.path, opts.movement);
-      }
-    });
-
     this.acceptor = opts.acceptor ?? null;
 
     const createRef = (name: string, go: WorldObject[0], opts: WorldObject[1]) => {
       const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
       this.refs[name] = instance;
 
-      this.register(() => {
+      this.onDestroy(() => {
         const [kind, index] = instance.poolPointer;
         game.world.objects.delete(kind, index);
 
@@ -219,18 +227,30 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       });
     }
 
+    this.init();
+
+    if (opts.show != null && opts.show in this.animations) {
+      this.play(this.animations[opts.show]!);
+    }
+
+    if (opts.movement != null) {
+      this.movement.moveAlongPath(opts.movement.path, opts.movement);
+    }
+
     return opts;
   }
 
+  @ifAlive
   visit(_go: GameObject) {
     // Ничего не делаю по умолчанию
   }
 
+  @ifAlive
   move(dx: number, dy: number) {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    if (this.isPaused()) {
+    if (this.paused) {
       return;
     }
 
@@ -238,20 +258,19 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.y = this.y + dy;
   }
 
-  isPaused() {
-    return this.#paused;
-  }
-
+  @ifAlive
   pause() {
     this.#paused = true;
   }
 
+  @ifAlive
   resume() {
     this.#paused = false;
   }
 
+  @ifAlive
   togglePause() {
-    if (this.isPaused()) {
+    if (this.paused) {
       this.resume();
 
     } else {
@@ -259,12 +278,14 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }
   }
 
+  @ifAlive
   ensurePlaying(animation: Animations[keyof Animations]) {
     if (this.#nowPlaying !== animation) {
       this.play(animation);
     }
   }
 
+  @ifAlive
   play(animation: Animations[keyof Animations]) {
     const spriteAnimation = animation.animation;
     const params = spriteAnimation.params;
@@ -318,7 +339,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       }
     };
 
-    this.#cancelRedrawHandler = this.register(emitter.on(this.redrawEvent, (payload) => {
+    this.#cancelRedrawHandler = this.onDestroy(emitter.on(this.redrawEvent, (payload) => {
       const sprite = spriteAnimation.at(frameIndex)!;
 
       const x = this.x - camera.x;
@@ -352,7 +373,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
       duration /= (params.speed * effects.speed);
 
-      if (!this.isPaused() && (payload.now - lastFrameTime >= duration)) {
+      if (!this.paused && (payload.now - lastFrameTime >= duration)) {
         if (params.randomOrder) {
           frameIndex = spriteAnimation.randomIndex();
 

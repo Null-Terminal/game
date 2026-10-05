@@ -1,3 +1,4 @@
+import { ifAlive } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
 
 import type { RenderPayload, Collision } from "#engine/game";
@@ -38,11 +39,12 @@ export abstract class MovableObject extends GameObject {
     this.#riding = null;
   }
 
+  @ifAlive
   override move(dx: number, dy: number): number {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    if (this.isPaused()) {
+    if (this.paused) {
       return CollisionStatus.NoCollision;
     }
 
@@ -88,7 +90,7 @@ export abstract class MovableObject extends GameObject {
     const stats = { ...(this.constructor as typeof MovableObject).stats };
     this.stats = stats;
 
-    this.register(
+    this.onDestroy(
       this.canvas.emitter.on(this.redrawEvent, (payload) => {
         initializer?.(payload);
 

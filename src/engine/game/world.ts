@@ -1,7 +1,7 @@
 import { cast } from "#/tstools";
 import { Disposable } from "#engine/disposable";
 
-import { RTree, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
+import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
@@ -40,10 +40,10 @@ export class World extends Disposable {
     this.game = game;
     this.options = { ...opts };
 
-    this.register(
+    this.onDestroy(
       game.canvas.emitter.on(game.canvas.events.background, () => {
         this.dynamics.clear();
-        this.interacts.clear();
+        this.dynamicInteracts.clear();
       })
     );
 
@@ -63,13 +63,18 @@ export class World extends Disposable {
     return this.objects.add(go, this.game, opts);
   }
 
-  addToWorld(go: GameObject, world: RTree) {
+  addToWorld(
+    go: GameObject,
+    world: RTree,
+    onAdd?: (...ptr: RTreeEntry) => void
+  ) {
     const ptr = go.poolPointer;
 
     const width = go.x + go.width || Infinity;
     const height = go.y + go.height || Infinity;
 
     world.insert(ptr[0], ptr[1], go.x, go.y, width, height);
+    onAdd?.(ptr[0], ptr[1], go.x, go.y, width, height);
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {

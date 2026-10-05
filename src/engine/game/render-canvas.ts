@@ -20,6 +20,10 @@ export class RenderCanvas extends Disposable {
     ui: handler<RenderPayload>(),
   });
 
+  get paused() {
+    return this.#paused;
+  }
+
   @cache
   get events() {
     return this.emitter.events;
@@ -78,10 +82,6 @@ export class RenderCanvas extends Disposable {
     this.emitter.off();
   }
 
-  isPaused() {
-    return this.#paused;
-  }
-
   pause() {
     this.#paused = true;
   }
@@ -91,7 +91,7 @@ export class RenderCanvas extends Disposable {
   }
 
   togglePause() {
-    if (this.isPaused()) {
+    if (this.paused) {
       this.resume();
 
     } else {
@@ -120,7 +120,7 @@ export class RenderCanvas extends Disposable {
     const animate = (now?: number) => {
       this.#redrawId = requestAnimationFrame(animate);
 
-      if (now == null || this.isPaused()) {
+      if (now == null || this.paused) {
         return;
       }
 

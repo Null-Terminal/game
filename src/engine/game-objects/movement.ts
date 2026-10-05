@@ -23,7 +23,7 @@ export class Movement {
 
     let pathIndex = 0;
 
-    this.#cancelMovementHandler = go.register(go.canvas.emitter.on(go.redrawEvent, ({ delta }) => {
+    this.#cancelMovementHandler = go.onDestroy(go.canvas.emitter.on(go.redrawEvent, ({ delta }) => {
       const target = path[pathIndex]!;
 
       const dx = target[0] - go.x;

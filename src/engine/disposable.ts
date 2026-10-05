@@ -1,12 +1,22 @@
 export abstract class Disposable {
-  readonly #destructors: Function[] = [];
-  #abortController = new AbortController();
-
   get abortSignal() {
     return this.#abortController.signal;
   }
 
-  register<T extends () => void>(destructor: T): T {
+  get destroyed() {
+    return this.#destroyed;
+  }
+
+  protected set destroyed(value: boolean) {
+    this.#destroyed = value;
+  }
+
+  #destroyed = false;
+
+  readonly #destructors: Function[] = [];
+  #abortController = new AbortController();
+
+  onDestroy<T extends () => void>(destructor: T): T {
     this.#destructors.push(destructor);
     return destructor;
   }
@@ -20,12 +30,18 @@ export abstract class Disposable {
       }
     });
 
-    return this.register(() => {
+    return this.onDestroy(() => {
       executed = true;
     });
   }
 
   destroy() {
+    if (this.destroyed) {
+      return;
+    }
+
+    this.destroyed = true;
+
     const destructors = this.#destructors.splice(0);
 
     for (let i = destructors.length; i--;) {

@@ -27,7 +27,7 @@ export class Camera extends Disposable {
 
     const { canvas } = this.game;
 
-    this.register(
+    this.onDestroy(
       canvas.emitter.on(canvas.events.background, () => {
         this.update();
       })

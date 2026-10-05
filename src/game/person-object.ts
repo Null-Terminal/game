@@ -63,13 +63,13 @@ export class PersonObject extends MovableObject {
   };
 
   init() {
-    this.register(this.game.camera.bindTo(this));
+    this.onDestroy(this.game.camera.bindTo(this));
     this.play(this.animations.stay);
 
     this.#initControls();
     this.initPhysics(this.#initPhysics, this.#initEffects);
 
-    this.register(
+    this.onDestroy(
       this.canvas.emitter.on(this.canvas.events.ui, ({ ctx }) => {
         this.#renderStats(ctx);
       })

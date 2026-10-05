@@ -11,6 +11,9 @@ import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/moveme
 export type OptionsOf<C extends abstract new (...args: any) => GameObject> =
   InstanceType<C>["options"];
 
+export type CreateParameters<T extends abstract new (...args: any) => GameObject = typeof GameObject> =
+  Parameters<InstanceType<T>["create"]>;
+
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
