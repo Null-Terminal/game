@@ -161,7 +161,7 @@ export class RTreeNode extends BinView {
     return true;
   }
 
-  firstChildResult<T>(ptr: Ptr32, getter: (ptr: Ptr32To16, i: number) => T | null): T | null {
+  firstChildResult<T>(ptr: Ptr32, getter: (ptr: Ptr32To16, i: number) => T | null | undefined): T | null {
     const { view } = this;
     const children = view.uints16;
 
@@ -171,7 +171,7 @@ export class RTreeNode extends BinView {
     for (let i = 0, offset = start; offset < end; offset++, i++) {
       const result = getter(view.unpackPtr(children[offset]!), i);
 
-      if (result !== null) {
+      if (result != null) {
         return result;
       }
     }

@@ -20,3 +20,5 @@ export interface RTreeView {
 export type Ptr32 = number & {};
 
 export type Ptr32To16 = number & {};
+
+export type RTreeEntry = [kind: number, index: number, ...BBoxTuple];
