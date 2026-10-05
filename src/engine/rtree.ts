@@ -109,11 +109,15 @@ export class RTree {
     pred?: RTreePredicate
   ): readonly RTreePublicNode[] {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
     return this.#searchNode(this.#root, minX, minY, maxX, maxY, null, pred) ?? EMPTY_RESULTS;
@@ -127,11 +131,15 @@ export class RTree {
     pred?: RTreePredicate
   ): RTreePublicNode | null {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
     return this.#searchFirstNode(this.#root, minX, minY, maxX, maxY, pred);
@@ -146,11 +154,15 @@ export class RTree {
     maxY: number,
   ): Ptr32 {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
     const node = this.#node;
@@ -174,6 +186,37 @@ export class RTree {
     return ptr;
   }
 
+  reindex(
+    kind: number,
+    index: number,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    nextIndex: number,
+  ): boolean {
+    if (minX > maxX) {
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
+    }
+
+    if (minY > maxY) {
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
+    }
+
+    const child = this.#findEntry(this.#root, kind, index, minX, minY, maxX, maxY);
+
+    if (child === 0) {
+      return false;
+    }
+
+    this.#node.setData(child, kind, nextIndex);
+    return true;
+  }
+
   remove(
     kind: number,
     index: number,
@@ -183,21 +226,37 @@ export class RTree {
     maxY: number,
   ): boolean {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
     const orphans: Ptr32[] = [];
-    const found = this.#removeNode(this.#root, kind, index, minX, minY, maxX, maxY, orphans);
+    const child = this.#findEntry(this.#root, kind, index, minX, minY, maxX, maxY);
+
+    if (child !== 0) {
+      const node = this.#node;
+      const leaf = node.getParent(child);
+
+      node.removeChild(leaf, child);
+
+      const movedFrom = this.#release(child, orphans);
+      const current = movedFrom !== 0 && leaf === movedFrom ? child : leaf;
+
+      this.#condense(current, orphans);
+    }
 
     for (const orphan of orphans) {
       this.#attachNode(orphan);
     }
 
-    return found;
+    return child !== 0;
   }
 
   forEach(cb: (node: RTreePublicNode) => void) {
@@ -449,7 +508,7 @@ export class RTree {
     return { index1, index2, item1, item2 };
   }
 
-  #removeNode(
+  #findEntry(
     ptr: Ptr32,
     kind: number,
     index: number,
@@ -457,16 +516,15 @@ export class RTree {
     minY: number,
     maxX: number,
     maxY: number,
-    orphans: Ptr32[],
-  ): boolean {
+  ): Ptr32 {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
-      return false;
+      return 0;
     }
 
     if (node.isLeaf(ptr)) {
-      const child = node.firstChildResult(ptr, (childPtr) => {
+      return node.firstChildResult(ptr, (childPtr) => {
         if (!node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
           return null;
         }
@@ -478,24 +536,14 @@ export class RTree {
         }
 
         return null;
-      });
-
-      if (child == null) {
-        return false;
-      }
-
-      node.removeChild(ptr, child);
-
-      const movedFrom = this.#release(child, orphans);
-      const leaf = movedFrom !== 0 && ptr === movedFrom ? child : ptr;
-
-      this.#condense(leaf, orphans);
-      return true;
+      }) ?? 0;
     }
 
     return node.firstChildResult(ptr, (childPtr) => {
-      return this.#removeNode(childPtr, kind, index, minX, minY, maxX, maxY, orphans) ? true : null;
-    }) === true;
+      const found = this.#findEntry(childPtr, kind, index, minX, minY, maxX, maxY);
+
+      return found !== 0 ? found : null;
+    }) ?? 0;
   }
 
   #condense(ptr: Ptr32, orphans: Ptr32[]) {
