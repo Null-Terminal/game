@@ -6,7 +6,7 @@ import type { ConcreteGameObjectConstructor  } from "#engine/game-object-pool";
 import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
 
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { MovePath, MoveAlongPathOptions } from "#engine/game-objects/movement/types";
+import type { MovementOptions } from "#engine/game-objects/movement/types";
 
 export type OptionsOf<C extends abstract new (...args: any) => GameObject> =
   InstanceType<C>["options"];
@@ -31,8 +31,9 @@ export interface Effects extends FrameEffects {
 }
 
 export interface DefaultGameObjectOptions {
+  name?: string;
   show?: string;
-  movement?: { path: MovePath } & MoveAlongPathOptions;
+  movement?: MovementOptions;
 
   accept?: Accept | null;
   acceptor?: GameObject | null;

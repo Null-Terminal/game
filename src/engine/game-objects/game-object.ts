@@ -234,7 +234,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }
 
     if (opts.movement != null) {
-      this.movement.moveAlongPath(opts.movement.path, opts.movement);
+      this.movement.follow(opts.movement);
     }
 
     return opts;
