@@ -137,7 +137,13 @@ export class World extends Disposable {
   }
 
   #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number): RTreePredicate {
-    return ({ bbox }) => maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+    return ({ bbox, pointer: [kind, i] }) => {
+      if (!(maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3])) {
+        return false;
+      }
+
+      return this.objects.get(kind, i)?.destroyed === false;
+    };
   }
 
   #collisionMapper = ({ bbox, pointer: [kind, i] }: RTreePublicNode): Collision => {
