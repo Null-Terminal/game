@@ -13,8 +13,8 @@ export class RenderCanvas extends Disposable {
   readonly emitter = new EventEmitter({
     background: handler<RenderPayload>(),
     static: handler<RenderPayload>(),
-    dynamic: handler<RenderPayload>(),
-    interact: handler<RenderPayload>(),
+    dynamic: handler<RenderPayload>({ withFlush: true }),
+    interact: handler<RenderPayload>({ withFlush: true }),
     main: handler<RenderPayload>(),
     overlay: handler<RenderPayload>(),
     ui: handler<RenderPayload>(),
