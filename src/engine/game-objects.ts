@@ -7,7 +7,7 @@ export { BackgroundObject } from "#engine/game-objects/background-object";
 export { StaticObject } from "#engine/game-objects/static-object";
 
 export { DynamicObject } from "#engine/game-objects/dynamic-object";
-export { MovableObject, CollisionStatus } from "#engine/game-objects/movable-object";
+export { MovableObject, CollisionStatus, MovableObjectMotion } from "#engine/game-objects/movable-object";
 
 export { StaticInteractObject } from "#engine/game-objects/static-interact-object";
 export { DynamicInteractObject } from "#engine/game-objects/dynamic-interact-object";

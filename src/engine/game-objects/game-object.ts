@@ -237,6 +237,8 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       this.movement.follow(opts.movement);
     }
 
+    this.mountFlush();
+
     return opts;
   }
 
@@ -246,36 +248,11 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   }
 
   @ifAlive
-  move(dx: number, dy: number) {
-    this.prevX = this.x;
-    this.prevY = this.y;
-
-    if (this.paused) {
-      return;
-    }
-
-    this.x = this.x + dx;
-    this.y = this.y + dy;
-  }
-
-  @ifAlive
-  pause() {
-    this.#paused = true;
-  }
-
-  @ifAlive
-  resume() {
-    this.#paused = false;
-  }
-
-  @ifAlive
-  togglePause() {
-    if (this.paused) {
-      this.resume();
-
-    } else {
-      this.pause();
-    }
+  @ifShadowed(0)
+  move(dx: number, dy: number): number {
+    const status = this.kinematicMove(dx, dy);
+    this.onMove(status);
+    return status;
   }
 
   @ifAlive
@@ -409,7 +386,46 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }));
   }
 
+  protected bindFlush() {}
+
+  protected mountFlush() {
+    if (this.bindFlush === GameObject.prototype.bindFlush) {
+      return;
+    }
+
+    const { flush } = this.redrawEvent;
+
+    if (flush == null) {
+      return;
+    }
+
+    this.onDestroy(this.canvas.emitter.on(flush, () => {
+      if (this.destroyed || this.status.shadowed) {
+        return;
+      }
+
+      this.bindFlush();
+    }));
+  }
+
+  protected kinematicMove(dx: number, dy: number): number {
+    this.prevX = this.x;
+    this.prevY = this.y;
+
+    if (!this.status.paused) {
+      this.x = this.x + dx;
+      this.y = this.y + dy;
+    }
+
+    // У подклассов коды могут отличаться
+    return 0;
+  }
+
   protected renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
     defaultRender(payload);
+  }
+
+  protected onMove(_status: number) {
+    // Ничего не делает по умолчанию
   }
 }

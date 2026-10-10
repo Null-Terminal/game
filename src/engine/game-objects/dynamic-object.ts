@@ -1,4 +1,3 @@
-import { ifAlive } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
 
 export abstract class DynamicObject extends GameObject {
@@ -6,12 +5,7 @@ export abstract class DynamicObject extends GameObject {
     return this.canvas.events.dynamic;
   }
 
-  @ifAlive
-  override move(dx: number, dy: number) {
-    super.move(dx, dy);
-
-    if (!this.destroyed) {
-      this.world.addToWorld(this, this.world.dynamics);
-    }
+  protected override bindFlush() {
+    this.world.addToWorld(this, this.world.dynamics);
   }
 }

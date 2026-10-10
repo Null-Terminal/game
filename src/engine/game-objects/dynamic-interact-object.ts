@@ -1,4 +1,3 @@
-import { ifAlive } from "#engine/game-objects/decorators";
 import { MovableObject } from "#engine/game-objects/movable-object";
 
 export abstract class DynamicInteractObject extends MovableObject {
@@ -10,14 +9,7 @@ export abstract class DynamicInteractObject extends MovableObject {
     this.initPhysics();
   }
 
-  @ifAlive
-  override move(dx: number, dy: number): number {
-    const moveStatus = super.move(dx, dy);
-
-    if (!this.destroyed) {
-      this.world.addToWorld(this, this.world.dynamicInteracts);
-    }
-
-    return moveStatus;
+  protected override bindFlush() {
+    this.world.addToWorld(this, this.world.dynamicInteracts);
   }
 }
