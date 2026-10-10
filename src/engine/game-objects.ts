@@ -1,6 +1,6 @@
 export type { RenderPayload } from "#engine/game";
 
-export { ifAlive } from "#engine/game-objects/decorators";
+export { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
 export { GameObject } from "#engine/game-objects/game-object";
 
 export { BackgroundObject } from "#engine/game-objects/background-object";

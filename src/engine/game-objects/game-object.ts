@@ -5,9 +5,11 @@ import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
-import { ifAlive } from "#engine/game-objects/decorators";
+import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
+
 import { Movement } from "#engine/game-objects/movement";
+import { GameObjectStatus } from "#engine/game-objects/game-object-status";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
 import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
@@ -64,12 +66,11 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   readonly movement = new Movement(this);
 
+  statusValue = GameObjectStatus.State.Active;
+  readonly status = new GameObjectStatus(this);
+
   get name(): string {
     return this.constructor.name;
-  }
-
-  get paused() {
-    return this.#paused;
   }
 
   get canvas() {
@@ -108,8 +109,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.#height = value;
   }
 
-  #paused = false;
-
   #width = 0;
   #height = 0;
 
@@ -131,7 +130,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
     super.destroy();
 
-    this.#paused = false;
+    this.status.reset();
     this.#nowPlaying = null;
   }
 
@@ -145,6 +144,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }
 
     this.destroyed = false;
+    this.status.reset();
 
     this.game = game;
     this.poolPointer = poolPointer;
@@ -340,6 +340,10 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     };
 
     this.#cancelRedrawHandler = this.onDestroy(emitter.on(this.redrawEvent, (payload) => {
+      if (this.status.shadowed) {
+        return;
+      }
+
       const sprite = spriteAnimation.at(frameIndex)!;
 
       const x = this.x - camera.x;
@@ -373,7 +377,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
       duration /= (params.speed * effects.speed);
 
-      if (!this.paused && (payload.now - lastFrameTime >= duration)) {
+      if (!this.status.paused && (payload.now - lastFrameTime >= duration)) {
         if (params.randomOrder) {
           frameIndex = spriteAnimation.randomIndex();
 

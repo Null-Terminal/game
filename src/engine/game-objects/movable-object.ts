@@ -44,7 +44,7 @@ export abstract class MovableObject extends GameObject {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    if (this.paused) {
+    if (this.status.paused) {
       return CollisionStatus.NoCollision;
     }
 

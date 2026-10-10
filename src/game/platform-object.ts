@@ -19,7 +19,7 @@ export class PlatformObject extends DynamicObject {
   @ifAlive
   override visit(go: GameObject) {
     if (go instanceof UsefulObject && go.nowPlaying === go.animations.trigger) {
-      this.togglePause();
+      this.status.togglePause();
     }
   }
 }
