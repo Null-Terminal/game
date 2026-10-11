@@ -16,13 +16,15 @@ export interface DefaultBackgroundObjectOptions extends DefaultGameObjectOptions
   stretch?: AxisFlags;
   static?: AxisFlags;
   scrollFactor?: ScrollFactor;
+  overlay?: boolean;
 }
 
 export abstract class BackgroundObject<
   T extends GameObjectOptions<DefaultBackgroundObjectOptions> = GameObjectOptions<DefaultBackgroundObjectOptions>
 > extends GameObject<T> {
   override get redrawEvent() {
-    return this.canvas.events.background;
+    const { background, overlay } = this.canvas.events;
+    return this.options?.overlay ? overlay : background;
   }
 
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
