@@ -17,12 +17,13 @@ import type { OptionsOf, Accept, Refs, GameObjectOptions, Effects } from "#engin
 
 export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
   static refs<const T extends Accept>(entries: {
-    [I in keyof T]: T[I] extends [
-        infer C extends new (...args: any[]) => GameObject,
-        ...any
-      ]
-      ? [C, OptionsOf<C>?]
-      : T[I]
+    [I in keyof T]: T[I] extends (options: infer O) => infer R
+      ? R extends readonly [infer C extends new (...args: any[]) => GameObject, ...any]
+        ? (options: O) => readonly [C, OptionsOf<C>?]
+        : T[I]
+      : T[I] extends readonly [infer C extends new (...args: any[]) => GameObject, ...any]
+        ? readonly [C, OptionsOf<C>?]
+        : T[I]
   }): T {
     return entries as T;
   }
@@ -204,17 +205,26 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       });
     };
 
-    Object.entries((this.constructor as typeof GameObject).with).forEach(([name, [go, opts]]) => {
+    const withMap = (this.constructor as typeof GameObject).with as Accept<T>;
+
+    Object.entries(withMap).forEach(([name, entry]) => {
+      const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
       const resolvedOpts = { ...this.options, x: 0, y: 0, ...opts, acceptor: this };
 
       if (opts != null) {
-        if ("bbox" in opts && "bbox" in resolvedOpts) {
+        // Бесконечный край не сдвигает детей: -Infinity + x остаётся -Infinity.
+        const originX = Number.isFinite(this.x) ? this.x : 0;
+        const originY = Number.isFinite(this.y) ? this.y : 0;
+
+        if ("bbox" in opts && opts.bbox != null && "bbox" in resolvedOpts) {
           const { bbox } = opts;
-          resolvedOpts.bbox = [bbox[0] + this.x, bbox[1] + this.y, bbox[2] + this.x, bbox[3] + this.y];
+          resolvedOpts.bbox = [bbox[0] + originX, bbox[1] + originY, bbox[2] + originX, bbox[3] + originY];
 
         } else {
-          resolvedOpts.x += this.x;
-          resolvedOpts.y += this.y;
+          // Коробка родителя не наследуется: bbox ребёнка задаёт только его запись.
+          delete resolvedOpts.bbox;
+          resolvedOpts.x += originX;
+          resolvedOpts.y += originY;
         }
       }
 
@@ -222,7 +232,10 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     });
 
     if (opts.accept != null) {
-      Object.entries(opts.accept).forEach(([name, [go, opts]]) => {
+      const acceptMap = opts.accept as Accept<T>;
+
+      Object.entries(acceptMap).forEach(([name, entry]) => {
+        const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
         createRef(name, go, { ...opts, acceptor: this });
       });
     }

@@ -17,13 +17,19 @@ export type CreateParameters<T extends abstract new (...args: any) => GameObject
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
-export type Accept = Record<string, [
+export type WithEntry = readonly [
   ConcreteGameObjectConstructor<typeof GameObject>,
-  Tb.IntersectionOf<GameObjectOptions> & Record<string, unknown>
-]>;
+  (Tb.IntersectionOf<GameObjectOptions> & Record<string, unknown>)?
+];
+
+export type Accept<T = never> = Record<string, WithEntry | ((opts: T) => WithEntry)>;
+
+type ResolveWith<T> = T extends (...args: never[]) => infer R ? R : T;
 
 export type Refs<T extends Accept> = {
-  [K in keyof T]?: InstanceType<T[K][0]> | null;
+  [K in keyof T]?: ResolveWith<T[K]> extends readonly [infer C extends abstract new (...args: any) => GameObject, ...any]
+    ? InstanceType<C> | null
+    : never;
 };
 
 export interface Effects extends FrameEffects {

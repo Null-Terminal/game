@@ -3,7 +3,7 @@ import { alias, tuple, f32 } from "#/bindata";
 import { BinView } from "#engine/rtree/binview";
 import type { Ptr32 } from "#engine/rtree/types";
 
-export type BBoxTuple = [minX: number, minY: number, maxX: number, maxY: number];
+export type BBoxTuple = readonly [minX: number, minY: number, maxX: number, maxY: number];
 
 export const bbox = tuple("bbox", [
   alias("minX", f32),
