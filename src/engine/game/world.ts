@@ -12,7 +12,7 @@ import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/ty
 export * from "#engine/game/world/types";
 
 export class World extends Disposable {
-  static of<const T extends WorldObject[]>(entries: {
+  static of<const T extends [new (...args: any[]) => GameObject, object?][]>(entries: {
     [I in keyof T]: T[I] extends [
         infer C extends new (...args: any[]) => GameObject,
         ...any
