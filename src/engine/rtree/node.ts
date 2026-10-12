@@ -3,6 +3,7 @@ import { alias, array, tuple, usize2, u8 } from "#/bindata";
 import { BinView } from "#engine/rtree/binview";
 
 import { bbox, BBox, type BBoxTuple } from "#engine/rtree/bbox";
+import { calcBBoxArea } from "#engine/rtree/utils";
 import { data, Data, type DataPointer } from "#engine/rtree/data";
 
 import type { RTreeView, Ptr32, Ptr32To16 } from "#engine/rtree/types";
@@ -261,7 +262,7 @@ export class RTreeNode extends BinView {
     const unionMaxX = Math.max(bbox.getMaxX(bboxPtr1), bbox.getMaxX(bboxPtr2));
     const unionMaxY = Math.max(bbox.getMaxY(bboxPtr1), bbox.getMaxY(bboxPtr2));
 
-    return (unionMaxX - unionMinX) * (unionMaxY - unionMinY);
+    return calcBBoxArea(unionMinX, unionMinY, unionMaxX, unionMaxY);
   }
 
   #clearMemory(ptr: Ptr32) {

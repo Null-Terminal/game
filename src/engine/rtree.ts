@@ -1,6 +1,7 @@
 import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
+import { nanToInfinity } from "#engine/rtree/utils";
 import type { RTreeEntry, RTreePublicNode, RTreePredicate, RTreeView, Ptr32 } from "#engine/rtree/types";
 
 export type { RTreeEntry, RTreePublicNode, RTreePredicate };
@@ -380,7 +381,8 @@ export class RTree {
       const enlargement = node.calcBBoxEnlargement(childPtr, minX, minY, maxX, maxY);
       const area = node.calcBBoxArea(childPtr);
 
-      if (enlargement < minEnlargement) {
+      // Стартовый minEnlargement уже Infinity, поэтому Infinity < Infinity не выбирает ветку
+      if (bestChildPtr === 0 || enlargement < minEnlargement) {
         minEnlargement = enlargement;
         minArea = area;
         bestChildPtr = childPtr;
@@ -493,7 +495,7 @@ export class RTree {
         const area2 = node.calcBBoxArea(child2Ptr);
 
         const unionArea = node.calcUnionBBoxArea(child1Ptr, child2Ptr);
-        const waste = unionArea - area1 - area2;
+        const waste = nanToInfinity(unionArea - area1 - area2);
 
         if (waste > maxWaste) {
           maxWaste = waste;

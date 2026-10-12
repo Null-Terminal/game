@@ -2,6 +2,7 @@ import { alias, tuple, f32 } from "#/bindata";
 
 import { BinView } from "#engine/rtree/binview";
 import type { Ptr32 } from "#engine/rtree/types";
+import { calcBBoxArea, nanToInfinity } from "#engine/rtree/utils";
 
 export type BBoxTuple = readonly [minX: number, minY: number, maxX: number, maxY: number];
 
@@ -81,12 +82,12 @@ export class BBox extends BinView {
     const newMaxY = Math.max(this.getMaxY(ptr), maxY);
 
     // Площадь bbox после добавления
-    const newArea = (newMaxX - newMinX) * (newMaxY - newMinY);
+    const newArea = calcBBoxArea(newMinX, newMinY, newMaxX, newMaxY);
 
-    return newArea - this.calcArea(ptr);
+    return nanToInfinity(newArea - this.calcArea(ptr));
   }
 
   calcArea(ptr: Ptr32): number {
-    return (this.getMaxX(ptr) - this.getMinX(ptr)) * (this.getMaxY(ptr) - this.getMinY(ptr));
+    return calcBBoxArea(this.getMinX(ptr), this.getMinY(ptr), this.getMaxX(ptr), this.getMaxY(ptr));
   }
 }
