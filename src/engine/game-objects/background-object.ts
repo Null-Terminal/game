@@ -12,6 +12,8 @@ export type Axis = "w" | "h";
 export type AxisFlags = "" | Axis | `${Axis}${Axis}`;
 export type ScrollFactor = [both: number] | [x: number, y: number];
 
+const FULL_SPAN = [-Infinity, Infinity] as const;
+
 export interface DefaultBackgroundObjectOptions extends DefaultGameObjectOptions {
   stretch?: AxisFlags;
   static?: AxisFlags;
@@ -118,9 +120,8 @@ export abstract class BackgroundObject<
     const toScreenY = (worldY: number) => resolveY(worldY - scrollY) + h;
 
     // Границы на холсте, куда должна вписываться заливка (без bbox — весь экран)
-    const full = [-Infinity, Infinity] as const;
-    const [spanX1, spanX2] = bbox == null ? full : this.#selectSpan(minX, maxX, toScreenX);
-    const [spanY1, spanY2] = bbox == null ? full : this.#selectSpan(maxY, minY, toScreenY);
+    const [spanX1, spanX2] = bbox == null ? FULL_SPAN : this.#selectSpan(minX, maxX, toScreenX);
+    const [spanY1, spanY2] = bbox == null ? FULL_SPAN : this.#selectSpan(maxY, minY, toScreenY);
 
     const originX = Number.isFinite(x) ? x : this.#selectPatternStart(minX, maxX, toScreenX, w);
     const originY = Number.isFinite(y) ? resolveY(y) : toScreenY(this.#selectFiniteEdge(minY, maxY)) - h;
