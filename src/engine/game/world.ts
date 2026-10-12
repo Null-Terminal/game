@@ -23,7 +23,7 @@ export class World extends Disposable {
     return entries as T;
   }
 
-  readonly game: Game;
+  game!: Game;
   readonly options: Required<WorldOptions>;
 
   readonly statics = new RTree();
@@ -34,11 +34,20 @@ export class World extends Disposable {
 
   readonly objects = new GameObjectPool();
 
-  constructor(game: Game, opts: WorldOptions) {
-    super();
+  #mounted = false;
 
-    this.game = game;
+  constructor(opts: WorldOptions) {
+    super();
     this.options = { ...opts };
+  }
+
+  mount(game: Game) {
+    if (this.#mounted) {
+      throw new Error(`${this.constructor.name}.mount: already mounted`);
+    }
+
+    this.#mounted = true;
+    this.game = game;
 
     this.onDestroy(
       game.canvas.emitter.on(game.canvas.events.background, () => {
@@ -48,7 +57,7 @@ export class World extends Disposable {
     );
 
     this.nextTick(() => {
-      for (const elem of opts.objects) {
+      for (const elem of this.options.objects) {
         this.createObject(elem[0], elem[1]);
       }
     });
