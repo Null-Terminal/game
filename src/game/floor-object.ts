@@ -14,14 +14,21 @@ export class FloorObject extends GameObject<FloorObjectOptions> {
       const [x1, y1, x2, y2] = bbox;
 
       const height = fillHeight(show);
+      const originX = Number.isFinite(x1) ? x1 : 0;
       const originY = Number.isFinite(y1) ? y1 : 0;
-      const y = y2 - originY - height;
+      const finiteY = Number.isFinite(y1) && Number.isFinite(y2);
 
-      if (Number.isFinite(x1) && Number.isFinite(x2)) {
-        return [FillerObject, { bbox: [0, y, x2 - x1, y + height] }] as const;
+      // Оба края по X бесконечны, а по Y плита конечная — тайлим ширину, спрайт висит от верха.
+      if (!Number.isFinite(x1) && !Number.isFinite(x2) && finiteY) {
+        return [FillerObject, { stretch: "w", y: y2 - originY - height }] as const;
       }
 
-      return [FillerObject, { stretch: "w", y }] as const;
+      const top = finiteY ? y2 - originY - height : y1 - originY;
+      const bottom = finiteY ? top + height : y2 - originY;
+
+      return [FillerObject, {
+        bbox: [x1 - originX, top, x2 - originX, bottom]
+      }] as const;
 
       function fillHeight(show: string | undefined): number {
         const animations = FillerObject.animations;
@@ -36,13 +43,12 @@ export class FloorObject extends GameObject<FloorObjectOptions> {
 
     bed: ({ bbox }: FloorObjectOptions) => {
       const [x1, y1, x2, y2] = bbox;
-      const height = y2 - y1;
+      const originX = Number.isFinite(x1) ? x1 : 0;
+      const originY = Number.isFinite(y1) ? y1 : 0;
 
-      if (Number.isFinite(x1) && Number.isFinite(x2)) {
-        return [WallObject, { bbox: [0, 0, x2 - x1, height] }] as const;
-      }
-
-      return [WallObject, { bbox: [-Infinity, 0, Infinity, height] }] as const;
+      return [WallObject, {
+        bbox: [x1 - originX, y1 - originY, x2 - originX, y2 - originY]
+      }] as const;
     }
   });
 

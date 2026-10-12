@@ -12,32 +12,24 @@ export class WaterObject extends StaticInteractObject<WaterObjectOptions> {
   static override readonly with = GameObject.refs({
     fill: ({ bbox }: WaterObjectOptions) => {
       const [x1, y1, x2, y2] = bbox;
-      const depth = y2 - y1;
-
-      if (Number.isFinite(x1) && Number.isFinite(x2)) {
-        return [FillerObject, {
-          show: "water",
-          overlay: true,
-          bbox: [0, 0, x2 - x1, depth]
-        }] as const;
-      }
+      const originX = Number.isFinite(x1) ? x1 : 0;
+      const originY = Number.isFinite(y1) ? y1 : 0;
 
       return [FillerObject, {
         show: "water",
-        stretch: "w",
         overlay: true,
-        bbox: [0, 0, 1, depth]
+        bbox: [x1 - originX, y1 - originY, x2 - originX, y2 - originY]
       }] as const;
     },
 
     bed: ({ bbox }: WaterObjectOptions) => {
-      const [x1, , x2] = bbox;
+      const [x1, y1, x2] = bbox;
+      const originX = Number.isFinite(x1) ? x1 : 0;
+      const originY = Number.isFinite(y1) ? y1 : 0;
 
-      if (Number.isFinite(x1) && Number.isFinite(x2)) {
-        return [WallObject, { bbox: [0, 0, x2 - x1, 1] }] as const;
-      }
-
-      return [WallObject, { bbox: [-Infinity, 0, Infinity, 1] }] as const;
+      return [WallObject, {
+        bbox: [x1 - originX, y1 - originY, x2 - originX, y1 - originY + 1]
+      }] as const;
     }
   });
 
