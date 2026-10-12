@@ -18,7 +18,6 @@ export class FloorObject extends GameObject<FloorObjectOptions> {
       const originY = Number.isFinite(y1) ? y1 : 0;
       const finiteY = Number.isFinite(y1) && Number.isFinite(y2);
 
-      // Оба края по X бесконечны, а по Y плита конечная — тайлим ширину, спрайт висит от верха.
       if (!Number.isFinite(x1) && !Number.isFinite(x2) && finiteY) {
         return [FillerObject, { stretch: "w", y: y2 - originY - height }] as const;
       }
