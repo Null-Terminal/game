@@ -7,7 +7,7 @@ export interface GameObjectStore {
   buffer: GameObject[]
 }
 
-export type ConcreteGameObjectConstructor<T extends typeof GameObject> = {
+export type KindedGameObjectCtor<T extends typeof GameObject> = {
   new (...args: any[]): InstanceType<T>;
   get kind(): number;
 };

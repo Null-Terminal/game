@@ -2,35 +2,44 @@ import type { Handlers } from "#/event-emitter";
 import type { BBoxTuple } from "#engine/rtree";
 
 import type { RenderPayload } from "#engine/game";
-import type { ConcreteGameObjectConstructor  } from "#engine/game-object-pool";
+import type { KindedGameObjectCtor } from "#engine/game-object-pool";
 import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { MovementOptions } from "#engine/game-objects/movement/types";
 
-export type OptionsOf<C extends abstract new (...args: any) => GameObject> =
-  InstanceType<C>["options"];
+export type AbstractGameObjectCtor = abstract new (...args: any[]) => GameObject;
 
-export type CreateParameters<T extends abstract new (...args: any) => GameObject = typeof GameObject> =
+export type CreateParameters<T extends AbstractGameObjectCtor = typeof GameObject> =
   Parameters<InstanceType<T>["create"]>;
+
+export type CreateOptionsOf<C extends AbstractGameObjectCtor> =
+  NonNullable<CreateParameters<C>[2]>;
 
 export type Animations = Record<string, LoadedAnimation>;
 export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
 export type WithEntry = readonly [
-  ConcreteGameObjectConstructor<typeof GameObject>,
+  KindedGameObjectCtor<typeof GameObject>,
   (Tb.IntersectionOf<GameObjectOptions> & Record<string, unknown>)?
 ];
 
-export type Accept<T = never> = Record<string, WithEntry | ((opts: T) => WithEntry)>;
+export type WithMap<T = never> = Record<string, WithEntry | ((opts: T) => WithEntry)>;
 
 type ResolveWith<T> = T extends (...args: never[]) => infer R ? R : T;
 
-export type Refs<T extends Accept> = {
-  [K in keyof T]?: ResolveWith<T[K]> extends readonly [infer C extends abstract new (...args: any) => GameObject, ...any]
+export type Refs<T extends WithMap> = {
+  [K in keyof T]?: ResolveWith<T[K]> extends readonly [infer C extends AbstractGameObjectCtor, ...any]
     ? InstanceType<C> | null
     : never;
 };
+
+export type RefOf<O, E> =
+  E extends ((options: O) => infer _ extends readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
+    ? (options: O) => readonly [C, CreateOptionsOf<C>?]
+    : E extends (readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
+      ? readonly [C, CreateOptionsOf<C>?]
+      : E;
 
 export interface Effects extends FrameEffects {
   speed?: number;
@@ -41,7 +50,7 @@ export interface DefaultGameObjectOptions {
   show?: string;
   movement?: MovementOptions;
 
-  accept?: Accept | null;
+  accept?: WithMap | null;
   acceptor?: GameObject | null;
 
   effects?: Effects;

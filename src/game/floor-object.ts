@@ -9,8 +9,8 @@ import { FillerObject } from "#game/filler-object";
 type FloorObjectOptions = DefaultGameObjectOptions & { bbox: BBoxTuple };
 
 export class FloorObject extends GameObject<FloorObjectOptions> {
-  static override readonly with = GameObject.refs({
-    fill: ({ show, bbox }: FloorObjectOptions) => {
+  static override readonly with = GameObject.refs<FloorObjectOptions>()({
+    fill: ({ show, bbox }) => {
       const [x1, y1, x2, y2] = bbox;
 
       const height = fillHeight(show);
@@ -40,7 +40,7 @@ export class FloorObject extends GameObject<FloorObjectOptions> {
       }
     },
 
-    bed: ({ bbox }: FloorObjectOptions) => {
+    bed: ({ bbox }) => {
       const [x1, y1, x2, y2] = bbox;
       const originX = Number.isFinite(x1) ? x1 : 0;
       const originY = Number.isFinite(y1) ? y1 : 0;

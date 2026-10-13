@@ -2,24 +2,23 @@ export type MovePoint = [x: number, y: number];
 export type MovementOptions = PathMovement | FunctionMovement | SineMovement | CircleMovement;
 
 export type MoveSpeed = number | ((elapsed: number) => number);
-export interface MoveSpeedOptions {
+
+export interface SpeedOptions {
   speed?: MoveSpeed;
 }
 
-export interface MoveAlongPathOptions extends MoveSpeedOptions {
+export type MovePath = MovePoint[];
+
+export interface PathMovement extends SpeedOptions {
+  path: MovePath;
   tolerance?: number;
 }
 
-export type MovePath = MovePoint[];
-export interface PathMovement extends MoveAlongPathOptions {
-  path: MovePath;
-}
-
 export interface SineMovement {
-  sine: SineMovementOptions;
+  sine: Sine;
 }
 
-export interface SineMovementOptions extends MoveSpeedOptions {
+export interface Sine extends SpeedOptions {
   // Ось, вдоль которой объект проходит length и возвращается назад.
   // По другой оси смещение равно синусу этого прохода, умноженному на амплитуду.
   // Если "x" — проход по горизонтали, волна вверх и вниз, а если "y" — проход по вертикали, волна влево и вправо.
@@ -31,16 +30,16 @@ export interface SineMovementOptions extends MoveSpeedOptions {
 }
 
 export interface CircleMovement {
-  circle: CircleMovementOptions;
+  circle: Circle;
 }
 
-export interface CircleMovementOptions extends MoveSpeedOptions {
+export interface Circle extends SpeedOptions {
   center: MovePoint;
   radius: number;
   period: number;
 }
 
-export interface FunctionMovement extends MoveSpeedOptions {
+export interface FunctionMovement extends SpeedOptions {
   // Значение distance зависит от того, задан ли параметр speed.
   // Без speed — это секунды с запуска движения (пауза их не увеличивает),
   // а функция по этому времени сама возвращает точку, в которую нужно переместить объект.

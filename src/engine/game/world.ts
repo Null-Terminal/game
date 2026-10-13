@@ -5,7 +5,7 @@ import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } fro
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
-import type { GameObject, OptionsOf } from "#engine/game-objects";
+import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
 
 import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
 
@@ -17,7 +17,7 @@ export class World extends Disposable {
         infer C extends new (...args: any[]) => GameObject,
         ...any
       ]
-      ? [C, OptionsOf<C>?]
+      ? [C, CreateOptionsOf<C>?]
       : T[I]
   }): T {
     return entries as T;

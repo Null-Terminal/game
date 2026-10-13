@@ -9,8 +9,8 @@ import { WallObject } from "#game/wall-object";
 type WaterObjectOptions = DefaultGameObjectOptions & { bbox: BBoxTuple };
 
 export class WaterObject extends StaticInteractObject<WaterObjectOptions> {
-  static override readonly with = GameObject.refs({
-    fill: ({ bbox }: WaterObjectOptions) => {
+  static override readonly with = GameObject.refs<WaterObjectOptions>()({
+    fill: ({ bbox }) => {
       const [x1, y1, x2, y2] = bbox;
       const originX = Number.isFinite(x1) ? x1 : 0;
       const originY = Number.isFinite(y1) ? y1 : 0;
@@ -22,7 +22,7 @@ export class WaterObject extends StaticInteractObject<WaterObjectOptions> {
       }] as const;
     },
 
-    bed: ({ bbox }: WaterObjectOptions) => {
+    bed: ({ bbox }) => {
       const [x1, y1, x2] = bbox;
       const originX = Number.isFinite(x1) ? x1 : 0;
       const originY = Number.isFinite(y1) ? y1 : 0;

@@ -13,22 +13,14 @@ import { GameObjectStatus } from "#engine/game-objects/game-object-status";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
 import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
-import type { OptionsOf, Accept, Refs, GameObjectOptions, Effects } from "#engine/game-objects/types";
+import type { GameObjectOptions, Effects, WithMap, Refs, RefOf } from "#engine/game-objects/types";
 
 export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
-  static refs<const T extends Accept>(entries: {
-    [I in keyof T]: T[I] extends (options: infer O) => infer R
-      ? R extends readonly [infer C extends new (...args: any[]) => GameObject, ...any]
-        ? (options: O) => readonly [C, OptionsOf<C>?]
-        : T[I]
-      : T[I] extends readonly [infer C extends new (...args: any[]) => GameObject, ...any]
-        ? readonly [C, OptionsOf<C>?]
-        : T[I]
-  }): T {
-    return entries as T;
+  static refs<O extends GameObjectOptions>() {
+    return <const E extends WithMap<O>>(entries: { [I in keyof E]: RefOf<O, E[I]> }): E => entries as E;
   }
 
-  static readonly with: Accept = {};
+  static readonly with: WithMap = {};
 
   readonly refs: Refs<(typeof GameObject)["with"]> = {};
 
@@ -205,7 +197,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       });
     };
 
-    const withMap = (this.constructor as typeof GameObject).with as Accept<T>;
+    const withMap = (this.constructor as typeof GameObject).with as WithMap<T>;
 
     Object.entries(withMap).forEach(([name, entry]) => {
       const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
@@ -232,7 +224,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     });
 
     if (opts.accept != null) {
-      const acceptMap = opts.accept as Accept<T>;
+      const acceptMap = opts.accept as WithMap<T>;
 
       Object.entries(acceptMap).forEach(([name, entry]) => {
         const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;

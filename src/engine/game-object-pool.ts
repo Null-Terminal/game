@@ -1,5 +1,5 @@
 import type { CreateParameters, GameObject } from "#engine/game-objects";
-import type { GameObjectStore, ConcreteGameObjectConstructor, PoolPointer } from "#engine/game-object-pool/types";
+import type { GameObjectStore, KindedGameObjectCtor, PoolPointer } from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
 
@@ -20,7 +20,7 @@ export class GameObjectPool {
   }
 
   add<T extends typeof GameObject, A extends CreateParameters<T>>(
-    GObject: ConcreteGameObjectConstructor<T>,
+    GObject: KindedGameObjectCtor<T>,
     game: A[0],
     opts: A[2]
   ): PoolPointer {

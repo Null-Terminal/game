@@ -1,16 +1,7 @@
 import { GameObject } from "#engine/game-objects/game-object";
 
-import type {
-  MovePath,
-  MovePoint,
-
-  MoveAlongPathOptions,
-  MoveSpeed,
-  MovementOptions,
-
-  SineMovementOptions,
-  CircleMovementOptions
-} from "#engine/game-objects/movement/types";
+import type { MovementOptions, PathMovement } from "#engine/game-objects/movement/types";
+import type { MovePoint, MoveSpeed, MovePath, Sine, Circle } from "#engine/game-objects/movement/types";
 
 export type * from "#engine/game-objects/movement/types";
 
@@ -50,7 +41,7 @@ export class Movement {
     throw new TypeError(`${this.constructor.name}.follow: unknown movement`);
   }
 
-  #followPath(path: MovePath, { tolerance = 5, speed = 100 }: MoveAlongPathOptions) {
+  #followPath(path: MovePath, { tolerance = 5, speed = 100 }: Pick<PathMovement, "tolerance" | "speed">) {
     if (path.length === 0) {
       return;
     }
@@ -124,7 +115,7 @@ export class Movement {
     return typeof speed === "function" ? speed(elapsed) : speed;
   }
 
-  #followSine({ axis = "x", amplitude, length, period, speed, origin }: SineMovementOptions) {
+  #followSine({ axis = "x", amplitude, length, period, speed, origin }: Sine) {
     if (period <= 0) {
       return;
     }
@@ -145,7 +136,7 @@ export class Movement {
     }, speed);
   }
 
-  #followCircle({ center, radius, period, speed }: CircleMovementOptions) {
+  #followCircle({ center, radius, period, speed }: Circle) {
     if (period <= 0) {
       return;
     }

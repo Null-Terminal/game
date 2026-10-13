@@ -1,10 +1,10 @@
 import type { BBoxTuple } from "#engine/rtree/bbox";
-import type { CreateParameters, GameObject } from "#engine/game-objects";
-import type { ConcreteGameObjectConstructor  } from "#engine/game-object-pool";
+import type { CreateOptionsOf, GameObject } from "#engine/game-objects";
+import type { KindedGameObjectCtor } from "#engine/game-object-pool";
 
 export type WorldObject<T extends typeof GameObject = typeof GameObject> = [
-  GameObject: ConcreteGameObjectConstructor<T>,
-  CreateParameters<T>[2]?
+  GameObject: KindedGameObjectCtor<T>,
+  CreateOptionsOf<T>?
 ];
 
 export type WorldObjects = WorldObject[];
