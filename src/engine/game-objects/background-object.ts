@@ -12,14 +12,14 @@ export type Axis = "w" | "h";
 export type AxisFlags = "" | Axis | `${Axis}${Axis}`;
 export type ScrollFactor = [both: number] | [x: number, y: number];
 
-const FULL_SPAN = [-Infinity, Infinity] as const;
-
 export interface DefaultBackgroundObjectOptions extends DefaultGameObjectOptions {
   stretch?: AxisFlags;
   static?: AxisFlags;
   scrollFactor?: ScrollFactor;
   overlay?: boolean;
 }
+
+const FULL_SPAN = [-Infinity, Infinity] as const;
 
 export abstract class BackgroundObject<
   T extends GameObjectOptions<DefaultBackgroundObjectOptions> = GameObjectOptions<DefaultBackgroundObjectOptions>
