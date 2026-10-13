@@ -17,6 +17,12 @@ export default defineConfig([
         "semi": ["error", "always"],
         "no-extra-semi": "error",
         "object-curly-spacing": ["warn", "always"],
+        "no-multi-spaces": ["warn", {
+          exceptions: {
+            TSEnumMember: true,
+            VariableDeclarator: true
+          }
+        }],
         "quotes": ["warn", "double"]
       }
   },

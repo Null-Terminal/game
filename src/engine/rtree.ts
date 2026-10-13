@@ -332,7 +332,7 @@ export class RTree {
     maxX: number,
     maxY: number,
     pred?: RTreePredicate
-  ): RTreePublicNode | null  {
+  ): RTreePublicNode | null {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
