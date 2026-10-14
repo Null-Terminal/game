@@ -1,5 +1,5 @@
 import { WallObject } from "#game/wall-object";
-import { WaterObject } from "#game/water-object";
+import { LiquidObject } from "#game/liquid-object";
 import { FillerObject } from "#game/filler-object";
 
 import { UsefulObject } from "#game/useful-object";
@@ -17,9 +17,9 @@ export const world = World.of([
   [FillerObject, { show: "meshFence", y: 140, stretch: "w" }],
 
   [FloorObject, { show: "asphalt", bbox: [-Infinity, 130, 900, 135] }],
-  [WaterObject, { bbox: [900, 134, 1500, 204] }],
+  [LiquidObject, { show: "lava", bbox: [900, 134, 1500, 204] }],
   [FloorObject, { show: "asphalt", bbox: [1500, 130, 2800, 135] }],
-  [WaterObject, { bbox: [2800, 134, 3400, 204] }],
+  [LiquidObject, { show: "water", bbox: [2800, 134, 3400, 204] }],
   [FloorObject, { show: "asphalt", bbox: [3400, 130, Infinity, 135] }],
 
   [WallObject, { show: "bricks", bbox: [160, 220, 340, 240] }],
