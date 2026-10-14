@@ -59,7 +59,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   readonly movement = new Movement(this);
 
-  statusValue = GameObjectStatus.State.Active;
+  _statusValue = GameObjectStatus.State.Active;
   readonly status = new GameObjectStatus(this);
 
   get name(): string {
