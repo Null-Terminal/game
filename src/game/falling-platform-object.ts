@@ -11,7 +11,6 @@ const wall = await loadAnimation(import("#/sprites/bricks.webp"), {
 });
 
 export interface DefaultFallingPlatformObjectOptions extends DefaultGameObjectOptions {
-  // Секунды после контакта с игроком. 0 — падает сразу.
   fallAfterSeconds?: number;
 }
 
