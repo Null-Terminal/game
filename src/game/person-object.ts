@@ -138,11 +138,7 @@ export class PersonObject extends MovableObject {
     window.addEventListener("keydown", (e) => {
       const key = e.code;
 
-      if (e.code === "Escape") {
-        e.preventDefault();
-        canvas.togglePause();
-
-      } else if (key in controls) {
+      if (key in controls) {
         e.preventDefault();
         const control = controls[key]!;
 

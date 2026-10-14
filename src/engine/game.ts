@@ -1,8 +1,11 @@
 import { Disposable } from "#engine/disposable";
 
 import { Camera } from "#engine/game/camera";
+import { GameStatus } from "#engine/game/game-status";
 import { World } from "#engine/game/world";
 import type { RenderCanvas } from "#engine/game/render-canvas";
+
+export { GameStatus } from "#engine/game/game-status";
 
 export { Camera } from "#engine/game/camera";
 export type { CameraOptions, CameraDeadZone, CameraLimit } from "#engine/game/camera";
@@ -17,6 +20,9 @@ export class Game extends Disposable {
   readonly camera: Camera;
   readonly world: World;
   readonly canvas: RenderCanvas;
+
+  _statusValue = GameStatus.State.Playing;
+  readonly status = new GameStatus(this);
 
   static camera(camera: Camera) {
     return {
@@ -43,6 +49,13 @@ export class Game extends Disposable {
 
     camera.mount(this);
     world.mount(this);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Escape") {
+        e.preventDefault();
+        this.status.togglePause();
+      }
+    }, { signal: this.abortSignal });
   }
 
   override destroy() {
