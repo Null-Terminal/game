@@ -17,6 +17,8 @@ const [fuel, trigger] = await Promise.all([
 ]);
 
 export class UsefulObject extends DynamicInteractObject {
+  static readonly FUEL_GAIN = 20;
+
   static override readonly animations = { fuel, trigger };
   override readonly animations = UsefulObject.animations;
 
@@ -28,11 +30,13 @@ export class UsefulObject extends DynamicInteractObject {
   }
 
   @ifAlive
-  override visit({ stats, actions }: PersonObject) {
+  override visit(go: PersonObject) {
+    const { stats, actions } = go;
+
     switch (this.nowPlaying) {
       case this.animations.fuel:
         if (stats.fuel < stats.fuelMax) {
-          stats.fuel = Math.min(stats.fuelMax, stats.fuel + 20);
+          go.updateState(({ fuel }) => ({ fuel: fuel + UsefulObject.FUEL_GAIN }));
           return this.destroy();
         }
 
