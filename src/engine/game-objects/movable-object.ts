@@ -27,16 +27,18 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     onGround: false,
   };
 
-  stats = MovableObject.stats;
+  get stats() {
+    return this.#stats;
+  }
 
+  _motionValue = MovableObjectMotion.State.Solid;
   readonly motion = new MovableObjectMotion(this);
-
-  motionValue = MovableObjectMotion.State.Solid;
 
   override get redrawEvent() {
     return this.canvas.events.main;
   }
 
+  #stats = MovableObject.stats;
   #riding: GameObject | null = null;
 
   readonly #MAX_RIDING_TOLERANCE = 10;
@@ -50,6 +52,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   }
 
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+    this.#stats = { ...(this.constructor as typeof MovableObject).stats };
     this.motion.reset();
     return super.create(game, poolPointer, opts);
   }
@@ -63,6 +66,10 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
 
     this.onMove(status);
     return status;
+  }
+
+  updateState(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
+    Object.assign(this.stats, patch(this.stats));
   }
 
   protected solidMove(dx: number, dy: number): number {
@@ -112,8 +119,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     initializer?: (payload: RenderPayload) => void,
     effect?: (moveStatus: number) => void
   ) {
-    const stats = { ...(this.constructor as typeof MovableObject).stats };
-    this.stats = stats;
+    const { stats } = this;
 
     this.onDestroy(
       this.canvas.emitter.on(this.redrawEvent, (payload) => {
@@ -124,12 +130,12 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
 
         const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
 
-        // Врезались в потолок
+        stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
+
         if (moveStatus & CollisionStatus.TopCollision) {
           stats.vy = 0;
 
-        } else if (moveStatus & CollisionStatus.BottomCollision) {
-          stats.onGround = true;
+        } else if (stats.onGround) {
           stats.vy = stats.gravity;
         }
 
