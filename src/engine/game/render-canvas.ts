@@ -33,6 +33,10 @@ export class RenderCanvas extends Disposable {
     return this.#fps;
   }
 
+  get delta() {
+    return this.#delta;
+  }
+
   get width() {
     return this.canvas.width;
   }
@@ -56,7 +60,9 @@ export class RenderCanvas extends Disposable {
 
   #redrawId = 0;
   #paused = false;
+
   #fps = 0;
+  #delta = 0;
 
   constructor(canvas: HTMLCanvasElement, opts?: RenderCanvasOptions) {
     super();
@@ -136,11 +142,11 @@ export class RenderCanvas extends Disposable {
 
       this.clear();
 
-      const delta = Math.min(0.025, (now - lastRedraw) / 1000);
-      lastRedraw = now;
+      this.#delta = Math.min(0.025, (now - lastRedraw) / 1000);
+      payload.delta = this.#delta;
 
+      lastRedraw = now;
       payload.now = now;
-      payload.delta = delta;
 
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);
