@@ -17,13 +17,6 @@ export { RenderCanvas } from "#engine/game/render-canvas";
 export type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas";
 
 export class Game extends Disposable {
-  readonly camera: Camera;
-  readonly world: World;
-  readonly canvas: RenderCanvas;
-
-  _statusValue = GameStatus.State.Playing;
-  readonly status = new GameStatus(this);
-
   static camera(camera: Camera) {
     return {
       world: (world: World) => ({
@@ -39,6 +32,13 @@ export class Game extends Disposable {
       }),
     };
   }
+
+  readonly camera: Camera;
+  readonly world: World;
+  readonly canvas: RenderCanvas;
+
+  _statusValue = GameStatus.State.Playing;
+  readonly status = new GameStatus(this);
 
   protected constructor(canvas: RenderCanvas, camera: Camera, world: World) {
     super();
