@@ -131,6 +131,10 @@ export class PersonObject extends MovableObject {
       this.ensurePlaying(this.animations.jump);
 
     } else if (actions.jetpack && stats.fuel > 0) {
+      if (!stats.usingJetpack) {
+        this.#fallPeak = this.y;
+      }
+
       stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack * delta);
 
       stats.onGround = false;
