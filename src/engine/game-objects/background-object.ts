@@ -211,6 +211,8 @@ export abstract class BackgroundObject<
     const minFinite = Number.isFinite(min);
     const maxFinite = Number.isFinite(max);
 
+    // Ограничиваем заливку по оси только при одной конечной границе.
+    // Если конечны обе, stretch повторяет паттерн по всему холсту, несмотря на bbox.
     if (minFinite === maxFinite) {
       return [-Infinity, Infinity];
     }
