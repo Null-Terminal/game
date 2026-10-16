@@ -1,4 +1,4 @@
-import { DynamicObject, GameObject } from "#engine/game-objects";
+import { DynamicObject, GameObject, ifAlive } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -16,9 +16,10 @@ export class PlatformObject extends DynamicObject {
     this.play(this.animations.wall);
   }
 
+  @ifAlive
   override visit(go: GameObject) {
     if (go instanceof UsefulObject && go.nowPlaying === go.animations.trigger) {
-      this.togglePause();
+      this.status.togglePause();
     }
   }
 }

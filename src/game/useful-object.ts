@@ -1,4 +1,4 @@
-import { InteractObject } from "#engine/game-objects";
+import { DynamicInteractObject, ifAlive } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -16,7 +16,9 @@ const [fuel, trigger] = await Promise.all([
   }),
 ]);
 
-export class UsefulObject extends InteractObject {
+export class UsefulObject extends DynamicInteractObject {
+  static readonly FUEL_GAIN = 20;
+
   static override readonly animations = { fuel, trigger };
   override readonly animations = UsefulObject.animations;
 
@@ -27,11 +29,14 @@ export class UsefulObject extends InteractObject {
     this.#used = false;
   }
 
-  override visit({ stats, actions }: PersonObject) {
+  @ifAlive
+  override visit(go: PersonObject) {
+    const { stats, actions } = go;
+
     switch (this.nowPlaying) {
       case this.animations.fuel:
-        if (stats.fuel < 100) {
-          stats.fuel = Math.min(100, stats.fuel + 20);
+        if (stats.fuel < stats.fuelMax) {
+          go.updateState(({ fuel }) => ({ fuel: fuel + UsefulObject.FUEL_GAIN }));
           return this.destroy();
         }
 

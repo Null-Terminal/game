@@ -1,4 +1,4 @@
-import { MovableObject, type RenderPayload } from "#engine/game-objects";
+import { CollisionStatus, MovableObject, type RenderPayload } from "#engine/game-objects";
 
 import { loadAnimation } from "#engine/animation-loader";
 
@@ -37,13 +37,42 @@ export class PersonObject extends MovableObject {
     ...MovableObject.stats,
     speed: 300,
     jump: 2500,
-    jetpack: 250,
+    jetpack: 350,
     usingJetpack: false,
-    fuel: 100,
-    fuelPerTick: 0.1
+    fuel: 1000,
+    fuelMax: 1000,
+    fuelPerTick: 0.1,
+    hp: 100,
+    hpMax: 100,
+    fallSafe: 200,
+    fallDamage: 0.05
   };
 
-  override readonly stats = PersonObject.stats;
+  override get stats() {
+    return super.stats as typeof PersonObject.stats;
+  }
+
+  override updateState(patch: (stats: PersonObject["stats"]) => Partial<PersonObject["stats"]>) {
+    const next = patch(this.stats);
+
+    if (next.hp != null) {
+      next.hp = Math.max(0, Math.min(this.stats.hpMax, next.hp));
+
+      if (next.hp === 0 && this.stats.hp > 0) {
+        this.game.status.finish();
+      }
+    }
+
+    if (next.fuel != null) {
+      next.fuel = Math.max(0, Math.min(this.stats.fuelMax, next.fuel));
+    }
+
+    super.updateState(() => next);
+  }
+
+  #fallPeak = 0;
+  #forgiveFall = true;
+  #grounded = false;
 
   readonly actions = {
     left: 0,
@@ -62,13 +91,17 @@ export class PersonObject extends MovableObject {
   };
 
   init() {
-    this.register(this.game.camera.bindTo(this));
+    this.#fallPeak = 0;
+    this.#grounded = false;
+    this.#forgiveFall = true;
+
+    this.onDestroy(this.game.camera.bindTo(this));
     this.play(this.animations.stay);
 
     this.#initControls();
     this.initPhysics(this.#initPhysics, this.#initEffects);
 
-    this.register(
+    this.onDestroy(
       this.canvas.emitter.on(this.canvas.events.ui, ({ ctx }) => {
         this.#renderStats(ctx);
       })
@@ -98,12 +131,16 @@ export class PersonObject extends MovableObject {
       this.ensurePlaying(this.animations.jump);
 
     } else if (actions.jetpack && stats.fuel > 0) {
+      if (!stats.usingJetpack) {
+        this.#fallPeak = this.y;
+      }
+
       stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack * delta);
 
       stats.onGround = false;
       stats.usingJetpack = true;
 
-      stats.fuel = Math.max(0, stats.fuel - stats.fuelPerTick);
+      this.updateState(({ fuel }) => ({ fuel: fuel - stats.fuelPerTick }));
       actions.jump = 0;
 
       this.ensurePlaying(this.animations.fly);
@@ -125,23 +162,45 @@ export class PersonObject extends MovableObject {
     }
   };
 
-  #initEffects = () => {
+  #initEffects = (moveStatus: number) => {
     this.findInteractCollisions().forEach(({ object }) => {
       object.visit(this);
     });
+
+    const grounded = (moveStatus & CollisionStatus.BottomCollision) !== 0;
+
+    if (grounded) {
+      if (!this.#grounded && !this.#forgiveFall) {
+        this.#applyFallDamage();
+      }
+
+      this.#fallPeak = this.y;
+      this.#forgiveFall = false;
+
+    } else {
+      this.#fallPeak = Math.max(this.#fallPeak, this.y);
+    }
+
+    this.#grounded = grounded;
   };
 
+  #applyFallDamage() {
+    const extra = this.#fallPeak - this.y - this.stats.fallSafe;
+
+    if (extra <= 0) {
+      return;
+    }
+
+    this.updateState(({ hp }) => ({ hp: hp - extra * this.stats.fallDamage }));
+  }
+
   #initControls() {
-    const { canvas, actions, controls } = this;
+    const { actions, controls } = this;
 
     window.addEventListener("keydown", (e) => {
       const key = e.code;
 
-      if (e.code === "Escape") {
-        e.preventDefault();
-        canvas.togglePause();
-
-      } else if (key in controls) {
+      if (key in controls) {
         e.preventDefault();
         const control = controls[key]!;
 
@@ -167,11 +226,18 @@ export class PersonObject extends MovableObject {
   }
 
   #renderStats(ctx: CanvasRenderingContext2D) {
-    const left = this.canvas.width - 100;
-    const top = 30;
+    const padding = 10;
+    const { hp, hpMax, fuel, fuelMax } = this.stats;
+    const lines = [
+      `HP: ${hp.toFixed(0)}/${hpMax}`,
+      `FUEL: ${fuel.toFixed(0)}/${fuelMax}`
+    ];
 
     ctx.font = "16px monospace";
     ctx.fillStyle = "#00FF00";
-    ctx.fillText(`FUEL: ${this.stats.fuel.toFixed(0)}`, left, top);
+
+    lines.forEach((text, index) => {
+      ctx.fillText(text, this.canvas.width - ctx.measureText(text).width - padding, 30 + index * 20);
+    });
   }
 }

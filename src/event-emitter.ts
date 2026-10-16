@@ -2,10 +2,19 @@ export type Handler<T = any> = (payload: T) => void;
 
 export type Destructor = () => void;
 
-export type Handlers<P = any> = ({ handler: Handler; ptr: number })[] & { PayloadType: P };
+export type Handlers<P = any> = ({ handler: Handler; ptr: number })[] & {
+  PayloadType: P;
+  flush?: Handlers<P>;
+};
 
-export function handler<P>(): Handlers<P> {
-  return [] as any;
+export function handler<P>(opts?: { withFlush?: boolean }): Handlers<P> {
+  const event: Handlers<P> = [] as any;
+
+  if (opts?.withFlush) {
+    event.flush = handler<P>();
+  }
+
+  return event;
 }
 
 export class EventEmitter<T extends Record<string, Handlers>> {
@@ -24,11 +33,12 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     let deleted = false;
 
     return () => {
-      if (deleted) {
+      const { ptr } = box;
+
+      if (deleted || event[ptr] !== box) {
+        deleted = true;
         return;
       }
-
-      const { ptr } = box;
 
       if (ptr !== event.length - 1) {
         event[ptr] = event[event.length - 1]!;
@@ -44,11 +54,12 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     let deleted = false;
 
     const destructor = () => {
-      if (deleted) {
+      const { ptr } = box;
+
+      if (deleted || event[ptr] !== box) {
+        deleted = true;
         return;
       }
-
-      const { ptr } = box;
 
       if (ptr !== event.length - 1) {
         event[ptr] = event[event.length - 1]!;
@@ -86,5 +97,9 @@ export class EventEmitter<T extends Record<string, Handlers>> {
   emit<E extends Handlers>(event: E, ...payload: E["PayloadType"] extends void ? any : [E["PayloadType"]]): void;
   emit<E extends Handlers>(event: E, payload: E["PayloadType"]) {
     event.forEach(({ handler }) => handler(payload));
+
+    if (event.flush != null) {
+      this.emit(event.flush, payload);
+    }
   }
 }

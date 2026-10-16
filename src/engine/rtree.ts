@@ -1,18 +1,20 @@
 import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
-import type { RTreePublicNode, RTreePredicate, RTreeView, Ptr32 } from "#engine/rtree/types";
+import { nanToInfinity } from "#engine/rtree/utils";
+import type { RTreeEntry, RTreePublicNode, RTreePredicate, RTreeView, Ptr32 } from "#engine/rtree/types";
 
-export type { RTreePublicNode, RTreePredicate };
+export type { RTreeEntry, RTreePublicNode, RTreePredicate };
 export type { BBoxTuple } from "#engine/rtree/bbox";
 
 export const header = tuple("header", [
   alias("size", usize2),
-  alias("_", usize2),
+  alias("root", usize2),
 ]);
 
 const BLOCKS32_PER_ELEMENT = RTreeNode.BYTES_PER_ELEMENT / 4;
 const HEADER32_OFFSET = header.size / 4;
+const EMPTY_RESULTS = Object.freeze([] as RTreePublicNode[]);
 
 export class RTree {
   static readonly Header = header;
@@ -46,13 +48,22 @@ export class RTree {
   readonly #header: Uint16Array;
   readonly #buffer;
 
-  #root: Ptr32;
   #size;
+  #rootPtr: Ptr32 = 0;
+
+  get #root(): Ptr32 {
+    return this.#rootPtr;
+  }
+
+  set #root(ptr: Ptr32) {
+    this.#rootPtr = ptr;
+    this.#header[header.at.root.index] = this.#view.packPtr(ptr);
+  }
 
   get #freePtr32(): Ptr32 {
-    const ptr = this.size * BLOCKS32_PER_ELEMENT + HEADER32_OFFSET;
+    const ptr = this.#view.unpackPtr(this.size + 1);
 
-    if (ptr >= this.#view.uints32.length - 1) {
+    if (ptr + BLOCKS32_PER_ELEMENT > this.#view.uints32.length) {
       throw new Error(`${this.constructor.name}: Out of memory - maximum nodes reached (${this.size})`);
     }
 
@@ -83,7 +94,7 @@ export class RTree {
     this.#header = new Uint16Array(this.#buffer, 0, header.size / 2);
 
     this.#size = this.#header[header.at.size.index]!;
-    this.#root = this.#createEmptyNode();
+    this.#root = this.#size === 0 ? this.#createEmptyNode() : this.#view.unpackPtr(this.#header[header.at.root.index]!);
   }
 
   clear() {
@@ -97,19 +108,20 @@ export class RTree {
     maxX: number,
     maxY: number,
     pred?: RTreePredicate
-  ): RTreePublicNode[] {
-    const results: RTreePublicNode[] = [];
-
+  ): readonly RTreePublicNode[] {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
-    this.#searchNode(this.#root, minX, minY, maxX, maxY, results, pred);
-    return results;
+    return this.#searchNode(this.#root, minX, minY, maxX, maxY, null, pred) ?? EMPTY_RESULTS;
   }
 
   searchFirst(
@@ -120,11 +132,15 @@ export class RTree {
     pred?: RTreePredicate
   ): RTreePublicNode | null {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
     return this.#searchFirstNode(this.#root, minX, minY, maxX, maxY, pred);
@@ -139,11 +155,15 @@ export class RTree {
     maxY: number,
   ): Ptr32 {
     if (minX > maxX) {
-      [minX, maxX] = [maxX, minX];
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
     }
 
     if (minY > maxY) {
-      [minY, maxY] = [maxY, minY];
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
     }
 
     const node = this.#node;
@@ -165,6 +185,79 @@ export class RTree {
     }
 
     return ptr;
+  }
+
+  reindex(
+    kind: number,
+    index: number,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    nextIndex: number,
+  ): boolean {
+    if (minX > maxX) {
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
+    }
+
+    if (minY > maxY) {
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
+    }
+
+    const child = this.#findEntry(this.#root, kind, index, minX, minY, maxX, maxY);
+
+    if (child === 0) {
+      return false;
+    }
+
+    this.#node.setData(child, kind, nextIndex);
+    return true;
+  }
+
+  remove(
+    kind: number,
+    index: number,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  ): boolean {
+    if (minX > maxX) {
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
+    }
+
+    if (minY > maxY) {
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
+    }
+
+    const orphans: Ptr32[] = [];
+    const child = this.#findEntry(this.#root, kind, index, minX, minY, maxX, maxY);
+
+    if (child !== 0) {
+      const node = this.#node;
+      const leaf = node.getParent(child);
+
+      node.removeChild(leaf, child);
+
+      const movedFrom = this.#release(child, orphans);
+      const current = movedFrom !== 0 && leaf === movedFrom ? child : leaf;
+
+      this.#condense(current, orphans);
+    }
+
+    for (const orphan of orphans) {
+      this.#attachNode(orphan);
+    }
+
+    return child !== 0;
   }
 
   forEach(cb: (node: RTreePublicNode) => void) {
@@ -203,13 +296,13 @@ export class RTree {
     minY: number,
     maxX: number,
     maxY: number,
-    results: RTreePublicNode[],
+    results: RTreePublicNode[] | null,
     pred?: RTreePredicate
-  ) {
+  ): RTreePublicNode[] | null {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
-      return;
+      return results;
     }
 
     if (node.isLeaf(ptr)) {
@@ -218,16 +311,18 @@ export class RTree {
           const childNode = { bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) };
 
           if (pred == null || pred(childNode)) {
-            results.push(childNode);
+            (results ??= []).push(childNode);
           }
         }
       });
 
     } else {
       node.forEachChild(ptr, (childPtr) => {
-        this.#searchNode(childPtr, minX, minY, maxX, maxY, results, pred);
+        results = this.#searchNode(childPtr, minX, minY, maxX, maxY, results, pred);
       });
     }
+
+    return results;
   }
 
   #searchFirstNode(
@@ -237,7 +332,7 @@ export class RTree {
     maxX: number,
     maxY: number,
     pred?: RTreePredicate
-  ): RTreePublicNode | null  {
+  ): RTreePublicNode | null {
     const node = this.#node;
 
     if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
@@ -262,10 +357,13 @@ export class RTree {
   }
 
   #chooseLeaf(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
+    return this.#chooseNode(ptr, minX, minY, maxX, maxY, 0);
+  }
+
+  #chooseNode(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number, level: number): Ptr32 {
     const node = this.#node;
 
-    // Уже находимся в листе
-    if (node.isLeaf(ptr)) {
+    if (node.getLevel(ptr) === level) {
       return ptr;
     }
 
@@ -283,7 +381,8 @@ export class RTree {
       const enlargement = node.calcBBoxEnlargement(childPtr, minX, minY, maxX, maxY);
       const area = node.calcBBoxArea(childPtr);
 
-      if (enlargement < minEnlargement) {
+      // Стартовый minEnlargement уже Infinity, поэтому Infinity < Infinity не выбирает ветку
+      if (bestChildPtr === 0 || enlargement < minEnlargement) {
         minEnlargement = enlargement;
         minArea = area;
         bestChildPtr = childPtr;
@@ -298,7 +397,7 @@ export class RTree {
       throw new Error(`${this.constructor.name}: No child found in internal node`);
     }
 
-    return this.#chooseLeaf(bestChildPtr, minX, minY, maxX, maxY);
+    return this.#chooseNode(bestChildPtr, minX, minY, maxX, maxY, level);
   }
 
   #splitNode(ptr: Ptr32) {
@@ -359,14 +458,16 @@ export class RTree {
       node.pushChild(parent, group1);
       node.pushChild(parent, group2);
 
-      if (node.getSize(parent) === this.maxEntries) {
+      this.#release(ptr);
+
+      if (node.getSize(parent) >= this.maxEntries) {
         this.#splitNode(parent);
 
       } else {
         this.#updateBBox(parent);
       }
 
-    // Если родитель - корень
+    // Если корень
     } else {
       node.createEmpty(root, node.getLevel(ptr) + 1);
 
@@ -394,7 +495,7 @@ export class RTree {
         const area2 = node.calcBBoxArea(child2Ptr);
 
         const unionArea = node.calcUnionBBoxArea(child1Ptr, child2Ptr);
-        const waste = unionArea - area1 - area2;
+        const waste = nanToInfinity(unionArea - area1 - area2);
 
         if (waste > maxWaste) {
           maxWaste = waste;
@@ -407,6 +508,164 @@ export class RTree {
     });
 
     return { index1, index2, item1, item2 };
+  }
+
+  #findEntry(
+    ptr: Ptr32,
+    kind: number,
+    index: number,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  ): Ptr32 {
+    const node = this.#node;
+
+    if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
+      return 0;
+    }
+
+    if (node.isLeaf(ptr)) {
+      return node.firstChildResult(ptr, (childPtr) => {
+        if (!node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
+          return null;
+        }
+
+        const pointer = node.getData(childPtr);
+
+        if (pointer[0] === kind && pointer[1] === index) {
+          return childPtr;
+        }
+
+        return null;
+      }) ?? 0;
+    }
+
+    return node.firstChildResult(ptr, (childPtr) => {
+      const found = this.#findEntry(childPtr, kind, index, minX, minY, maxX, maxY);
+
+      return found !== 0 ? found : null;
+    }) ?? 0;
+  }
+
+  #condense(ptr: Ptr32, orphans: Ptr32[]) {
+    const node = this.#node;
+
+    let current = ptr;
+
+    while (current !== this.#root && node.getSize(current) < this.minEntries) {
+      const count = node.getSize(current);
+
+      for (let i = 0; i < count; i++) {
+        orphans.push(node.getChild(current, i));
+      }
+
+      let parent = node.getParent(current);
+
+      node.removeChild(parent, current);
+
+      const movedFrom = this.#release(current, orphans);
+
+      if (movedFrom !== 0 && parent === movedFrom) {
+        parent = current;
+      }
+
+      current = parent;
+    }
+
+    if (current === this.#root && !node.isLeaf(current) && node.getSize(current) === 1) {
+      const child = node.getChild(current, 0);
+      node.setParent(child, 0);
+
+      this.#root = child;
+      this.#release(current, orphans);
+
+      return;
+    }
+
+    if (current === this.#root && !node.isLeaf(current) && node.getSize(current) === 0) {
+      node.createEmpty(current, 0);
+      return;
+    }
+
+    this.#adjustTree(current);
+  }
+
+  #attachNode(ptr: Ptr32) {
+    const node = this.#node;
+    const parentLevel = node.getSize(ptr) === 0 ? 0 : node.getLevel(ptr) + 1;
+
+    while (node.getLevel(this.#root) < parentLevel) {
+      this.#growRoot();
+    }
+
+    const [minX, minY, maxX, maxY] = node.getBBox(ptr);
+    const parent = this.#chooseNode(this.#root, minX, minY, maxX, maxY, parentLevel);
+
+    node.pushChild(parent, ptr);
+    this.#adjustTree(parent);
+
+    if (node.getSize(parent) >= this.maxEntries) {
+      this.#splitNode(parent);
+    }
+  }
+
+  #growRoot() {
+    const node = this.#node;
+
+    const oldRoot = this.#root;
+    const newRoot = this.#createEmptyNode(node.getLevel(oldRoot) + 1);
+
+    node.pushChild(newRoot, oldRoot);
+    this.#root = newRoot;
+
+    this.#updateBBox(newRoot);
+  }
+
+  #release(ptr: Ptr32, orphans?: Ptr32[]): Ptr32 {
+    const last = this.#view.unpackPtr(this.size);
+
+    if (ptr === last) {
+      this.size--;
+      return 0;
+    }
+
+    const node = this.#node;
+    const parent = node.getParent(last);
+
+    // Двигаем последний узел на место удаленного
+    const words = this.#view.uints32;
+    words.copyWithin(ptr, last, last + BLOCKS32_PER_ELEMENT);
+
+    // В ptr уже лежит последний узел, а не удалённый, но родитель всё ещё ссылается на last
+    if (parent !== 0 && parent !== ptr && node.removeChild(parent, last)) {
+      node.pushChild(parent, ptr);
+
+    // Последний узел был ребёнком освобождаемого слота либо без родителя
+    } else {
+      node.setParent(ptr, 0);
+    }
+
+    // Теперь правим ссылку на родителя для детей ptr
+    node.forEachChild(ptr, (childPtr) => {
+      node.setParent(childPtr, ptr);
+    });
+
+    if (this.#root === last) {
+      this.#root = ptr;
+    }
+
+    if (orphans != null) {
+      for (let i = 0; i < orphans.length; i++) {
+        if (orphans[i] === last) {
+          orphans[i] = ptr;
+          break;
+        }
+      }
+    }
+
+    this.size--;
+    return last;
   }
 
   #adjustTree(ptr: Ptr32) {

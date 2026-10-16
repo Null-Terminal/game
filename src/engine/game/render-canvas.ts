@@ -13,12 +13,16 @@ export class RenderCanvas extends Disposable {
   readonly emitter = new EventEmitter({
     background: handler<RenderPayload>(),
     static: handler<RenderPayload>(),
-    dynamic: handler<RenderPayload>(),
-    interact: handler<RenderPayload>(),
+    dynamic: handler<RenderPayload>({ withFlush: true }),
+    interact: handler<RenderPayload>({ withFlush: true }),
     main: handler<RenderPayload>(),
     overlay: handler<RenderPayload>(),
     ui: handler<RenderPayload>(),
   });
+
+  get paused() {
+    return this.#paused;
+  }
 
   @cache
   get events() {
@@ -27,6 +31,10 @@ export class RenderCanvas extends Disposable {
 
   get fps() {
     return this.#fps;
+  }
+
+  get delta() {
+    return this.#delta;
   }
 
   get width() {
@@ -52,7 +60,9 @@ export class RenderCanvas extends Disposable {
 
   #redrawId = 0;
   #paused = false;
+
   #fps = 0;
+  #delta = 0;
 
   constructor(canvas: HTMLCanvasElement, opts?: RenderCanvasOptions) {
     super();
@@ -78,10 +88,6 @@ export class RenderCanvas extends Disposable {
     this.emitter.off();
   }
 
-  isPaused() {
-    return this.#paused;
-  }
-
   pause() {
     this.#paused = true;
   }
@@ -91,7 +97,7 @@ export class RenderCanvas extends Disposable {
   }
 
   togglePause() {
-    if (this.isPaused()) {
+    if (this.paused) {
       this.resume();
 
     } else {
@@ -111,10 +117,16 @@ export class RenderCanvas extends Disposable {
 
     let frameCount = 0;
 
+    const payload = {
+      now: 0,
+      delta: 0,
+      ctx: this.#ctx
+    };
+
     const animate = (now?: number) => {
       this.#redrawId = requestAnimationFrame(animate);
 
-      if (now == null || this.isPaused()) {
+      if (now == null || this.paused) {
         return;
       }
 
@@ -130,14 +142,11 @@ export class RenderCanvas extends Disposable {
 
       this.clear();
 
-      const delta = Math.min(0.025, (now - lastRedraw) / 1000);
-      lastRedraw = now;
+      this.#delta = Math.min(0.025, (now - lastRedraw) / 1000);
+      payload.delta = this.#delta;
 
-      const payload: RenderPayload = {
-        now,
-        delta,
-        ctx: this.#ctx
-      };
+      lastRedraw = now;
+      payload.now = now;
 
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);

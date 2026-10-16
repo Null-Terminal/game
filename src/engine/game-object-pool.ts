@@ -1,5 +1,5 @@
-import type { GameObject } from "#engine/game-objects";
-import type { GameObjectStore, ConcreteGameObjectConstructor, PoolPointer } from "#engine/game-object-pool/types";
+import type { CreateParameters, GameObject } from "#engine/game-objects";
+import type { GameObjectStore, KindedGameObjectCtor, PoolPointer } from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
 
@@ -12,12 +12,15 @@ export class GameObjectPool {
   }
 
   get(kind: number, index: number): GameObject | undefined {
-    const store = this.objects[kind];
-    return store?.buffer[index];
+    if (!this.has(kind, index)) {
+      return undefined;
+    }
+
+    return this.objects[kind]!.buffer[index];
   }
 
-  add<T extends typeof GameObject, A extends ConstructorParameters<T>>(
-    GObject: ConcreteGameObjectConstructor<T>,
+  add<T extends typeof GameObject, A extends CreateParameters<T>>(
+    GObject: KindedGameObjectCtor<T>,
     game: A[0],
     opts: A[2]
   ): PoolPointer {
@@ -33,26 +36,57 @@ export class GameObjectPool {
     const { length, buffer } = store;
 
     const poolPointer: PoolPointer = [kind, store.length++];
+    const fromPool = buffer.length > length;
 
-    if (buffer.length > length) {
-      buffer[length]!.create(game, poolPointer, opts);
+    const object = fromPool ? buffer[length]! : new GObject();
+    object.create(game, poolPointer, opts);
 
-    } else {
-      buffer.push(new GObject(game, poolPointer, opts));
+    if (!fromPool) {
+      buffer.push(object);
     }
 
     return poolPointer;
   }
 
   delete(kind: number, index: number) {
-    const store = this.objects[kind];
+    if (!this.has(kind, index)) {
+      return;
+    }
 
-    if (store != null) {
-      if (index < store.length - 1) {
-        store.buffer[index] = store.buffer[store.length - 1]!;
+    const store = this.objects[kind]!;
+    const removed = store.buffer[index]!;
+
+    removed.destroy();
+
+    const [, removedIndex] = removed.poolPointer;
+
+    if (removedIndex >= store.length || store.buffer[removedIndex] !== removed) {
+      return;
+    }
+
+    const last = store.length - 1;
+
+    if (removedIndex < last) {
+      const moved = store.buffer[last]!;
+
+      store.buffer[removedIndex] = moved;
+      store.buffer[last] = removed;
+
+      moved.reindex(removedIndex);
+      removed.poolPointer = [kind, last];
+    }
+
+    store.length = last;
+  }
+
+  destroy() {
+    for (const store of Object.values(this.objects)) {
+      for (let i = store.length; i--;) {
+        store.buffer[i]!.destroy();
       }
 
-      store.length--;
+      store.length = 0;
+      store.buffer.length = 0;
     }
   }
 }

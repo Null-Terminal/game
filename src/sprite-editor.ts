@@ -74,9 +74,11 @@ export class SpriteEditor extends HTMLElement {
       throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
-    this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
-    this.#actionHandlers = new ActionHandlers(this);
+    if (this.grid == null) {
+      this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
+    }
 
+    this.#actionHandlers = new ActionHandlers(this);
     this.history = new EditorHistory(this);
   }
 }

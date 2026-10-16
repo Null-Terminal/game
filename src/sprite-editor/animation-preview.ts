@@ -74,6 +74,7 @@ export class AnimationPreview extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.pause();
     this.#actionHandlers.destroy();
   }
 
@@ -186,7 +187,10 @@ export class AnimationPreview extends HTMLElement {
       throw new Error(`${this.constructor.name}: ShadowRoot element not found`);
     }
 
-    this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
+    if (this.#player == null) {
+      this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
+    }
+
     this.#actionHandlers = new ActionHandlers(this);
   }
 }

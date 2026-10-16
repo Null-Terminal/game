@@ -1,6 +1,12 @@
+import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
+import { MovableObjectMotion } from "#engine/game-objects/movable-object-motion";
 
-import type { RenderPayload, Collision } from "#engine/game";
+import type { Game, RenderPayload, Collision } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
+import type { GameObjectOptions } from "#engine/game-objects/types";
+
+export { MovableObjectMotion } from "#engine/game-objects/movable-object-motion";
 
 export enum CollisionStatus {
   NoCollision     = 0b00000,
@@ -13,7 +19,7 @@ export enum CollisionStatus {
 
 const ridingTolerance: Record<number, number> = {};
 
-export abstract class MovableObject extends GameObject {
+export abstract class MovableObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
   static readonly stats = {
     vx: 0,
     vy: 0,
@@ -21,12 +27,17 @@ export abstract class MovableObject extends GameObject {
     onGround: false,
   };
 
-  stats = MovableObject.stats;
+  get stats() {
+    return this.#stats;
+  }
+
+  readonly motion = new MovableObjectMotion(this);
 
   override get redrawEvent() {
     return this.canvas.events.main;
   }
 
+  #stats = MovableObject.stats;
   #riding: GameObject | null = null;
 
   readonly #MAX_RIDING_TOLERANCE = 10;
@@ -36,13 +47,35 @@ export abstract class MovableObject extends GameObject {
   override destroy() {
     super.destroy();
     this.#riding = null;
+    this.motion.reset();
   }
 
+  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+    this.#stats = { ...(this.constructor as typeof MovableObject).stats };
+    this.motion.reset();
+    return super.create(game, poolPointer, opts);
+  }
+
+  @ifAlive
+  @ifShadowed(0)
   override move(dx: number, dy: number): number {
+    const status = this.motion.kinematic ?
+      this.kinematicMove(dx, dy) :
+      this.solidMove(dx, dy);
+
+    this.onMove(status);
+    return status;
+  }
+
+  updateState(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
+    Object.assign(this.stats, patch(this.stats));
+  }
+
+  protected solidMove(dx: number, dy: number): number {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    if (this.isPaused()) {
+    if (this.status.paused) {
       return CollisionStatus.NoCollision;
     }
 
@@ -85,10 +118,9 @@ export abstract class MovableObject extends GameObject {
     initializer?: (payload: RenderPayload) => void,
     effect?: (moveStatus: number) => void
   ) {
-    const stats = { ...(this.constructor as typeof MovableObject).stats };
-    this.stats = stats;
+    const { stats } = this;
 
-    this.register(
+    this.onDestroy(
       this.canvas.emitter.on(this.redrawEvent, (payload) => {
         initializer?.(payload);
 
@@ -97,12 +129,12 @@ export abstract class MovableObject extends GameObject {
 
         const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
 
-        // Врезались в потолок
+        stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
+
         if (moveStatus & CollisionStatus.TopCollision) {
           stats.vy = 0;
 
-        } else if (moveStatus & CollisionStatus.BottomCollision) {
-          stats.onGround = true;
+        } else if (stats.onGround) {
           stats.vy = stats.gravity;
         }
 
@@ -119,11 +151,11 @@ export abstract class MovableObject extends GameObject {
     return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
   }
 
-  protected findInteractCollisions(x = this.x, y = this.y): Collision[] {
+  protected findInteractCollisions(x = this.x, y = this.y): readonly Collision[] {
     return this.world.findInteractCollisions(x, y, x + this.width, y + this.height);
   }
 
-  protected findCollisions(x = this.x, y = this.y): Collision[] {
+  protected findCollisions(x = this.x, y = this.y): readonly Collision[] {
     return this.world.findCollisions(x, y, x + this.width, y + this.height);
   }
 
@@ -157,7 +189,7 @@ export abstract class MovableObject extends GameObject {
     const riding = collision != null ? collision.object : lastRiding;
 
     // Проверяем, что мы все еще стоим на платформе
-    const isStandingOnPlatform = riding == null ?
+    const isStandingOnPlatform = riding == null || riding.destroyed ?
       false :
       this.y - riding.y - riding.height <= ridingYTolerance &&
       this.x + this.width - riding.x > ridingXTolerance &&
@@ -171,7 +203,7 @@ export abstract class MovableObject extends GameObject {
       // Корректирую позицию объекта под позицию платформы на которой он стоит
       this.x += riding.x - riding.prevX;
 
-      // Ставим объект чуть-чуть выше, чтобы не провоцировать рассчеты коллизий
+      // Ставим объект чуть-чуть выше, чтобы не провоцировать расчеты коллизий
       this.y = riding.y + riding.height + this.#COLLISION_EPSILON;
 
       // Из‑за потери точности при работе с дробными числами иногда возникает
@@ -179,6 +211,7 @@ export abstract class MovableObject extends GameObject {
       // Это значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
       this.visualOffsetY = riding.y - riding.prevY;
 
+      riding.visit(this);
       status |= CollisionStatus.BottomCollision;
 
     } else {

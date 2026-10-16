@@ -12,7 +12,9 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
     super(parent);
   }
 
-  destroy() {
+  override destroy() {
+    super.destroy();
+
     const { settings } = this.parent;
 
     settings.removeEventListener("click", this.onAction);

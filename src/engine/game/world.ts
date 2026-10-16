@@ -1,56 +1,89 @@
+import { cast } from "#/tstools";
 import { Disposable } from "#engine/disposable";
 
-import { RTree, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
+import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 
 import type { Game } from "#engine/game";
-import type { GameObject } from "#engine/game-objects";
+import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
 
 import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
 
 export * from "#engine/game/world/types";
 
 export class World extends Disposable {
-  readonly game: Game;
+  static of<const T extends [new (...args: any[]) => GameObject, object?][]>(entries: {
+    [I in keyof T]: T[I] extends [
+        infer C extends new (...args: any[]) => GameObject,
+        ...any
+      ]
+      ? [C, CreateOptionsOf<C>?]
+      : T[I]
+  }): T {
+    return entries as T;
+  }
+
+  game!: Game;
   readonly options: Required<WorldOptions>;
 
   readonly statics = new RTree();
   readonly dynamics = new RTree();
-  readonly interacts = new RTree();
+
+  readonly staticInteracts = new RTree();
+  readonly dynamicInteracts = new RTree();
 
   readonly objects = new GameObjectPool();
 
-  constructor(game: Game, opts: WorldOptions) {
+  #mounted = false;
+
+  constructor(opts: WorldOptions) {
     super();
-
-    this.game = game;
     this.options = { ...opts };
+  }
 
-    this.register(
+  mount(game: Game) {
+    if (this.#mounted) {
+      throw new Error(`${this.constructor.name}.mount: already mounted`);
+    }
+
+    this.#mounted = true;
+    this.game = game;
+
+    this.onDestroy(
       game.canvas.emitter.on(game.canvas.events.background, () => {
         this.dynamics.clear();
-        this.interacts.clear();
+        this.dynamicInteracts.clear();
       })
     );
 
     this.nextTick(() => {
-      for (const elem of opts.objects) {
+      for (const elem of this.options.objects) {
         this.createObject(elem[0], elem[1]);
       }
     });
+  }
+
+  override destroy() {
+    super.destroy();
+    this.objects.destroy();
   }
 
   createObject(go: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
     return this.objects.add(go, this.game, opts);
   }
 
-  addToWorld(go: GameObject, world: RTree) {
+  addToWorld(
+    go: GameObject,
+    world: RTree,
+    onAdd?: (...ptr: RTreeEntry) => void
+  ) {
     const ptr = go.poolPointer;
 
     const width = go.x + go.width || Infinity;
     const height = go.y + go.height || Infinity;
 
     world.insert(ptr[0], ptr[1], go.x, go.y, width, height);
+    onAdd?.(ptr[0], ptr[1], go.x, go.y, width, height);
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
@@ -80,31 +113,46 @@ export class World extends Disposable {
     return collision;
   }
 
-  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
+  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
 
-    return this.interacts
-      .search(x1, y1, x2, y2, pred)
-      .map(this.#collisionMapper);
+    const dynamicCollisions = this.dynamicInteracts.search(x1, y1, x2, y2, pred);
+    const staticCollisions = this.staticInteracts.search(x1, y1, x2, y2, pred);
+
+    if (dynamicCollisions.length === 0 && staticCollisions.length === 0) {
+      return cast(dynamicCollisions);
+    }
+
+    return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): Collision[] {
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
 
-    return this.dynamics
-      .search(x1, y1, x2, y2, pred)
-      .concat(this.statics.search(x1, y1, x2, y2, pred))
-      .map(this.#collisionMapper);
+    const dynamicCollisions = this.dynamics.search(x1, y1, x2, y2, pred);
+    const staticCollisions = this.statics.search(x1, y1, x2, y2, pred);
+
+    if (dynamicCollisions.length === 0 && staticCollisions.length === 0) {
+      return cast(dynamicCollisions);
+    }
+
+    return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
   #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number): RTreePredicate {
-    return ({ bbox }) => maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3];
+    return ({ bbox, pointer: [kind, i] }) => {
+      if (!(maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3])) {
+        return false;
+      }
+
+      return this.objects.get(kind, i)?.destroyed === false;
+    };
   }
 
   #collisionMapper = ({ bbox, pointer: [kind, i] }: RTreePublicNode): Collision => {

@@ -1,12 +1,12 @@
 import { GameObject } from "#engine/game-objects/game-object";
+import type { GameObjectOptions } from "#engine/game-objects/types";
 
-export abstract class DynamicObject extends GameObject {
+export abstract class DynamicObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
   override get redrawEvent() {
     return this.canvas.events.dynamic;
   }
 
-  override move(dx: number, dy: number) {
-    super.move(dx, dy);
+  protected override bindFlush() {
     this.world.addToWorld(this, this.world.dynamics);
   }
 }
