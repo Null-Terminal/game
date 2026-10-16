@@ -32,12 +32,12 @@ export abstract class BackgroundObject<
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     const options = super.create(game, poolPointer, opts);
 
-    if (!isFinite(this.width)) {
+    if (!Number.isFinite(this.width)) {
       options.stretch ??= "";
       options.stretch += "w";
     }
 
-    if (!isFinite(this.height)) {
+    if (!Number.isFinite(this.height)) {
       this.height = Infinity;
       options.stretch ??= "";
       options.stretch += "h";

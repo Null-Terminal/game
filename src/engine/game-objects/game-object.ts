@@ -150,14 +150,14 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       this.x = minX;
       this.y = minY;
 
-      if (isFinite(minX) && isFinite(maxX)) {
+      if (Number.isFinite(minX) && Number.isFinite(maxX)) {
         this.width = maxX - minX;
 
       } else {
         this.width = Infinity;
       }
 
-      if (isFinite(minY) && isFinite(maxY)) {
+      if (Number.isFinite(minY) && Number.isFinite(maxY)) {
         this.height = maxY - minY;
 
       } else {
