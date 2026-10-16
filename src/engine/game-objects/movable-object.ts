@@ -31,7 +31,6 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return this.#stats;
   }
 
-  _motionValue = MovableObjectMotion.State.Solid;
   readonly motion = new MovableObjectMotion(this);
 
   override get redrawEvent() {

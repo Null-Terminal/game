@@ -11,20 +11,22 @@ export class GameObjectStatus {
 
   readonly #go: GameObject;
 
+  #state = State.Active;
+
   constructor(gameObject: GameObject) {
     this.#go = gameObject;
   }
 
   get active() {
-    return this.#go._statusValue === State.Active;
+    return this.#state === State.Active;
   }
 
   get paused() {
-    return this.#go._statusValue === State.Paused;
+    return this.#state === State.Paused;
   }
 
   get shadowed() {
-    return this.#go._statusValue === State.Shadowed;
+    return this.#state === State.Shadowed;
   }
 
   pause() {
@@ -56,7 +58,7 @@ export class GameObjectStatus {
   }
 
   reset() {
-    this.#go._statusValue = State.Active;
+    this.#state = State.Active;
   }
 
   #set(state: State) {
@@ -64,6 +66,6 @@ export class GameObjectStatus {
       throw new Error(`${this.#go.name}.status: called on destroyed object`);
     }
 
-    this.#go._statusValue = state;
+    this.#state = state;
   }
 }

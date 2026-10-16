@@ -12,24 +12,26 @@ export class GameStatus {
 
   readonly #game: Game;
 
+  #state: State = State.Playing;
+
   constructor(game: Game) {
     this.#game = game;
   }
 
   get playing() {
-    return this.#game._statusValue === State.Playing;
+    return this.#state === State.Playing;
   }
 
   get paused() {
-    return this.#game._statusValue === State.Paused;
+    return this.#state === State.Paused;
   }
 
   get finished() {
-    return this.#game._statusValue === State.Finished;
+    return this.#state === State.Finished;
   }
 
   get restarting() {
-    return this.#game._statusValue === State.Restarting;
+    return this.#state === State.Restarting;
   }
 
   pause() {
@@ -85,6 +87,6 @@ export class GameStatus {
       throw new Error("Game.status: called on destroyed game");
     }
 
-    this.#game._statusValue = state;
+    this.#state = state;
   }
 }

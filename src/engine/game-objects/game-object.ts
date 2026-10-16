@@ -58,8 +58,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   bbox: BBoxTuple | null = null;
 
   readonly movement = new Movement(this);
-
-  _statusValue = GameObjectStatus.State.Active;
   readonly status = new GameObjectStatus(this);
 
   get name(): string {

@@ -13,16 +13,18 @@ export class MovableObjectMotion {
 
   readonly #go: MovableObject;
 
+  #state = State.Solid;
+
   constructor(gameObject: MovableObject) {
     this.#go = gameObject;
   }
 
   get kinematic() {
-    return this.#go._motionValue === State.Kinematic;
+    return this.#state === State.Kinematic;
   }
 
   get solid() {
-    return this.#go._motionValue === State.Solid;
+    return this.#state === State.Solid;
   }
 
   toKinematic() {
@@ -34,7 +36,7 @@ export class MovableObjectMotion {
   }
 
   reset() {
-    this.#go._motionValue = State.Solid;
+    this.#state = State.Solid;
   }
 
   #set(state: State) {
@@ -42,6 +44,6 @@ export class MovableObjectMotion {
       throw new Error(`${this.#go.name}.motion: called on destroyed object`);
     }
 
-    this.#go._motionValue = state;
+    this.#state = state;
   }
 }
