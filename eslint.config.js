@@ -23,7 +23,7 @@ export default defineConfig([
             VariableDeclarator: true
           }
         }],
-        "quotes": ["warn", "double"]
+        "quotes": ["warn", "double", { avoidEscape: true }]
       }
   },
 
@@ -36,5 +36,15 @@ export default defineConfig([
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-unused-vars": "off"
     }
-  }))
+  })),
+
+  {
+    files: ["**/*.{ts,mts,cts}"],
+    rules: {
+      "no-restricted-syntax": ["error", {
+        selector: ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)[returnType.typeAnnotation.type="TSVoidKeyword"][body.type="BlockStatement"]',
+        message: "Omit explicit void on implemented functions; TypeScript infers it"
+      }]
+    }
+  }
 ]);
