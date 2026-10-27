@@ -123,6 +123,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
     this.status.reset();
     this.#nowPlaying = null;
+    this.#cancelRedrawHandler = null;
   }
 
   reindex(index: number) {
@@ -339,6 +340,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       framePayload.y = y;
 
       this.renderFrame(framePayload, renderFrame);
+      this.drawDebug(framePayload);
 
       if ((!rendered || sprite.spriteId !== "") && animation.name in this.animation.events) {
         this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
@@ -426,6 +428,37 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   protected renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
     defaultRender(payload);
+  }
+
+  protected drawDebug({ ctx, x, y }: RenderFramePayload) {
+    const { width, height } = this;
+
+    const outline = this.options.debug?.outline;
+
+    if (!outline || Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(width) || Number.isNaN(height)) {
+      return;
+    }
+
+    const { width: viewWidth, height: viewHeight } = this.canvas.canvas;
+
+    const left = Math.max(0, x);
+    const right = Number.isFinite(width) ? Math.min(viewWidth, x + width) : viewWidth;
+
+    const rawBottom = viewHeight - y;
+    const top = Number.isFinite(height) ? Math.max(0, rawBottom - height) : 0;
+    const bottom = Math.min(viewHeight, rawBottom);
+
+    const hasVisibleArea = left < right && top < bottom;
+
+    if (!hasVisibleArea) {
+      return;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = typeof outline === "string" ? outline : "#00FFFF";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(left, top, right - left, bottom - top);
+    ctx.restore();
   }
 
   protected onMove(_status: number) {

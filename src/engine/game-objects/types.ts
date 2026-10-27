@@ -45,6 +45,11 @@ export interface Effects extends FrameEffects {
   speed?: number;
 }
 
+export interface GameObjectDebugOptions {
+  // Визуализация рамки вокруг отрисованного объект (можно явно задать цвет)
+  outline?: boolean | string;
+}
+
 export interface DefaultGameObjectOptions {
   name?: string;
   show?: string;
@@ -54,6 +59,7 @@ export interface DefaultGameObjectOptions {
   acceptor?: GameObject | null;
 
   effects?: Effects;
+  debug?: GameObjectDebugOptions;
 }
 
 export type GameObjectOptions<T = DefaultGameObjectOptions> =
