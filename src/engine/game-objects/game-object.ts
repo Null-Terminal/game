@@ -7,6 +7,7 @@ import type { BBoxTuple } from "#engine/rtree";
 
 import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
+import { drawDebugOutline } from "#engine/game-objects/debug-drawing";
 
 import { Movement } from "#engine/game-objects/movement";
 import { GameObjectStatus } from "#engine/game-objects/game-object-status";
@@ -387,22 +388,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     const top = Number.isFinite(height) ? Math.max(0, rawBottom - height) : 0;
     const bottom = Math.min(viewHeight, rawBottom);
 
-    this.drawDebugOutline(ctx, left, top, right, bottom);
-  }
-
-  protected drawDebugOutline(ctx: CanvasRenderingContext2D, left: number, top: number, right: number, bottom: number) {
-    const outline = this.options.debug?.outline;
-    const hasVisibleArea = left < right && top < bottom;
-
-    if (!outline || !hasVisibleArea) {
-      return;
-    }
-
-    ctx.save();
-    ctx.strokeStyle = typeof outline === "string" ? outline : "#00FFFF";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(left, top, right - left, bottom - top);
-    ctx.restore();
+    drawDebugOutline(ctx, outline, left, top, right, bottom);
   }
 
   protected onMove(_status: number) {
