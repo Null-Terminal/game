@@ -4,26 +4,19 @@ import type { PoolPointer } from "#engine/game-object-pool";
 import type { BakedFrame } from "#engine/animation-loader/types";
 
 import { GameObject } from "#engine/game-objects/game-object";
+import { drawDebugOutline, drawDebugStretchSeams } from "#engine/game-objects/debug-drawing";
 
-import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
-import type { GameObjectOptions, DefaultGameObjectOptions } from "#engine/game-objects/types";
+import type { GameObjectOptions, RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
+import type { Axis, DefaultBackgroundObjectOptions, VisibleBounds } from "#engine/game-objects/background-object/types";
 
-export type Axis = "w" | "h";
-export type AxisFlags = "" | Axis | `${Axis}${Axis}`;
-export type ScrollFactor = [both: number] | [x: number, y: number];
-
-export interface DefaultBackgroundObjectOptions extends DefaultGameObjectOptions {
-  stretch?: AxisFlags;
-  static?: AxisFlags;
-  scrollFactor?: ScrollFactor;
-  overlay?: boolean;
-}
-
-const FULL_SPAN = [-Infinity, Infinity] as const;
+export type * from "#engine/game-objects/background-object/types";
 
 export abstract class BackgroundObject<
   T extends GameObjectOptions<DefaultBackgroundObjectOptions> = GameObjectOptions<DefaultBackgroundObjectOptions>
 > extends GameObject<T> {
+  // Переиспользуем границы, чтобы не создавать объект на каждом кадре
+  readonly #visibleBounds: VisibleBounds = { left: 0, top: 0, right: 0, bottom: 0 };
+
   override get redrawEvent() {
     const { background, overlay } = this.canvas.events;
     return this.options?.overlay ? overlay : background;
@@ -32,22 +25,23 @@ export abstract class BackgroundObject<
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     const options = super.create(game, poolPointer, opts);
 
-    if (!Number.isFinite(this.width)) {
-      options.stretch ??= "";
-      options.stretch += "w";
+    if (!Number.isFinite(this.width) && !options.stretch?.includes("w")) {
+      options.stretch = options.stretch?.includes("h") ? "hw" : "w";
     }
 
     if (!Number.isFinite(this.height)) {
       this.height = Infinity;
-      options.stretch ??= "";
-      options.stretch += "h";
+
+      if (!options.stretch?.includes("h")) {
+        options.stretch = options.stretch?.includes("w") ? "wh" : "h";
+      }
     }
 
     return options;
   }
 
   protected override renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
-    const { game: { camera }, canvas: { canvas }, effects, options: opts } = this;
+    const { game: { camera }, canvas: { canvas }, options: opts } = this;
 
     const stretchWidth = opts.stretch?.includes("w");
     const stretchHeight = opts.stretch?.includes("h");
@@ -63,10 +57,9 @@ export abstract class BackgroundObject<
 
     const staticWidth = opts.static?.includes("w");
     const staticHeight = opts.static?.includes("h");
-    const [scrollFactorX, scrollFactorY = scrollFactorX] = opts.scrollFactor ?? [1];
 
-    const scrollX = staticWidth ? 0 : camera.x * scrollFactorX;
-    const scrollY = staticHeight ? 0 : camera.y * scrollFactorY;
+    const scrollX = this.getScrollOffset("w");
+    const scrollY = this.getScrollOffset("h");
 
     let { x, y } = payload;
 
@@ -79,37 +72,86 @@ export abstract class BackgroundObject<
     payload.x = x;
     payload.y = y;
 
-    const { ctx, pattern, frameIndex, animation, resolveY } = payload;
+    const wrapWidth = stretchWidth && !staticWidth;
+    const wrapHeight = stretchHeight && !staticHeight;
+    const bounds = this.getVisibleBounds(scrollX, scrollY);
 
-    if (pattern || stretchWidth || stretchHeight) {
-      const wrapWidth = stretchWidth && !staticWidth;
-      const wrapHeight = stretchHeight && !staticHeight;
+    if (!this.isVisibleInViewport(bounds.left, bounds.top, bounds.right, bounds.bottom)) {
+      return;
+    }
 
-      if (wrapWidth || wrapHeight) {
-        const image = animation.getPatternFrame(frameIndex, this.width, this.height, effects);
-        this.#stretchPattern(ctx, image, x, y, wrapWidth, wrapHeight, scrollX, scrollY, resolveY);
+    if (!wrapWidth && !wrapHeight) {
+      defaultRender(payload);
+      return;
+    }
 
-      } else {
-        defaultRender(payload);
-      }
+    const image = this.getStretchImage(payload, this.width, this.height);
+    this.#stretchPattern(payload, image, wrapWidth, wrapHeight, scrollX, scrollY, bounds);
+  }
+
+  protected override drawDebug(payload: RenderFramePayload) {
+    if (this.bbox == null) {
+      super.drawDebug(payload);
+      return;
+    }
+
+    if (!this.options.debug?.outline) {
+      return;
+    }
+
+    const bounds = this.getVisibleBounds(this.getScrollOffset("w"), this.getScrollOffset("h"));
+    drawDebugOutline(payload.ctx, this.options.debug.outline, bounds.left, bounds.top, bounds.right, bounds.bottom);
+  }
+
+  protected getStretchImage(payload: RenderFramePayload, width: number, height: number): BakedFrame {
+    return payload.animation.getPatternFrame(payload.frameIndex, width, height, this.effects);
+  }
+
+  protected getScrollOffset(axis: Axis): number {
+    if (this.options.static?.includes(axis)) {
+      return 0;
+    }
+
+    const factor = axis === "w" ?
+      this.options.scrollFactor?.[0] ?? 1 :
+      this.options.scrollFactor?.[1] ?? this.options.scrollFactor?.[0] ?? 1;
+
+    return (axis === "w" ? this.game.camera.x : this.game.camera.y) * factor;
+  }
+
+  protected getVisibleBounds(scrollX: number, scrollY: number): Readonly<VisibleBounds> {
+    const { bbox } = this;
+    const { width, height } = this.canvas.canvas;
+
+    const bounds = this.#visibleBounds;
+
+    if (bbox == null) {
+      bounds.left = 0;
+      bounds.top = 0;
+      bounds.right = width;
+      bounds.bottom = height;
 
     } else {
-      defaultRender(payload);
+      bounds.left = Math.max(0, bbox[0] - scrollX);
+      bounds.top = Math.max(0, height - bbox[3] + scrollY);
+      bounds.right = Math.min(width, bbox[2] - scrollX);
+      bounds.bottom = Math.min(height, height - bbox[1] + scrollY);
     }
+
+    return bounds;
   }
 
   #stretchPattern(
-    ctx: CanvasRenderingContext2D,
+    payload: RenderFramePayload,
     pattern: BakedFrame,
-    x: number,
-    y: number,
     stretchWidth: boolean | undefined,
     stretchHeight: boolean | undefined,
     scrollX: number,
     scrollY: number,
-    resolveY: RenderFramePayload["resolveY"]
+    bounds: Readonly<VisibleBounds>
   ) {
-    const { width: w, height: h, canvas: view, bbox } = this;
+    const { width: w, height: h, bbox } = this;
+    const { ctx, x, y, resolveY } = payload;
 
     const minX = bbox?.[0] ?? 0;
     const minY = bbox?.[1] ?? 0;
@@ -119,18 +161,21 @@ export abstract class BackgroundObject<
     const toScreenX = (worldX: number) => worldX - scrollX;
     const toScreenY = (worldY: number) => resolveY(worldY - scrollY) + h;
 
-    // Границы на холсте, куда должна вписываться заливка (без bbox — весь экран)
-    const [spanX1, spanX2] = bbox == null ? FULL_SPAN : this.#selectSpan(minX, maxX, toScreenX);
-    const [spanY1, spanY2] = bbox == null ? FULL_SPAN : this.#selectSpan(maxY, minY, toScreenY);
+    const { left: spanX1, top: spanY1, right: spanX2, bottom: spanY2 } = bounds;
 
     const originX = Number.isFinite(x) ? x : this.#selectPatternStart(minX, maxX, toScreenX, w);
     const originY = Number.isFinite(y) ? resolveY(y) : toScreenY(this.#selectFiniteEdge(minY, maxY)) - h;
 
-    const xs = stretchWidth ? this.#findPatternPositions(originX, w, view.width) : [originX];
-    const ys = stretchHeight ? this.#findPatternPositions(originY, h, view.height) : [originY];
+    const stepX = stretchWidth ? Math.max(1, w - 1) : Infinity;
+    const stepY = stretchHeight ? Math.max(1, h - 1) : Infinity;
 
-    for (const dx of xs) {
-      for (const dy of ys) {
+    const firstX = stretchWidth ? this.#firstPatternPosition(originX, w, spanX1) : originX;
+    const firstY = stretchHeight ? this.#firstPatternPosition(originY, h, spanY1) : originY;
+
+    const showStretchSeams = this.options.debug?.stretchSeams;
+
+    for (let dx = firstX; dx < spanX2; dx += stepX) {
+      for (let dy = firstY; dy < spanY2; dy += stepY) {
         let srcX = 0;
         let srcY = 0;
         let srcW = w;
@@ -175,49 +220,37 @@ export abstract class BackgroundObject<
 
         if (srcW > 0 && srcH > 0 && destW > 0 && destH > 0) {
           ctx.drawImage(pattern, srcX, srcY, srcW, srcH, destX, destY, destW, destH);
+
+          if (showStretchSeams) {
+            drawDebugStretchSeams(ctx, {
+              x: dx,
+              y: dy,
+              left: destX,
+              top: destY,
+              right: destX + destW,
+              bottom: destY + destH
+            }, stretchWidth, stretchHeight);
+          }
         }
       }
     }
+
   }
 
-  #findPatternPositions(origin: number, size: number, viewEnd: number): number[] {
-    // Защита от бесконечного цикла
-    if (size <= 1) {
-      return [origin];
-    }
-
-    // Шаг size-1: 1px перекрытие, чтобы на дробных координатах не просвечивал шов
-    const step = size - 1;
-
-    // В JS остаток от деления отрицательного числа даст отрицательный результат
+  #firstPatternPosition(origin: number, size: number, visibleStart: number): number {
+    // Перекрываем соседние плитки на 1 px, но для плитки размером 1 px шаг остаётся равным 1
+    const step = Math.max(1, size - 1);
     let start = origin % step;
 
-    // Положительный остаток сдвигаем к меньшей координате, чтобы копия начиналась до экрана
     if (start > 0) {
       start -= step;
     }
 
-    const copies: number[] = [];
-
-    // От копии с меньшей координатой, которая ещё цепляет экран, шагаем к viewEnd
-    for (let point = start; point < viewEnd; point += step) {
-      copies.push(point);
+    if (start + size <= visibleStart) {
+      start += Math.ceil((visibleStart - start - size) / step) * step;
     }
 
-    return copies.length > 0 ? copies : [origin];
-  }
-
-  #selectSpan(min: number, max: number, toScreen: (world: number) => number): [number, number] {
-    const minFinite = Number.isFinite(min);
-    const maxFinite = Number.isFinite(max);
-
-    // Ограничиваем заливку по оси только при одной конечной границе.
-    // Если конечны обе, stretch повторяет паттерн по всему холсту, несмотря на bbox.
-    if (minFinite === maxFinite) {
-      return [-Infinity, Infinity];
-    }
-
-    return [minFinite ? toScreen(min) : -Infinity, maxFinite ? toScreen(max) : Infinity];
+    return start;
   }
 
   #selectFiniteEdge(min: number, max: number): number {
