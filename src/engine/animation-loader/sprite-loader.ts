@@ -1,11 +1,12 @@
 import type { LoadSpriteOptions } from "#engine/animation-loader/types";
+import { removeTargetColor } from "./remove-target-color";
 
 const spriteCache = new Map<string, Promise<ImageBitmap>>();
 
 export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
   const { removeBackground = false, tolerance = 5 } = options ?? {};
 
-  const cacheKey = [url, removeBackground && tolerance].join("_");
+  const cacheKey = [url, removeBackground, tolerance].join("_");
 
   const fromCache = spriteCache.get(cacheKey);
 
@@ -67,16 +68,7 @@ function removeCanvasBackground(canvas: OffscreenCanvas, color: string | boolean
     return;
   }
 
-  // Заливка фона
-  for (let i = 0; i < data.length; i += 4) {
-    const diffR = Math.abs(data[i]! - targetColor[0]!);
-    const diffG = Math.abs(data[i + 1]! - targetColor[1]!);
-    const diffB = Math.abs(data[i + 2]! - targetColor[2]!);
-
-    if (diffR <= tolerance && diffG <= tolerance && diffB <= tolerance) {
-      data[i + 3] = 0;
-    }
-  }
+  removeTargetColor(targetColor, data, canvas.width, canvas.height, tolerance, typeof color === "string");
 
   ctx.putImageData(imageData, 0, 0);
 }
