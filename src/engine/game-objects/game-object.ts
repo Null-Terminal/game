@@ -242,9 +242,19 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     const renderFrame: RenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, resolveY }) => {
       const { width: w, height: h } = this;
 
+      const top = resolveY(y);
+
+      const finiteBounds =
+        Number.isFinite(x) && Number.isFinite(top) &&
+        Number.isFinite(w) && Number.isFinite(h);
+
+      if (finiteBounds && !this.isVisibleInViewport(x, top, x + w, top + h)) {
+        return;
+      }
+
       if (pattern) {
         const image = animation.getPatternFrame(frameIndex, w, h, effects);
-        ctx.drawImage(image, 0, 0, w, h, x, resolveY(y), w, h);
+        ctx.drawImage(image, 0, 0, w, h, x, top, w, h);
 
       } else {
         const image = animation.getSpriteFrame(frameIndex, effects);
@@ -252,7 +262,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
         // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
         // из-за разницы высот между отдельным фреймом и максимальным
         const diffY = h - image.height;
-        ctx.drawImage(image, x, resolveY(y) + diffY, image.width, image.height);
+        ctx.drawImage(image, x, top + diffY, image.width, image.height);
       }
     };
 
@@ -337,6 +347,11 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }));
   }
 
+  protected isVisibleInViewport(left: number, top: number, right: number, bottom: number): boolean {
+    const { width, height } = this.canvas.canvas;
+    return left < right && top < bottom && left < width && right > 0 && top < height && bottom > 0;
+  }
+
   protected kinematicMove(dx: number, dy: number): number {
     this.prevX = this.x;
     this.prevY = this.y;
@@ -394,7 +409,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     // Ничего не делает по умолчанию
   }
 
-  #initializeState(options: T): void {
+  #initializeState(options: T) {
     this.x = 0;
     this.y = 0;
 
@@ -430,7 +445,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.acceptor = options.acceptor ?? null;
   }
 
-  #createRefs(): void {
+  #createRefs() {
     const withMap = (this.constructor as typeof GameObject).with as WithMap<T>;
 
     for (const [name, entry] of Object.entries(withMap)) {
@@ -467,7 +482,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }
   }
 
-  #createRef(name: string, go: WorldObject[0], options: WorldObject[1]): void {
+  #createRef(name: string, go: WorldObject[0], options: WorldObject[1]) {
     const instance = this.world.objects.get(...this.world.createObject(go, options))!;
     this.refs[name] = instance;
 
