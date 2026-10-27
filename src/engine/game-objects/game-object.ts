@@ -104,7 +104,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   #height = 0;
 
   #nowPlaying: Animations[keyof Animations] | null = null;
-  #cancelRedrawHandler: Function | null = null;
+  #cancelRedrawHandler: (() => void) | null = null;
 
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
@@ -119,11 +119,12 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       return;
     }
 
+    this.#cancelRedrawHandler?.();
+    this.#cancelRedrawHandler = null;
     super.destroy();
 
     this.status.reset();
     this.#nowPlaying = null;
-    this.#cancelRedrawHandler = null;
   }
 
   reindex(index: number) {
@@ -141,109 +142,29 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.game = game;
     this.poolPointer = poolPointer;
 
-    opts = { ...opts! };
-    this.options = opts;
+    const options = { ...opts! } as T;
+    this.options = options;
 
-    if ("bbox" in opts!) {
-      this.bbox = opts.bbox;
-      const [minX, minY, maxX, maxY] = this.bbox;
+    try {
+      this.#initializeState(options);
+      this.#createRefs();
+      this.init();
 
-      this.x = minX;
-      this.y = minY;
-
-      if (Number.isFinite(minX) && Number.isFinite(maxX)) {
-        this.width = maxX - minX;
-
-      } else {
-        this.width = Infinity;
+      if (options.show != null && options.show in this.animations) {
+        this.play(this.animations[options.show]!);
       }
 
-      if (Number.isFinite(minY) && Number.isFinite(maxY)) {
-        this.height = maxY - minY;
-
-      } else {
-        this.height = Infinity;
+      if (options.movement != null) {
+        this.movement.follow(options.movement);
       }
 
-    } else {
-      this.bbox = null;
+      this.mountFlush();
+      return options;
 
-      if ("x" in opts) {
-        this.x = opts.x;
-      }
-
-      if ("y" in opts) {
-        this.y = opts.y;
-      }
+    } catch (err) {
+      this.destroy();
+      throw err;
     }
-
-    this.prevX = this.x;
-    this.prevY = this.y;
-
-    this.effects = { scale: 1, speed: 1, ...opts.effects };
-    this.acceptor = opts.acceptor ?? null;
-
-    const createRef = (name: string, go: WorldObject[0], opts: WorldObject[1]) => {
-      const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
-      this.refs[name] = instance;
-
-      this.onDestroy(() => {
-        const [kind, index] = instance.poolPointer;
-        game.world.objects.delete(kind, index);
-
-        instance.acceptor = null;
-        this.refs[name] = null;
-      });
-    };
-
-    const withMap = (this.constructor as typeof GameObject).with as WithMap<T>;
-
-    Object.entries(withMap).forEach(([name, entry]) => {
-      const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
-      const resolvedOpts = { ...this.options, x: 0, y: 0, ...opts, acceptor: this };
-
-      if (opts != null) {
-        // Бесконечный край не сдвигает детей: -Infinity + x остаётся -Infinity.
-        const originX = Number.isFinite(this.x) ? this.x : 0;
-        const originY = Number.isFinite(this.y) ? this.y : 0;
-
-        if ("bbox" in opts && opts.bbox != null && "bbox" in resolvedOpts) {
-          const { bbox } = opts;
-          resolvedOpts.bbox = [bbox[0] + originX, bbox[1] + originY, bbox[2] + originX, bbox[3] + originY];
-
-        } else {
-          // Коробка родителя не наследуется: bbox ребёнка задаёт только его запись.
-          delete resolvedOpts.bbox;
-          resolvedOpts.x += originX;
-          resolvedOpts.y += originY;
-        }
-      }
-
-      createRef(name, go, resolvedOpts);
-    });
-
-    if (opts.accept != null) {
-      const acceptMap = opts.accept as WithMap<T>;
-
-      Object.entries(acceptMap).forEach(([name, entry]) => {
-        const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
-        createRef(name, go, { ...opts, acceptor: this });
-      });
-    }
-
-    this.init();
-
-    if (opts.show != null && opts.show in this.animations) {
-      this.play(this.animations[opts.show]!);
-    }
-
-    if (opts.movement != null) {
-      this.movement.follow(opts.movement);
-    }
-
-    this.mountFlush();
-
-    return opts;
   }
 
   @ifAlive
@@ -271,8 +192,23 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     const spriteAnimation = animation.animation;
     const params = spriteAnimation.params;
 
+    if (spriteAnimation.isEmpty()) {
+      throw new RangeError("Cannot play an animation without frames");
+    }
+
     let lastFrameTime = 0;
     let frameIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
+
+    const pickDuration = () => {
+      if (params.randomDuration == null) {
+        return spriteAnimation.at(frameIndex)!.duration;
+      }
+
+      const [min = 100, max = min] = params.randomDuration;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+
+    let duration = pickDuration();
 
     this.#cancelRedrawHandler?.();
     this.#nowPlaying = animation;
@@ -320,7 +256,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       }
     };
 
-    this.#cancelRedrawHandler = this.onDestroy(emitter.on(this.redrawEvent, (payload) => {
+    this.#cancelRedrawHandler = emitter.on(this.redrawEvent, (payload) => {
       if (this.status.shadowed) {
         return;
       }
@@ -346,20 +282,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
         this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
       }
 
-      let duration;
-
-      if (params.randomDuration != null) {
-        const max = params.randomDuration[0] ?? 100;
-        const min = params.randomDuration[1] ?? 100;
-        duration = Math.floor(Math.random() * (max - min + 1)) + min;
-
-      } else {
-        duration = sprite?.duration;
-      }
-
-      duration /= (params.speed * effects.speed);
-
-      if (!this.status.paused && (payload.now - lastFrameTime >= duration)) {
+      if (!this.status.paused && (payload.now - lastFrameTime >= duration / (params.speed * effects.speed))) {
         if (params.randomOrder) {
           frameIndex = spriteAnimation.randomIndex();
 
@@ -385,10 +308,11 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
         }
 
         lastFrameTime = payload.now;
+        duration = pickDuration();
       }
 
       rendered ||= 1;
-    }));
+    });
   }
 
   protected bindFlush() {}
@@ -448,9 +372,14 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     const top = Number.isFinite(height) ? Math.max(0, rawBottom - height) : 0;
     const bottom = Math.min(viewHeight, rawBottom);
 
+    this.drawDebugOutline(ctx, left, top, right, bottom);
+  }
+
+  protected drawDebugOutline(ctx: CanvasRenderingContext2D, left: number, top: number, right: number, bottom: number) {
+    const outline = this.options.debug?.outline;
     const hasVisibleArea = left < right && top < bottom;
 
-    if (!hasVisibleArea) {
+    if (!outline || !hasVisibleArea) {
       return;
     }
 
@@ -463,5 +392,91 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   protected onMove(_status: number) {
     // Ничего не делает по умолчанию
+  }
+
+  #initializeState(options: T): void {
+    this.x = 0;
+    this.y = 0;
+
+    this.width = 0;
+    this.height = 0;
+
+    this.visualOffsetY = 0;
+    this.bbox = null;
+
+    if ("bbox" in options && options.bbox != null) {
+      const [minX, minY, maxX, maxY] = options.bbox;
+      this.bbox = options.bbox;
+
+      this.x = minX;
+      this.y = minY;
+
+      this.width = Number.isFinite(minX) && Number.isFinite(maxX) ? maxX - minX : Infinity;
+      this.height = Number.isFinite(minY) && Number.isFinite(maxY) ? maxY - minY : Infinity;
+
+    } else {
+      if ("x" in options) {
+        this.x = options.x ?? 0;
+      }
+
+      if ("y" in options) {
+        this.y = options.y ?? 0;
+      }
+    }
+
+    this.prevX = this.x;
+    this.prevY = this.y;
+    this.effects = { scale: 1, speed: 1, ...options.effects };
+    this.acceptor = options.acceptor ?? null;
+  }
+
+  #createRefs(): void {
+    const withMap = (this.constructor as typeof GameObject).with as WithMap<T>;
+
+    for (const [name, entry] of Object.entries(withMap)) {
+      const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
+      const resolvedOptions = { ...this.options, x: 0, y: 0, ...childOptions, acceptor: this };
+
+      if (childOptions != null) {
+        // Бесконечный край не сдвигает детей: -Infinity + x остаётся -Infinity
+        const originX = Number.isFinite(this.x) ? this.x : 0;
+        const originY = Number.isFinite(this.y) ? this.y : 0;
+
+        if ("bbox" in childOptions && childOptions.bbox != null) {
+          const { bbox } = childOptions;
+          resolvedOptions.bbox = [bbox[0] + originX, bbox[1] + originY, bbox[2] + originX, bbox[3] + originY];
+
+        } else {
+          // Коробка родителя не наследуется: bbox ребёнка задаёт только его запись
+          delete resolvedOptions.bbox;
+          resolvedOptions.x = (resolvedOptions.x ?? 0) + originX;
+          resolvedOptions.y = (resolvedOptions.y ?? 0) + originY;
+        }
+      }
+
+      this.#createRef(name, go, resolvedOptions);
+    }
+
+    if (this.options.accept != null) {
+      const acceptMap = this.options.accept as WithMap<T>;
+
+      for (const [name, entry] of Object.entries(acceptMap)) {
+        const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
+        this.#createRef(name, go, { ...childOptions, acceptor: this });
+      }
+    }
+  }
+
+  #createRef(name: string, go: WorldObject[0], options: WorldObject[1]): void {
+    const instance = this.world.objects.get(...this.world.createObject(go, options))!;
+    this.refs[name] = instance;
+
+    this.onDestroy(() => {
+      const [kind, index] = instance.poolPointer;
+      this.world.objects.delete(kind, index);
+
+      instance.acceptor = null;
+      this.refs[name] = null;
+    });
   }
 }

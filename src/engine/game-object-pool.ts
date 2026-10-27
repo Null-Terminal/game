@@ -34,18 +34,34 @@ export class GameObjectPool {
     }
 
     const { length, buffer } = store;
+    const poolPointer: PoolPointer = [kind, length];
 
-    const poolPointer: PoolPointer = [kind, store.length++];
     const fromPool = buffer.length > length;
-
     const object = fromPool ? buffer[length]! : new GObject();
-    object.create(game, poolPointer, opts);
 
-    if (!fromPool) {
-      buffer.push(object);
+    store.length++;
+
+    try {
+      object.create(game, poolPointer, opts);
+
+      if (!fromPool) {
+        buffer.push(object);
+      }
+
+      return poolPointer;
+
+    } catch (err) {
+      try {
+        if (!object.destroyed) {
+          object.destroy();
+        }
+
+      } finally {
+        store.length = length;
+      }
+
+      throw err;
     }
-
-    return poolPointer;
   }
 
   delete(kind: number, index: number) {
