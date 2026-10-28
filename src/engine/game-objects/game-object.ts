@@ -5,7 +5,7 @@ import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
-import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
+import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 
 import { Movement } from "#engine/game-objects/game-object/movement";
@@ -142,11 +142,8 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.poolPointer = [this.poolPointer[0], index];
   }
 
+  @ifDead
   create(game: Game, poolPointer: PoolPointer, opts?: T): T {
-    if (!this.destroyed) {
-      throw new Error(`${this.constructor.name}.create: called on a live object`);
-    }
-
     this.destroyed = false;
     this.status.reset();
 

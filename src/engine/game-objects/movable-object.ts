@@ -1,12 +1,12 @@
-import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
+import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
-import { MovableObjectMotion } from "#engine/game-objects/movable-object-motion";
+import { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
 
 import type { Game, RenderPayload, Collision } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { GameObjectOptions } from "#engine/game-objects/types";
 
-export { MovableObjectMotion } from "#engine/game-objects/movable-object-motion";
+export { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
 
 export enum CollisionStatus {
   NoCollision     = 0b00000,
@@ -50,6 +50,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     this.motion.reset();
   }
 
+  @ifDead
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     this.#stats = { ...(this.constructor as typeof MovableObject).stats };
     this.motion.reset();
@@ -90,23 +91,27 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     }
 
     if (dx !== 0) {
+      const targetX = this.x + dx;
       const newX = this.#moveX(dx);
 
       if (newX !== this.x) {
         this.x = newX;
+      }
 
-      } else {
+      if (newX !== targetX) {
         moveStatus |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
       }
     }
 
     if (dy !== 0) {
+      const targetY = this.y + dy;
       const newY = this.#moveY(dy);
 
       if (newY !== this.y) {
         this.y = newY;
+      }
 
-      } else {
+      if (newY !== targetY) {
         moveStatus |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
     }
@@ -120,31 +125,29 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   ) {
     const { stats } = this;
 
-    this.onDestroy(
-      this.canvas.emitter.on(this.redrawEvent, (payload) => {
-        initializer?.(payload);
+    this.render.on(this.redrawEvent, (payload) => {
+      initializer?.(payload);
 
-        // Гравитация
-        stats.vy = Math.max(stats.gravity, stats.vy + stats.gravity * payload.delta);
+      // Гравитация
+      stats.vy = Math.max(stats.gravity, stats.vy + stats.gravity * payload.delta);
 
-        const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
+      const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
 
-        stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
+      stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
 
-        if (moveStatus & CollisionStatus.TopCollision) {
-          stats.vy = 0;
+      if (moveStatus & CollisionStatus.TopCollision) {
+        stats.vy = 0;
 
-        } else if (stats.onGround) {
-          stats.vy = stats.gravity;
-        }
+      } else if (stats.onGround) {
+        stats.vy = stats.gravity;
+      }
 
-        effect?.(moveStatus);
-      })
-    );
+      effect?.(moveStatus);
+    });
   }
 
-  protected hasCollision(x = this.x, y = this.y): boolean {
-    return this.world.hasCollision(x, y, x + this.width, y + this.height);
+  protected hasCollision(x = this.x, y = this.y, width = this.width, height = this.height): boolean {
+    return this.world.hasCollision(x, y, x + width, y + height);
   }
 
   protected findDynamicCollision(x = this.x, y = this.y): Collision | null {
@@ -155,8 +158,8 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return this.world.findInteractCollisions(x, y, x + this.width, y + this.height);
   }
 
-  protected findCollisions(x = this.x, y = this.y): readonly Collision[] {
-    return this.world.findCollisions(x, y, x + this.width, y + this.height);
+  protected findCollisions(x = this.x, y = this.y, width = this.width, height = this.height): readonly Collision[] {
+    return this.world.findCollisions(x, y, x + width, y + height);
   }
 
   #updateRiding() {
@@ -281,60 +284,66 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   }
 
   #moveX(delta: number): number {
-    if (delta === 0) {
-      return this.x;
+    const target = this.x + delta;
+
+    const left = Math.min(this.x, target);
+    const right = Math.max(this.x, target) + this.width;
+
+    if (!this.hasCollision(left, this.y, right - left, this.height)) {
+      return target;
     }
 
-    const newX = this.x + delta;
+    const collisions = this.findCollisions(left, this.y, right - left, this.height);
+    let resolved = target;
 
-    if (!this.hasCollision(newX, this.y)) {
-      return newX;
+    for (const { bbox } of collisions) {
+      resolved = delta > 0 ?
+        Math.min(resolved, bbox[0] - this.width) :
+        Math.max(resolved, bbox[2]);
     }
 
-    const step = Math.sign(delta);
+    if (resolved !== target) {
+      for (const { bbox, object } of collisions) {
+        const edge = delta > 0 ? bbox[0] - this.width : bbox[2];
 
-    let start = this.x;
-
-    while (Math.abs(start - this.x) < Math.abs(delta)) {
-      const next = start + step;
-
-      if (!this.hasCollision(next, this.y)) {
-        start = next;
-
-      } else {
-        break;
+        if (edge === resolved) {
+          object.visit(this);
+        }
       }
     }
 
-    return start;
+    return resolved;
   }
 
   #moveY(delta: number): number {
-    if (delta === 0) {
-      return this.y;
+    const target = this.y + delta;
+
+    const bottom = Math.min(this.y, target);
+    const top = Math.max(this.y, target) + this.height;
+
+    if (!this.hasCollision(this.x, bottom, this.width, top - bottom)) {
+      return target;
     }
 
-    const newY = this.y + delta;
+    const collisions = this.findCollisions(this.x, bottom, this.width, top - bottom);
+    let resolved = target;
 
-    if (!this.hasCollision(this.x, newY)) {
-      return newY;
+    for (const { bbox } of collisions) {
+      resolved = delta > 0 ?
+        Math.min(resolved, bbox[1] - this.height) :
+        Math.max(resolved, bbox[3]);
     }
 
-    const step = Math.sign(delta);
+    if (resolved !== target) {
+      for (const { bbox, object } of collisions) {
+        const edge = delta > 0 ? bbox[1] - this.height : bbox[3];
 
-    let start = this.y;
-
-    while (Math.abs(start - this.y) < Math.abs(delta)) {
-      const next = start + step;
-
-      if (!this.hasCollision(this.x, next)) {
-        start = next;
-
-      } else {
-        break;
+        if (edge === resolved) {
+          object.visit(this);
+        }
       }
     }
 
-    return start;
+    return resolved;
   }
 }
