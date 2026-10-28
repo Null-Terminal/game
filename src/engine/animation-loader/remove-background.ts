@@ -1,3 +1,31 @@
+export function removeCanvasBackground(canvas: OffscreenCanvas, color: string | boolean, tolerance: number) {
+  const ctx = canvas.getContext("2d")!;
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  if (data.length < 4) {
+    return;
+  }
+
+  // Определяем цвет фона из левого верхнего угла
+  let targetColor = new Uint8Array(data.buffer, 0, 4);
+
+  // Либо цвет для удаления задан явно
+  if (typeof color === "string") {
+    targetColor = new Uint8Array(4).fill(255);
+    targetColor.setFromHex(color.startsWith("#") ? color.slice(1) : color);
+  }
+
+  if (targetColor[3] === 0) {
+    return;
+  }
+
+  removeTargetColor(targetColor, data, canvas.width, canvas.height, tolerance, typeof color === "string");
+
+  ctx.putImageData(imageData, 0, 0);
+}
+
 /**
  * Делает прозрачными пиксели цвета фона. Для насыщенного ключа также удаляет
  * его тёмные оттенки и ослабляет цветной ореол по краям изображения.
@@ -9,7 +37,7 @@ export function removeTargetColor(
   height: number,
   tolerance: number,
   expandChroma: boolean
-): void {
+) {
   if (color.length !== 3 && color.length !== 4) {
     throw new TypeError("Color must have 3 (RGB) or 4 (RGBA) channels");
   }
@@ -21,7 +49,7 @@ export function removeTargetColor(
 
   const chromatic = expandChroma && keyRange >= 64;
   const dominant = color[0] === keyMax ? 0 : color[1] === keyMax ? 1 : 2;
-  const otherChannels = [0, 1, 2].filter(channel => channel !== dominant);
+  const otherChannels = [0, 1, 2].filter((channel) => channel !== dominant);
 
   // У такого ключа один канал заметно ярче двух остальных: например, зелёный у #00ff00
   const primaryKey = chromatic &&
@@ -64,7 +92,7 @@ export function removeTargetColor(
 
   if (chromatic) {
     // Вес показывает, насколько каждый канал характерен для цвета ключа
-    const weights = [0, 1, 2].map(channel => (color[channel]! - keyMin) / keyRange);
+    const weights = [0, 1, 2].map((channel) => (color[channel]! - keyMin) / keyRange);
     removeColorSpillAtEdges(weights, data, width, height);
   }
 }
@@ -86,7 +114,7 @@ function removeColorSpillAtEdges(
   data: Uint8ClampedArray,
   width: number,
   height: number
-): void {
+) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const offset = (y * width + x) * 4;

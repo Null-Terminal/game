@@ -13,7 +13,7 @@ export abstract class Disposable {
 
   #destroyed = false;
 
-  readonly #destructors: Function[] = [];
+  readonly #destructors: (() => void)[] = [];
   #abortController = new AbortController();
 
   onDestroy<T extends () => void>(destructor: T): T {
