@@ -1,30 +1,41 @@
-import type { BackdropImage, BackdropImagePosition, BackdropLayoutOptions, BackdropOrder } from "#engine/game-objects/backdrop-object/types";
+import type { BackgroundFlowGap, BackgroundFlowOrder } from "#engine/game-objects/background-flow-object/types";
 
-export class BackdropLayout {
-  get positions(): readonly BackdropImagePosition[] {
+export interface FlowPosition {
+  index: number;
+  position: number;
+}
+
+interface FlowLayoutOptions {
+  order?: BackgroundFlowOrder;
+  gap?: BackgroundFlowGap;
+  seed: number;
+}
+
+export class FlowLayout {
+  get positions(): readonly FlowPosition[] {
     return this.#positions;
   }
 
-  readonly #images: readonly BackdropImage[];
-  readonly #order: BackdropOrder;
+  readonly #sizes: readonly number[];
+  readonly #order: BackgroundFlowOrder;
 
   readonly #minGap: number;
   readonly #maxGap: number;
 
-  readonly #positions: BackdropImagePosition[] = [];
+  readonly #positions: FlowPosition[] = [];
   readonly #shuffledIndices: number[] = [];
 
-  #nextX: number;
+  #nextPosition = 0;
   #roundRobinIndex = 0;
   #randomState: number;
 
-  constructor(images: readonly BackdropImage[], startX: number, opts: BackdropLayoutOptions) {
-    const hasInvalidImages =
-      images.length === 0 ||
-      images.some((image) => !Number.isFinite(image.width) || image.width <= 0);
+  constructor(sizes: readonly number[], opts: FlowLayoutOptions) {
+    const hasInvalidSizes =
+      sizes.length === 0 ||
+      sizes.some((size) => !Number.isFinite(size) || size <= 0);
 
-    if (hasInvalidImages) {
-      throw new RangeError("Backdrop image widths must be positive finite numbers");
+    if (hasInvalidSizes) {
+      throw new RangeError("Background flow sizes must be positive finite numbers");
     }
 
     const { order = "shuffle", gap = -1, seed } = opts;
@@ -35,45 +46,44 @@ export class BackdropLayout {
     const hasInvalidGap = !Number.isFinite(minGap) || !Number.isFinite(maxGap) || minGap > maxGap;
 
     if (hasInvalidGap) {
-      throw new RangeError("Backdrop gap must be a finite number or an ascending range");
+      throw new RangeError("Background flow gap must be a finite number or an ascending range");
     }
 
-    this.#images = images;
+    this.#sizes = sizes;
     this.#order = order;
 
     this.#minGap = minGap;
     this.#maxGap = maxGap;
 
-    this.#nextX = startX;
     this.#randomState = seed >>> 0;
   }
 
-  extendTo(endX: number) {
-    while (this.#nextX < endX) {
-      const index = this.#selectNextImageIndex();
-      const width = this.#images[index]!.width;
+  extendTo(endPosition: number) {
+    while (this.#nextPosition < endPosition) {
+      const index = this.#selectNextIndex();
+      const size = this.#sizes[index]!;
 
-      if (this.#nextX + width > 0) {
-        this.#positions.push({ index, x: this.#nextX });
+      if (this.#nextPosition + size > 0) {
+        this.#positions.push({ index, position: this.#nextPosition });
       }
 
       const gap = this.#minGap === this.#maxGap ?
         this.#minGap : this.#minGap + this.#random() * (this.#maxGap - this.#minGap);
 
-      // Даже при отрицательном промежутке следующая позиция должна быть правее текущей.
-      this.#nextX += Math.max(1, width + gap);
+      // Даже при отрицательном промежутке следующая позиция должна быть дальше текущей.
+      this.#nextPosition += Math.max(1, size + gap);
     }
   }
 
-  #selectNextImageIndex(): number {
+  #selectNextIndex(): number {
     switch (this.#order) {
       case "random": {
-        return Math.floor(this.#random() * this.#images.length);
+        return Math.floor(this.#random() * this.#sizes.length);
       }
 
       case "round-robin": {
         const index = this.#roundRobinIndex;
-        this.#roundRobinIndex = (index + 1) % this.#images.length;
+        this.#roundRobinIndex = (index + 1) % this.#sizes.length;
         return index;
       }
 
@@ -88,7 +98,7 @@ export class BackdropLayout {
   }
 
   #refillShuffledIndices() {
-    for (let i = 0; i < this.#images.length; i++) {
+    for (let i = 0; i < this.#sizes.length; i++) {
       this.#shuffledIndices.push(i);
     }
 
