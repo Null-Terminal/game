@@ -1,0 +1,16 @@
+{
+  "params": {
+    "maxHeight": 724,
+    "opacity": 0.4
+  },
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 2172,
+      "height": 724,
+      "duration": 1000,
+      "spriteId": ""
+    }
+  ]
+}
