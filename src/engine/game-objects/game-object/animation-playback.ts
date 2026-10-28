@@ -4,8 +4,9 @@ export class AnimationPlayback {
   readonly animation: LoadedAnimation;
 
   #frameIndex: number;
-  #duration: number;
   #lastFrameTime = 0;
+
+  #duration: number;
   #direction = 1;
   #rendered = 0;
 
