@@ -1,7 +1,8 @@
 {
   "params": {
-    "maxHeight": 1836,
-    "opacity": 0.9
+    "maxHeight": 1636,
+    "opacity": 0.9,
+    "randomOrder": true
   },
   "sprites": [
     {
@@ -9,7 +10,31 @@
       "y": 0,
       "width": 672,
       "height": 1536,
-      "duration": 1000,
+      "duration": 1600,
+      "spriteId": ""
+    },
+    {
+      "x": 672,
+      "y": 0,
+      "width": 672,
+      "height": 1536,
+      "duration": 90,
+      "spriteId": ""
+    },
+    {
+      "x": 1344,
+      "y": 0,
+      "width": 672,
+      "height": 1536,
+      "duration": 850,
+      "spriteId": ""
+    },
+    {
+      "x": 2016,
+      "y": 0,
+      "width": 672,
+      "height": 1536,
+      "duration": 140,
       "spriteId": ""
     }
   ]
