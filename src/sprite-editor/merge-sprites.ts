@@ -52,7 +52,7 @@ export function mergeSprites(sprites: Sprite[], params?: RawAnimationParameters)
 
   // Вычисляем итоговые размеры атласа
   const totalHeight = rows.reduce((sum, row) => sum + row.height, 0);
-  const totalWidth = Math.min(MAX_WIDTH, Math.max(...rows.map(r => r.x)));
+  const totalWidth = Math.min(MAX_WIDTH, Math.max(...rows.map((r) => r.x)));
 
   // Создаём результирующий canvas
   const resultCanvas = document.createElement("canvas");
