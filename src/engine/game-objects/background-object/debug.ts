@@ -1,0 +1,39 @@
+import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+
+export interface StretchTileBounds {
+  x: number;
+  y: number;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+export class BackgroundObjectDebug extends GameObjectDebug {
+  drawStretchSeams(
+    ctx: CanvasRenderingContext2D,
+    tile: StretchTileBounds,
+    repeatX: boolean | undefined,
+    repeatY: boolean | undefined
+  ) {
+    const vertical = repeatX && tile.x >= tile.left && tile.x < tile.right;
+    const horizontal = repeatY && tile.y >= tile.top && tile.y < tile.bottom;
+
+    if (!vertical && !horizontal) {
+      return;
+    }
+
+    ctx.save();
+    ctx.fillStyle = "#FF00FF";
+
+    if (vertical) {
+      ctx.fillRect(Math.round(tile.x), tile.top, 2, tile.bottom - tile.top);
+    }
+
+    if (horizontal) {
+      ctx.fillRect(tile.left, Math.round(tile.y), tile.right - tile.left, 2);
+    }
+
+    ctx.restore();
+  }
+}

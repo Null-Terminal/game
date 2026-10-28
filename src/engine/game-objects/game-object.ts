@@ -63,10 +63,18 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
   visualOffsetY = 0;
 
-  readonly movement = new Movement(this);
   readonly status = new GameObjectStatus(this);
   readonly render = new GameObjectRender(this);
-  readonly debug = new GameObjectDebug(this);
+
+  @cache
+  get movement(): Movement {
+    return this.#movement = new Movement(this);
+  }
+
+  @cache
+  get debug(): GameObjectDebug {
+    return new GameObjectDebug(this);
+  }
 
   get name(): string {
     return this.constructor.name;
@@ -107,6 +115,8 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   #width = 0;
   #height = 0;
 
+  #movement: Movement | null = null;
+
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
     super();
@@ -120,9 +130,11 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       return;
     }
 
-    this.render.clear();
     super.destroy();
 
+    this.render.clear();
+    this.animation.off();
+    this.#movement?.reset();
     this.status.reset();
   }
 

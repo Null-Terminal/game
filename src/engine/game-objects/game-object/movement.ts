@@ -15,8 +15,7 @@ export class Movement {
   }
 
   follow(movement: MovementOptions) {
-    this.#cancelMovementHandler?.();
-    this.#cancelMovementHandler = null;
+    this.reset();
 
     if ("path" in movement) {
       this.#followPath(movement.path, movement);
@@ -39,6 +38,11 @@ export class Movement {
     }
 
     throw new TypeError(`${this.constructor.name}.follow: unknown movement`);
+  }
+
+  reset() {
+    this.#cancelMovementHandler?.();
+    this.#cancelMovementHandler = null;
   }
 
   #followPath(path: MovePath, { tolerance = 5, speed = 100 }: Pick<PathMovement, "tolerance" | "speed">) {
@@ -152,8 +156,8 @@ export class Movement {
   #drive(step: (delta: number) => void) {
     const go = this.#go;
 
-    this.#cancelMovementHandler = go.onDestroy(go.canvas.emitter.on(go.redrawEvent, ({ delta }) => {
+    this.#cancelMovementHandler = go.render.on(go.redrawEvent, ({ delta }) => {
       step(delta);
-    }));
+    });
   }
 }

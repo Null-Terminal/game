@@ -1,12 +1,14 @@
+import { cache } from "#decorators/cache";
+
 import type { Game } from "#engine/game";
 
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BakedFrame } from "#engine/animation-loader/types";
 
 import { GameObject } from "#engine/game-objects/game-object";
-import { drawDebugOutline, drawDebugStretchSeams } from "#engine/game-objects/debug-drawing";
+import { BackgroundObjectDebug } from "#engine/game-objects/background-object/debug";
 
-import type { GameObjectOptions, RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
+import type { GameObjectOptions, ObjectRenderPayload, RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
 import type { Axis, DefaultBackgroundObjectOptions, VisibleBounds } from "#engine/game-objects/background-object/types";
 
 export type * from "#engine/game-objects/background-object/types";
@@ -14,25 +16,31 @@ export type * from "#engine/game-objects/background-object/types";
 export abstract class BackgroundObject<
   T extends GameObjectOptions<DefaultBackgroundObjectOptions> = GameObjectOptions<DefaultBackgroundObjectOptions>
 > extends GameObject<T> {
-  // Переиспользуем границы, чтобы не создавать объект на каждом кадре
-  readonly #visibleBounds: VisibleBounds = { left: 0, top: 0, right: 0, bottom: 0 };
+  @cache
+  override get debug(): BackgroundObjectDebug {
+    return new BackgroundObjectDebug(this);
+  }
 
   override get redrawEvent() {
     const { background, overlay } = this.canvas.events;
     return this.options?.overlay ? overlay : background;
   }
 
+  // Переиспользуем границы, чтобы не создавать объект на каждом кадре
+  readonly #visibleBounds: VisibleBounds = { left: 0, top: 0, right: 0, bottom: 0 };
+
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     const options = super.create(game, poolPointer, opts);
+    const autoStretch = this.shouldAutoStretchInfiniteBounds();
 
-    if (!Number.isFinite(this.width) && !options.stretch?.includes("w")) {
+    if (autoStretch && !Number.isFinite(this.width) && !options.stretch?.includes("w")) {
       options.stretch = options.stretch?.includes("h") ? "hw" : "w";
     }
 
     if (!Number.isFinite(this.height)) {
       this.height = Infinity;
 
-      if (!options.stretch?.includes("h")) {
+      if (autoStretch && !options.stretch?.includes("h")) {
         options.stretch = options.stretch?.includes("w") ? "wh" : "h";
       }
     }
@@ -40,20 +48,15 @@ export abstract class BackgroundObject<
     return options;
   }
 
+  protected shouldAutoStretchInfiniteBounds(): boolean {
+    return true;
+  }
+
   protected override renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
-    const { game: { camera }, canvas: { canvas }, options: opts } = this;
+    const { options: opts } = this;
 
     const stretchWidth = opts.stretch?.includes("w");
     const stretchHeight = opts.stretch?.includes("h");
-
-    // Синхронизируемся с размером холста, чтобы поддержать ресайз окна
-    if (stretchWidth) {
-      this.width = canvas.width;
-    }
-
-    if (stretchHeight) {
-      this.height = canvas.height;
-    }
 
     const staticWidth = opts.static?.includes("w");
     const staticHeight = opts.static?.includes("h");
@@ -61,50 +64,46 @@ export abstract class BackgroundObject<
     const scrollX = this.getScrollOffset("w");
     const scrollY = this.getScrollOffset("h");
 
-    let { x, y } = payload;
-
-    // Координаты payload.x/y уже содержат в себе скроллинг (камеру),
-    // но для корректной реализации static и scrollFactor нужно отменить этот скроллинг и применить заново с уточнениями
-    x += camera.x - scrollX;
-    y += camera.y - scrollY;
-
-    // Сохраняем обновленные координаты
-    payload.x = x;
-    payload.y = y;
-
     const wrapWidth = stretchWidth && !staticWidth;
     const wrapHeight = stretchHeight && !staticHeight;
+
+    this.prepareRenderFrame(payload, scrollX, scrollY);
     const bounds = this.getVisibleBounds(scrollX, scrollY);
 
-    if (!this.isVisibleInViewport(bounds.left, bounds.top, bounds.right, bounds.bottom)) {
+    if (bounds == null) {
       return;
     }
 
     if (!wrapWidth && !wrapHeight) {
       defaultRender(payload);
-      return;
+
+    } else {
+      const image = payload.animation.getPatternFrame(payload.frameIndex, this.width, this.height, this.effects);
+      this.#stretchPattern(payload, image, wrapWidth, wrapHeight, scrollX, scrollY, bounds);
     }
 
-    const image = this.getStretchImage(payload, this.width, this.height);
-    this.#stretchPattern(payload, image, wrapWidth, wrapHeight, scrollX, scrollY, bounds);
+    this.debug.draw(payload, this.bbox != null ? bounds : undefined);
   }
 
-  protected override drawDebug(payload: RenderFramePayload) {
-    if (this.bbox == null) {
-      super.drawDebug(payload);
-      return;
+  protected prepareRenderFrame(
+    payload: ObjectRenderPayload,
+    scrollX: number,
+    scrollY: number
+  ) {
+    const { game: { camera }, canvas: { canvas }, options } = this;
+
+    // Синхронизируемся с размером холста, чтобы поддержать ресайз окна.
+    if (options.stretch?.includes("w")) {
+      this.width = canvas.width;
     }
 
-    if (!this.options.debug?.outline) {
-      return;
+    if (options.stretch?.includes("h")) {
+      this.height = canvas.height;
     }
 
-    const bounds = this.getVisibleBounds(this.getScrollOffset("w"), this.getScrollOffset("h"));
-    drawDebugOutline(payload.ctx, this.options.debug.outline, bounds.left, bounds.top, bounds.right, bounds.bottom);
-  }
-
-  protected getStretchImage(payload: RenderFramePayload, width: number, height: number): BakedFrame {
-    return payload.animation.getPatternFrame(payload.frameIndex, width, height, this.effects);
+    // Координаты уже содержат скроллинг камеры. Заменяем его на scrollFactor и static.
+    payload.x += camera.x - scrollX;
+    payload.y += camera.y - scrollY;
   }
 
   protected getScrollOffset(axis: Axis): number {
@@ -119,7 +118,7 @@ export abstract class BackgroundObject<
     return (axis === "w" ? this.game.camera.x : this.game.camera.y) * factor;
   }
 
-  protected getVisibleBounds(scrollX: number, scrollY: number): Readonly<VisibleBounds> {
+  protected getVisibleBounds(scrollX: number, scrollY: number): Readonly<VisibleBounds> | null {
     const { bbox } = this;
     const { width, height } = this.canvas.canvas;
 
@@ -138,7 +137,7 @@ export abstract class BackgroundObject<
       bounds.bottom = Math.min(height, height - bbox[1] + scrollY);
     }
 
-    return bounds;
+    return this.isVisibleInViewport(bounds.left, bounds.top, bounds.right, bounds.bottom) ? bounds : null;
   }
 
   #stretchPattern(
@@ -222,7 +221,7 @@ export abstract class BackgroundObject<
           ctx.drawImage(pattern, srcX, srcY, srcW, srcH, destX, destY, destW, destH);
 
           if (showStretchSeams) {
-            drawDebugStretchSeams(ctx, {
+            this.debug.drawStretchSeams(ctx, {
               x: dx,
               y: dy,
               left: destX,
@@ -240,6 +239,7 @@ export abstract class BackgroundObject<
   #firstPatternPosition(origin: number, size: number, visibleStart: number): number {
     // Перекрываем соседние плитки на 1 px, но для плитки размером 1 px шаг остаётся равным 1
     const step = Math.max(1, size - 1);
+
     let start = origin % step;
 
     if (start > 0) {
