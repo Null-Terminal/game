@@ -9,7 +9,95 @@
       "y": 0,
       "width": 1214,
       "height": 1010,
-      "duration": 1000,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 1214,
+      "y": 0,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 2428,
+      "y": 0,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 3642,
+      "y": 0,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 0,
+      "y": 1010,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 1214,
+      "y": 1010,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 2428,
+      "y": 1010,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 3642,
+      "y": 1010,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 0,
+      "y": 2020,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 1214,
+      "y": 2020,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 2428,
+      "y": 2020,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
+      "spriteId": ""
+    },
+    {
+      "x": 3642,
+      "y": 2020,
+      "width": 1214,
+      "height": 1010,
+      "duration": 160,
       "spriteId": ""
     }
   ]
