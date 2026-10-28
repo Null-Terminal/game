@@ -7,10 +7,12 @@ import type { BBoxTuple } from "#engine/rtree";
 
 import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
-import { drawDebugOutline } from "#engine/game-objects/debug-drawing";
 
-import { Movement } from "#engine/game-objects/movement";
-import { GameObjectStatus } from "#engine/game-objects/game-object-status";
+import { Movement } from "#engine/game-objects/game-object/movement";
+import { GameObjectStatus } from "#engine/game-objects/game-object/status";
+import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
+import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 
 import type { Animations, AnimationEvents } from "#engine/game-objects/types";
 import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
@@ -49,6 +51,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   options!: T;
   effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
+  bbox: BBoxTuple | null = null;
 
   x = 0;
   prevX = 0;
@@ -56,10 +59,14 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   y = 0;
   prevY = 0;
 
-  bbox: BBoxTuple | null = null;
+  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
+  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
+  visualOffsetY = 0;
 
   readonly movement = new Movement(this);
   readonly status = new GameObjectStatus(this);
+  readonly render = new GameObjectRender(this);
+  readonly debug = new GameObjectDebug(this);
 
   get name(): string {
     return this.constructor.name;
@@ -78,7 +85,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   }
 
   get nowPlaying(): Animations[keyof Animations] | null {
-    return this.#nowPlaying;
+    return this.render.nowPlaying;
   }
 
   get width() {
@@ -88,10 +95,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   get height() {
     return this.#height;
   }
-
-  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
-  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
-  protected visualOffsetY = 0;
 
   protected set width(value: number) {
     this.#width = value;
@@ -103,9 +106,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   #width = 0;
   #height = 0;
-
-  #nowPlaying: Animations[keyof Animations] | null = null;
-  #cancelRedrawHandler: (() => void) | null = null;
 
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
@@ -120,12 +120,10 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       return;
     }
 
-    this.#cancelRedrawHandler?.();
-    this.#cancelRedrawHandler = null;
+    this.render.clear();
     super.destroy();
 
     this.status.reset();
-    this.#nowPlaying = null;
   }
 
   reindex(index: number) {
@@ -183,62 +181,21 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   @ifAlive
   ensurePlaying(animation: Animations[keyof Animations]) {
-    if (this.#nowPlaying !== animation) {
+    if (this.nowPlaying !== animation) {
       this.play(animation);
     }
   }
 
   @ifAlive
   play(animation: Animations[keyof Animations]) {
-    const spriteAnimation = animation.animation;
-    const params = spriteAnimation.params;
-
-    if (spriteAnimation.isEmpty()) {
-      throw new RangeError("Cannot play an animation without frames");
-    }
-
-    let lastFrameTime = 0;
-    let frameIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
-
-    const pickDuration = () => {
-      if (params.randomDuration == null) {
-        return spriteAnimation.at(frameIndex)!.duration;
-      }
-
-      const [min = 100, max = min] = params.randomDuration;
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    };
-
-    let duration = pickDuration();
-
-    this.#cancelRedrawHandler?.();
-    this.#nowPlaying = animation;
-
-    const { game: { camera }, canvas: { canvas, emitter }, bbox, effects } = this;
+    const playback = new AnimationPlayback(animation);
+    const { bbox, effects } = this;
 
     // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     if (bbox == null) {
       this.width = animation.maxWidth * effects.scale;
       this.height = animation.maxHeight * effects.scale;
     }
-
-    let inc = 1;
-    let rendered = 0;
-
-    // Нормализует y, так как canvas считает 0 верхом, а не низом
-    const resolveY = (y: number) => canvas.height - y - this.height;
-
-    const framePayload = {
-      ctx: null as CanvasRenderingContext2D | null,
-      now: 0,
-      delta: 0,
-      pattern: false,
-      frameIndex: 0,
-      animation: null as typeof animation | null,
-      x: 0,
-      y: 0,
-      resolveY
-    } as RenderFramePayload;
 
     const renderFrame: RenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, resolveY }) => {
       const { width: w, height: h } = this;
@@ -267,63 +224,21 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       }
     };
 
-    this.#cancelRedrawHandler = emitter.on(this.redrawEvent, (payload) => {
-      if (this.status.shadowed) {
-        return;
-      }
+    this.render.onRedraw((payload) => {
+      const framePayload = payload as RenderFramePayload;
 
-      const sprite = spriteAnimation.at(frameIndex)!;
-
-      const x = this.x - camera.x;
-      const y = this.y - camera.y - this.visualOffsetY;
-
-      framePayload.ctx = payload.ctx;
-      framePayload.now = payload.now;
-      framePayload.delta = payload.delta;
       framePayload.pattern = bbox != null;
-      framePayload.frameIndex = frameIndex;
+      framePayload.frameIndex = playback.frameIndex;
       framePayload.animation = animation;
-      framePayload.x = x;
-      framePayload.y = y;
 
       this.renderFrame(framePayload, renderFrame);
-      this.drawDebug(framePayload);
 
-      if ((!rendered || sprite.spriteId !== "") && animation.name in this.animation.events) {
-        this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
+      if (playback.shouldEmitEvent && animation.name in this.animation.events) {
+        this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);
       }
 
-      if (!this.status.paused && (payload.now - lastFrameTime >= duration / (params.speed * effects.speed))) {
-        if (params.randomOrder) {
-          frameIndex = spriteAnimation.randomIndex();
-
-        } else {
-          if (params.loopReverse) {
-            if (frameIndex + inc === spriteAnimation.length) {
-              inc = -1;
-
-            } else if (frameIndex + inc === params.loopFrom - 1) {
-              inc = 1;
-            }
-          }
-
-          if (frameIndex === spriteAnimation.length - 1) {
-            rendered = 2;
-          }
-
-          frameIndex = (frameIndex + inc) % spriteAnimation.length;
-
-          if (frameIndex === 0 && rendered > 1) {
-            frameIndex += params.loopFrom;
-          }
-        }
-
-        lastFrameTime = payload.now;
-        duration = pickDuration();
-      }
-
-      rendered ||= 1;
-    });
+      playback.advance(payload.now, effects.speed, this.status.paused);
+    }, animation);
   }
 
   protected bindFlush() {}
@@ -339,13 +254,13 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       return;
     }
 
-    this.onDestroy(this.canvas.emitter.on(flush, () => {
+    this.render.on(flush, () => {
       if (this.destroyed || this.status.shadowed) {
         return;
       }
 
       this.bindFlush();
-    }));
+    });
   }
 
   protected isVisibleInViewport(left: number, top: number, right: number, bottom: number): boolean {
@@ -368,27 +283,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
   protected renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
     defaultRender(payload);
-  }
-
-  protected drawDebug({ ctx, x, y }: RenderFramePayload) {
-    const { width, height } = this;
-
-    const outline = this.options.debug?.outline;
-
-    if (!outline || Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(width) || Number.isNaN(height)) {
-      return;
-    }
-
-    const { width: viewWidth, height: viewHeight } = this.canvas.canvas;
-
-    const left = Math.max(0, x);
-    const right = Number.isFinite(width) ? Math.min(viewWidth, x + width) : viewWidth;
-
-    const rawBottom = viewHeight - y;
-    const top = Number.isFinite(height) ? Math.max(0, rawBottom - height) : 0;
-    const bottom = Math.min(viewHeight, rawBottom);
-
-    drawDebugOutline(ctx, outline, left, top, right, bottom);
+    this.debug.draw(payload);
   }
 
   protected onMove(_status: number) {

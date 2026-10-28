@@ -1,14 +1,14 @@
 import { GameObject } from "#engine/game-objects/game-object";
 
-import type { MovementOptions, PathMovement } from "#engine/game-objects/movement/types";
-import type { MovePoint, MoveSpeed, MovePath, Sine, Circle } from "#engine/game-objects/movement/types";
+import type { MovementOptions, PathMovement } from "#engine/game-objects/game-object/movement/types";
+import type { MovePoint, MoveSpeed, MovePath, Sine, Circle } from "#engine/game-objects/game-object/movement/types";
 
-export type * from "#engine/game-objects/movement/types";
+export type * from "#engine/game-objects/game-object/movement/types";
 
 export class Movement {
-  readonly #go;
+  readonly #go: GameObject;
 
-  #cancelMovementHandler: Function | null = null;
+  #cancelMovementHandler: (() => void) | null = null;
 
   constructor(gameObject: GameObject) {
     this.#go = gameObject;

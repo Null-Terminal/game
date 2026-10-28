@@ -6,7 +6,7 @@ import type { KindedGameObjectCtor } from "#engine/game-object-pool";
 import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
 
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { MovementOptions } from "#engine/game-objects/movement/types";
+import type { MovementOptions } from "#engine/game-objects/game-object/movement/types";
 
 export type AbstractGameObjectCtor = abstract new (...args: any[]) => GameObject;
 
@@ -66,16 +66,16 @@ export type GameObjectOptions<T = DefaultGameObjectOptions> =
   { x?: number; y?: number } & T |
   { bbox?: BBoxTuple } & T;
 
-export interface RenderFramePayload extends RenderPayload {
-  pattern: boolean;
-
-  frameIndex: number;
-  animation: Animations[keyof Animations];
-
+export interface ObjectRenderPayload extends RenderPayload {
   x: number;
   y: number;
-
   resolveY(y: number): number;
+}
+
+export interface RenderFramePayload extends ObjectRenderPayload {
+  pattern: boolean;
+  frameIndex: number;
+  animation: Animations[keyof Animations];
 }
 
 export type RenderFrame = (payload: RenderFramePayload) => void;
