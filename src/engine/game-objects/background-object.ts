@@ -115,7 +115,10 @@ export abstract class BackgroundObject<
       this.options.scrollFactor?.[0] ?? 1 :
       this.options.scrollFactor?.[1] ?? this.options.scrollFactor?.[0] ?? 1;
 
-    return (axis === "w" ? this.game.camera.x : this.game.camera.y) * factor;
+    const offset = (axis === "w" ? this.game.camera.x : this.game.camera.y) * factor;
+
+    // Ближние слои рисуем по целым пикселям: дробный сдвиг камеры заставляет мелкую фактуру мерцать
+    return factor === 1 ? Math.round(offset) : offset;
   }
 
   protected getVisibleBounds(scrollX: number, scrollY: number): Readonly<VisibleBounds> | null {
