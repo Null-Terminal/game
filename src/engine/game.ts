@@ -1,8 +1,8 @@
 import { Disposable } from "#engine/disposable";
-
-import { Camera } from "#engine/game/camera";
 import { GameStatus } from "#engine/game/game-status";
-import { World } from "#engine/game/world";
+
+import type { Camera } from "#engine/game/camera";
+import type { World } from "#engine/game/world";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 
 export { GameStatus } from "#engine/game/game-status";

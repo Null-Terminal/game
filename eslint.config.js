@@ -42,6 +42,10 @@ export default defineConfig([
   {
     files: ["**/*.{ts,mts,cts}"],
     rules: {
+      "@typescript-eslint/consistent-type-imports": ["error", {
+        prefer: "type-imports",
+        fixStyle: "separate-type-imports"
+      }],
       "no-restricted-syntax": ["error", {
         selector: ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)[returnType.typeAnnotation.type="TSVoidKeyword"][body.type="BlockStatement"]',
         message: "Omit explicit void on implemented functions; TypeScript infers it"
