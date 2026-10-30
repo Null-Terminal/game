@@ -1,4 +1,6 @@
 import type { MovableObject } from "#engine/game-objects/movable-object";
+import { ifAlive } from "#engine/game-objects/decorators";
+import { GameObjectServant } from "#engine/game-objects/servant";
 
 enum State {
   // Объект не взаимодействует со внешним миром, движение без коллизий
@@ -8,15 +10,13 @@ enum State {
   Solid,
 }
 
-export class MovableObjectMotion {
+export class MovableObjectMotion extends GameObjectServant<MovableObject> {
   static readonly State = State;
-
-  readonly #go: MovableObject;
 
   #state = State.Solid;
 
-  constructor(gameObject: MovableObject) {
-    this.#go = gameObject;
+  constructor(go: MovableObject) {
+    super(go);
   }
 
   get kinematic() {
@@ -39,11 +39,8 @@ export class MovableObjectMotion {
     this.#state = State.Solid;
   }
 
+  @ifAlive
   #set(state: State) {
-    if (this.#go.destroyed) {
-      throw new Error(`${this.#go.name}.motion: called on destroyed object`);
-    }
-
     this.#state = state;
   }
 }

@@ -4,7 +4,7 @@ export class AnimationPlayback {
   readonly animation: LoadedAnimation;
 
   #frameIndex: number;
-  #lastFrameTime = 0;
+  #lastFrameElapsed = 0;
 
   #duration: number;
   #direction = 1;
@@ -34,11 +34,11 @@ export class AnimationPlayback {
     return this.#rendered === 0 || this.sprite.spriteId !== "";
   }
 
-  advance(now: number, speed: number, paused: boolean) {
+  advance(elapsed: number) {
     const sprites = this.animation.animation;
     const { params } = sprites;
 
-    if (!paused && now - this.#lastFrameTime >= this.#duration / (params.speed * speed)) {
+    if (elapsed - this.#lastFrameElapsed >= this.#duration / params.speed) {
       if (params.randomOrder) {
         this.#frameIndex = sprites.randomIndex();
 
@@ -63,7 +63,7 @@ export class AnimationPlayback {
         }
       }
 
-      this.#lastFrameTime = now;
+      this.#lastFrameElapsed = elapsed;
       this.#duration = this.#pickDuration();
     }
 

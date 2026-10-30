@@ -1,4 +1,4 @@
-import type { DefaultGameObjectOptions, GameObjectDebugOptions } from "#engine/game-objects/types";
+import type { DefaultGameObjectOptions, GameObjectDebugOptions } from "#engine/game-objects/game-object";
 
 export type Axis = "w" | "h";
 export type AxisFlags = "" | Axis | "wh" | "hw";

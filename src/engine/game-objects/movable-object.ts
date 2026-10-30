@@ -4,7 +4,7 @@ import { MovableObjectMotion } from "#engine/game-objects/movable-object/motion"
 
 import type { Game, RenderPayload, Collision } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
-import type { GameObjectOptions } from "#engine/game-objects/types";
+import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
 export { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
 

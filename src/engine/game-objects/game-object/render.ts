@@ -1,40 +1,38 @@
+import { ifAlive } from "#engine/game-objects/decorators";
+import { GameObjectServant } from "#engine/game-objects/servant";
+
 import type { Handler, Handlers } from "#/event-emitter";
-import type { LoadedAnimation } from "#engine/animation-loader";
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { ObjectRenderPayload } from "#engine/game-objects/types";
+import type { ObjectRenderPayload, PlayableAnimation } from "#engine/game-objects/game-object/types";
 
-export class GameObjectRender {
-  readonly #go: GameObject;
-
+export class GameObjectRender extends GameObjectServant {
   readonly #payload: ObjectRenderPayload;
   readonly #listeners = new Set<() => void>();
 
   #stopRedraw: (() => void) | null = null;
-  #playing: LoadedAnimation | null = null;
+  #playing: PlayableAnimation | null = null;
 
-  constructor(gameObject: GameObject) {
-    this.#go = gameObject;
+  constructor(go: GameObject) {
+    super(go);
 
     this.#payload = {
       ctx: null as CanvasRenderingContext2D | null,
       now: 0,
       delta: 0,
+      elapsed: 0,
       x: 0,
       y: 0,
-      resolveY: (y: number) => gameObject.canvas.canvas.height - y - gameObject.height
+      resolveY: (y: number) => go.canvas.canvas.height - y - go.height
     } as ObjectRenderPayload;
   }
 
-  get nowPlaying(): LoadedAnimation | null {
+  get nowPlaying(): PlayableAnimation | null {
     return this.#playing;
   }
 
+  @ifAlive
   on<E extends Handlers>(event: E, listener: Handler<E["PayloadType"]>): () => void {
-    if (this.#go.destroyed) {
-      throw new Error(`${this.#go.name}.render: called on destroyed object`);
-    }
-
-    const unsubscribe = this.#go.canvas.emitter.on(event, listener);
+    const unsubscribe = this.go.canvas.emitter.on(event, listener);
 
     const stop = () => {
       if (this.#listeners.delete(stop)) {
@@ -46,22 +44,32 @@ export class GameObjectRender {
     return stop;
   }
 
-  onRedraw(draw: (payload: ObjectRenderPayload) => void, animation: LoadedAnimation | null = null) {
-    if (this.#go.destroyed) {
-      throw new Error(`${this.#go.name}.render: called on destroyed object`);
-    }
-
-    this.#stopRedraw?.();
+  @ifAlive
+  onRedraw(
+    draw: (payload: ObjectRenderPayload) => void,
+    animation: PlayableAnimation | null = null,
+    onStop?: () => void
+  ) {
+    this.stopRedraw();
     this.#playing = animation;
 
-    const go = this.#go;
-    const payload = this.#payload;
+    const go = this.go;
 
-    this.#stopRedraw = this.on(go.redrawEvent, (frame) => {
+    const payload = this.#payload;
+    payload.elapsed = 0;
+
+    let lastNow = 0;
+
+    const unsubscribe = this.on(go.redrawEvent, (frame) => {
       if (go.status.shadowed) {
         return;
       }
 
+      if (lastNow !== 0 && !go.status.paused) {
+        payload.elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
+      }
+
+      lastNow = frame.now;
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
@@ -70,14 +78,25 @@ export class GameObjectRender {
 
       draw(payload);
     });
+
+    this.#stopRedraw = () => {
+      unsubscribe();
+      onStop?.();
+    };
+  }
+
+  stopRedraw() {
+    const stop = this.#stopRedraw;
+    this.#stopRedraw = null;
+    this.#playing = null;
+    stop?.();
   }
 
   clear() {
+    this.stopRedraw();
+
     for (const stop of this.#listeners) {
       stop();
     }
-
-    this.#stopRedraw = null;
-    this.#playing = null;
   }
 }

@@ -1,5 +1,7 @@
+import { GameObjectServant } from "#engine/game-objects/servant";
+
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { ObjectRenderPayload } from "#engine/game-objects/types";
+import type { ObjectRenderPayload } from "#engine/game-objects/game-object/types";
 
 interface OutlineBounds {
   left: number;
@@ -8,16 +10,14 @@ interface OutlineBounds {
   bottom: number;
 }
 
-export class GameObjectDebug {
-  readonly #go: GameObject;
-
-  constructor(gameObject: GameObject) {
-    this.#go = gameObject;
+export class GameObjectDebug extends GameObjectServant {
+  constructor(go: GameObject) {
+    super(go);
   }
 
   draw({ ctx, x, y }: ObjectRenderPayload, bounds?: Readonly<OutlineBounds>) {
-    const { width, height } = this.#go;
-    const outline = this.#go.options.debug?.outline;
+    const { width, height } = this.go;
+    const outline = this.go.options.debug?.outline;
 
     if (!outline || Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(width) || Number.isNaN(height)) {
       return;
@@ -28,7 +28,7 @@ export class GameObjectDebug {
       return;
     }
 
-    const { width: viewWidth, height: viewHeight } = this.#go.canvas.canvas;
+    const { width: viewWidth, height: viewHeight } = this.go.canvas.canvas;
 
     const left = Math.max(0, x);
     const right = Number.isFinite(width) ? Math.min(viewWidth, x + width) : viewWidth;

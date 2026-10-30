@@ -4,6 +4,7 @@ import { EventEmitter, handler } from "#/event-emitter";
 import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
+import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
 
 import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
@@ -13,10 +14,12 @@ import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import type {
+  Animations, AnimationEvents, PlayableAnimation, RenderFrame, RenderFramePayload,
+  GameObjectOptions, Effects, WithMap, Refs, RefOf
+} from "#engine/game-objects/game-object/types";
 
-import type { Animations, AnimationEvents } from "#engine/game-objects/types";
-import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
-import type { GameObjectOptions, Effects, WithMap, Refs, RefOf } from "#engine/game-objects/types";
+export type * from "#engine/game-objects/game-object/types";
 
 export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
   static refs<O extends GameObjectOptions>() {
@@ -35,7 +38,12 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   @cache
   static get animationEntries() {
     const entries = Object.entries(this.animations);
-    entries.forEach(([name, value]) => value.name = name);
+    entries.forEach(([name, value]) => {
+      if (value instanceof LoadedAnimation) {
+        value.name = name;
+      }
+    });
+
     return entries;
   }
 
@@ -92,7 +100,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     return this.game.world;
   }
 
-  get nowPlaying(): Animations[keyof Animations] | null {
+  get nowPlaying(): PlayableAnimation | null {
     return this.render.nowPlaying;
   }
 
@@ -189,14 +197,27 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   }
 
   @ifAlive
-  ensurePlaying(animation: Animations[keyof Animations]) {
+  ensurePlaying(animation: PlayableAnimation) {
     if (this.nowPlaying !== animation) {
       this.play(animation);
     }
   }
 
   @ifAlive
-  play(animation: Animations[keyof Animations]) {
+  play(animation: PlayableAnimation) {
+    this.render.stopRedraw();
+
+    if (typeof animation === "function") {
+      const playback = animation(this);
+
+      this.render.onRedraw((frame) => {
+        playback.draw(frame);
+        playback.advance?.(frame.elapsed);
+      }, animation, () => playback.destroy?.());
+
+      return;
+    }
+
     const playback = new AnimationPlayback(animation);
     const { bbox, effects } = this;
 
@@ -246,7 +267,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
         this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);
       }
 
-      playback.advance(payload.now, effects.speed, this.status.paused);
+      playback.advance(payload.elapsed);
     }, animation);
   }
 

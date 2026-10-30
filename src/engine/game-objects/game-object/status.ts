@@ -1,4 +1,7 @@
-import { GameObject } from "#engine/game-objects/game-object";
+import { ifAlive } from "#engine/game-objects/decorators";
+import { GameObjectServant } from "#engine/game-objects/servant";
+
+import type { GameObject } from "#engine/game-objects/game-object";
 
 enum State {
   Active,
@@ -6,15 +9,13 @@ enum State {
   Shadowed,
 }
 
-export class GameObjectStatus {
+export class GameObjectStatus extends GameObjectServant {
   static readonly State = State;
-
-  readonly #go: GameObject;
 
   #state = State.Active;
 
-  constructor(gameObject: GameObject) {
-    this.#go = gameObject;
+  constructor(go: GameObject) {
+    super(go);
   }
 
   get active() {
@@ -61,11 +62,8 @@ export class GameObjectStatus {
     this.#state = State.Active;
   }
 
+  @ifAlive
   #set(state: State) {
-    if (this.#go.destroyed) {
-      throw new Error(`${this.#go.name}.status: called on destroyed object`);
-    }
-
     this.#state = state;
   }
 }

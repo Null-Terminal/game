@@ -1,5 +1,5 @@
 import { GameObject } from "#engine/game-objects/game-object";
-import type { GameObjectOptions } from "#engine/game-objects/types";
+import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
 export abstract class DynamicObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
   override get redrawEvent() {

@@ -1,5 +1,5 @@
 import { StaticObject } from "#engine/game-objects/static-object";
-import type { GameObjectOptions } from "#engine/game-objects/types";
+import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
 export abstract class StaticInteractObject<T extends GameObjectOptions = GameObjectOptions> extends StaticObject<T> {
   override get redrawEvent() {

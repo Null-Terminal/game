@@ -1,5 +1,5 @@
 import type { LoadedAnimation } from "#engine/animation-loader";
-import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object/types";
+import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object";
 
 export type BackgroundFlowDirection = "horizontal" | "vertical";
 export type BackgroundFlowOrder = "shuffle" | "random" | "round-robin";

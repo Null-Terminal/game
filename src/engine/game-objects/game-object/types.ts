@@ -1,9 +1,8 @@
 import type { Handlers } from "#/event-emitter";
-import type { BBoxTuple } from "#engine/rtree";
-
+import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
 import type { RenderPayload } from "#engine/game";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
-import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
+import type { BBoxTuple } from "#engine/rtree";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { MovementOptions } from "#engine/game-objects/game-object/movement/types";
@@ -15,9 +14,6 @@ export type CreateParameters<T extends AbstractGameObjectCtor = typeof GameObjec
 
 export type CreateOptionsOf<C extends AbstractGameObjectCtor> =
   NonNullable<CreateParameters<C>[2]>;
-
-export type Animations = Record<string, LoadedAnimation>;
-export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
 export type WithEntry = readonly [
   KindedGameObjectCtor<typeof GameObject>,
@@ -46,7 +42,7 @@ export interface Effects extends FrameEffects {
 }
 
 export interface GameObjectDebugOptions {
-  // Визуализация рамки вокруг отрисованного объект (можно явно задать цвет)
+  // Визуализация рамки вокруг отрисованного объекта (можно явно задать цвет).
   outline?: boolean | string;
 }
 
@@ -69,13 +65,29 @@ export type GameObjectOptions<T = DefaultGameObjectOptions> =
 export interface ObjectRenderPayload extends RenderPayload {
   x: number;
   y: number;
+  // Время с начала текущего воспроизведения, в миллисекундах; учитывает паузу и скорость объекта.
+  elapsed: number;
   resolveY(y: number): number;
 }
 
 export interface RenderFramePayload extends ObjectRenderPayload {
   pattern: boolean;
   frameIndex: number;
-  animation: Animations[keyof Animations];
+  animation: LoadedAnimation;
 }
 
 export type RenderFrame = (payload: RenderFramePayload) => void;
+
+export interface AnimationInstance {
+  draw(frame: ObjectRenderPayload): void;
+  advance?(elapsed: number): void;
+  destroy?(): void;
+}
+
+// Функция вызывается при запуске play, а не на каждом кадре.
+export type AnimationSource = (go: GameObject) => AnimationInstance;
+
+export type PlayableAnimation = LoadedAnimation | AnimationSource;
+
+export type Animations = Record<string, PlayableAnimation>;
+export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };

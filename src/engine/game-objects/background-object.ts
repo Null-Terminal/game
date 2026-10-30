@@ -8,7 +8,7 @@ import type { BakedFrame } from "#engine/animation-loader/types";
 import { GameObject } from "#engine/game-objects/game-object";
 import { BackgroundObjectDebug } from "#engine/game-objects/background-object/debug";
 
-import type { GameObjectOptions, ObjectRenderPayload, RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
+import type { GameObjectOptions, ObjectRenderPayload, RenderFrame, RenderFramePayload } from "#engine/game-objects/game-object";
 import type { Axis, DefaultBackgroundObjectOptions, VisibleBounds } from "#engine/game-objects/background-object/types";
 
 export type * from "#engine/game-objects/background-object/types";

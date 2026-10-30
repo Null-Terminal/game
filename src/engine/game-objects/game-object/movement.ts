@@ -1,17 +1,16 @@
-import { GameObject } from "#engine/game-objects/game-object";
+import { GameObjectServant } from "#engine/game-objects/servant";
 
+import type { GameObject } from "#engine/game-objects/game-object";
 import type { MovementOptions, PathMovement } from "#engine/game-objects/game-object/movement/types";
 import type { MovePoint, MoveSpeed, MovePath, Sine, Circle } from "#engine/game-objects/game-object/movement/types";
 
 export type * from "#engine/game-objects/game-object/movement/types";
 
-export class Movement {
-  readonly #go: GameObject;
-
+export class Movement extends GameObjectServant {
   #cancelMovementHandler: (() => void) | null = null;
 
-  constructor(gameObject: GameObject) {
-    this.#go = gameObject;
+  constructor(go: GameObject) {
+    super(go);
   }
 
   follow(movement: MovementOptions) {
@@ -50,7 +49,7 @@ export class Movement {
       return;
     }
 
-    const go = this.#go;
+    const go = this.go;
 
     let pathIndex = 0;
     let elapsed = 0;
@@ -81,7 +80,7 @@ export class Movement {
   }
 
   #followAt(at: (distance: number) => MovePoint, speed?: MoveSpeed) {
-    const go = this.#go;
+    const go = this.go;
 
     let elapsed = 0;
     let distance = 0;
@@ -124,7 +123,7 @@ export class Movement {
       return;
     }
 
-    const go = this.#go;
+    const go = this.go;
     const [originX, originY] = origin ?? [go.x, go.y];
 
     this.#followAt((t) => {
@@ -154,7 +153,7 @@ export class Movement {
   }
 
   #drive(step: (delta: number) => void) {
-    const go = this.#go;
+    const go = this.go;
 
     this.#cancelMovementHandler = go.render.on(go.redrawEvent, ({ delta }) => {
       step(delta);

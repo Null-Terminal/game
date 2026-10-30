@@ -1,9 +1,10 @@
 import type { LoadedAnimation } from "#engine/animation-loader";
 
-import { ifAlive } from "#engine/game-objects/decorators";
-import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 import { BackgroundObject } from "#engine/game-objects/background-object";
-import type { GameObjectOptions, ObjectRenderPayload } from "#engine/game-objects/types";
+import { ifAlive } from "#engine/game-objects/decorators";
+import type { AnimationInstance, GameObject, GameObjectOptions, ObjectRenderPayload, PlayableAnimation } from "#engine/game-objects/game-object";
+
+import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 
 import { FlowLayout } from "#engine/game-objects/background-flow-object/layout";
 import type { FlowPosition } from "#engine/game-objects/background-flow-object/layout";
@@ -12,6 +13,18 @@ import type { BackgroundFlowDirection, DefaultBackgroundFlowObjectOptions } from
 export type * from "#engine/game-objects/background-flow-object/types";
 
 export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<DefaultBackgroundFlowObjectOptions>> {
+  static override readonly animations = {
+    flow: (go: GameObject) => {
+      if (!(go instanceof BackgroundFlowObject)) {
+        throw new TypeError("Flow animation requires a BackgroundFlowObject");
+      }
+
+      return go.#createCompositionPlayback();
+    }
+  };
+
+  override readonly animations = BackgroundFlowObject.animations;
+
   #layout: FlowLayout | null = null;
   #playbacks: AnimationPlayback[] = [];
 
@@ -41,22 +54,19 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
   }
 
   @ifAlive
-  override play(input: LoadedAnimation | readonly LoadedAnimation[]) {
+  override play(input: PlayableAnimation | readonly LoadedAnimation[]) {
     if (this.#isComposition(input)) {
-      this.#playComposition(input);
+      this.#playingSprites = input;
+      super.play(this.animations.flow);
       return;
     }
 
     super.play(input);
-
-    this.#layout = null;
-    this.#playbacks.length = 0;
     this.#playingSprites = null;
-    this.#maxSize = 0;
   }
 
   @ifAlive
-  override ensurePlaying(input: LoadedAnimation | readonly LoadedAnimation[]) {
+  override ensurePlaying(input: PlayableAnimation | readonly LoadedAnimation[]) {
     if (this.#isComposition(input)) {
       if (this.#playingSprites !== input) {
         this.play(input);
@@ -74,16 +84,19 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
     return false;
   }
 
-  #isComposition(input: LoadedAnimation | readonly LoadedAnimation[]): input is readonly LoadedAnimation[] {
+  #isComposition(input: PlayableAnimation | readonly LoadedAnimation[]): input is readonly LoadedAnimation[] {
     return Array.isArray(input);
   }
 
-  #playComposition(sprites: readonly LoadedAnimation[]) {
+  #createCompositionPlayback(): AnimationInstance {
+    const sprites = this.#playingSprites ?? this.options.sprites;
+
     if (sprites.length === 0) {
       throw new Error("Background flow must contain at least one sprite");
     }
 
     const playbacks: AnimationPlayback[] = [];
+
     const sizes: number[] = [];
     const direction = this.options.direction ?? "horizontal";
 
@@ -116,7 +129,6 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
 
     this.#playbacks = playbacks;
     this.#layout = layout;
-    this.#playingSprites = sprites;
     this.#maxSize = direction === "horizontal" ? maxWidth : maxHeight;
     this.#direction = direction;
 
@@ -125,13 +137,21 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
       this.height = maxHeight;
     }
 
-    this.render.onRedraw((frame) => {
-      this.#drawComposition(frame);
+    return {
+      draw: (frame) => this.#drawComposition(frame),
 
-      for (const playback of this.#playbacks) {
-        playback.advance(frame.now, this.effects.speed, this.status.paused);
+      advance: (elapsed) => {
+        for (const playback of this.#playbacks) {
+          playback.advance(elapsed);
+        }
+      },
+
+      destroy: () => {
+        this.#layout = null;
+        this.#playbacks.length = 0;
+        this.#maxSize = 0;
       }
-    });
+    };
   }
 
   #drawComposition(frame: ObjectRenderPayload) {
