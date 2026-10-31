@@ -1,7 +1,12 @@
-import { GameObjectServant } from "#engine/game-objects/servant";
+import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { ObjectRenderPayload } from "#engine/game-objects/game-object/types";
+import type { ObjectRenderPayload } from "#engine/game-objects/game-object/render";
+
+export interface GameObjectDebugOptions {
+  // Визуализация рамки вокруг отрисованного объекта (можно явно задать цвет)
+  outline?: boolean | string;
+}
 
 interface OutlineBounds {
   left: number;
@@ -10,8 +15,8 @@ interface OutlineBounds {
   bottom: number;
 }
 
-export class GameObjectDebug extends GameObjectServant {
-  constructor(go: GameObject) {
+export class GameObjectDebug<T extends GameObject = GameObject> extends ServantObject<T> {
+  constructor(go: T) {
     super(go);
   }
 

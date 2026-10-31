@@ -1,6 +1,8 @@
 import type { LoadedAnimation } from "#engine/animation-loader";
 import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object";
 
+export type { BackgroundFlowRenderState } from "#engine/game-objects/background-flow-object/render";
+
 export type BackgroundFlowDirection = "horizontal" | "vertical";
 export type BackgroundFlowOrder = "shuffle" | "random" | "round-robin";
 export type BackgroundFlowGap = number | readonly [min: number, max: number];

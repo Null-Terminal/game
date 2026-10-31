@@ -1,8 +1,10 @@
-import type { DefaultGameObjectOptions, GameObjectDebugOptions } from "#engine/game-objects/game-object";
+import type { DefaultGameObjectOptions, GameObjectDebugOptions, ScrollFactor } from "#engine/game-objects/game-object";
 
-export type Axis = "w" | "h";
+export type { StretchTileBounds } from "#engine/game-objects/background-object/debug";
+export type { VisibleBounds } from "#engine/game-objects/background-object/render";
+
+type Axis = "w" | "h";
 export type AxisFlags = "" | Axis | "wh" | "hw";
-export type ScrollFactor = [both: number] | [x: number, y: number];
 
 export interface BackgroundObjectDebugOptions extends GameObjectDebugOptions {
   stretchSeams?: boolean;
@@ -14,11 +16,4 @@ export interface DefaultBackgroundObjectOptions extends DefaultGameObjectOptions
   scrollFactor?: ScrollFactor;
   overlay?: boolean;
   debug?: BackgroundObjectDebugOptions;
-}
-
-export interface VisibleBounds {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
 }

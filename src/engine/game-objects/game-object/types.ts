@@ -1,11 +1,52 @@
 import type { Handlers } from "#/event-emitter";
-import type { LoadedAnimation, FrameEffects } from "#engine/animation-loader";
-import type { RenderPayload } from "#engine/game";
-import type { KindedGameObjectCtor } from "#engine/game-object-pool";
+
+import type { FrameEffects, LoadedAnimation } from "#engine/animation-loader";
 import type { BBoxTuple } from "#engine/rtree";
 
+import type { KindedGameObjectCtor } from "#engine/game-object-pool";
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { MovementOptions } from "#engine/game-objects/game-object/movement/types";
+
+import type { GameObjectDebugOptions } from "#engine/game-objects/game-object/debug";
+import type { MovementOptions } from "#engine/game-objects/game-object/movement";
+import type { ObjectRenderPayload } from "#engine/game-objects/game-object/render";
+
+export type { GameObjectDebugOptions } from "#engine/game-objects/game-object/debug";
+export type * from "#engine/game-objects/game-object/movement";
+export type * from "#engine/game-objects/game-object/render";
+
+export interface Effects extends FrameEffects {
+  speed?: number;
+}
+
+export interface DefaultGameObjectOptions {
+  name?: string;
+  show?: string;
+  movement?: MovementOptions;
+
+  accept?: WithMap | null;
+  acceptor?: GameObject | null;
+
+  effects?: Effects;
+  debug?: GameObjectDebugOptions;
+}
+
+export type GameObjectOptions<T = DefaultGameObjectOptions> =
+  { x?: number; y?: number } & T |
+  { bbox?: BBoxTuple } & T;
+
+export interface AnimationInstance {
+  draw(frame: ObjectRenderPayload): void;
+  advance?(elapsed: number): void;
+  destroy?(): void;
+}
+
+export type AnimationSource = (go: GameObject) => AnimationInstance;
+
+// Функция вызывается при запуске play, а не на каждом кадре
+export type PlayableAnimation = LoadedAnimation | AnimationSource;
+
+export type Animations = Record<string, PlayableAnimation>;
+export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
 
 export type AbstractGameObjectCtor = abstract new (...args: any[]) => GameObject;
 
@@ -36,58 +77,3 @@ export type RefOf<O, E> =
     : E extends (readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
       ? readonly [C, CreateOptionsOf<C>?]
       : E;
-
-export interface Effects extends FrameEffects {
-  speed?: number;
-}
-
-export interface GameObjectDebugOptions {
-  // Визуализация рамки вокруг отрисованного объекта (можно явно задать цвет).
-  outline?: boolean | string;
-}
-
-export interface DefaultGameObjectOptions {
-  name?: string;
-  show?: string;
-  movement?: MovementOptions;
-
-  accept?: WithMap | null;
-  acceptor?: GameObject | null;
-
-  effects?: Effects;
-  debug?: GameObjectDebugOptions;
-}
-
-export type GameObjectOptions<T = DefaultGameObjectOptions> =
-  { x?: number; y?: number } & T |
-  { bbox?: BBoxTuple } & T;
-
-export interface ObjectRenderPayload extends RenderPayload {
-  x: number;
-  y: number;
-  // Время с начала текущего воспроизведения, в миллисекундах; учитывает паузу и скорость объекта.
-  elapsed: number;
-  resolveY(y: number): number;
-}
-
-export interface RenderFramePayload extends ObjectRenderPayload {
-  pattern: boolean;
-  frameIndex: number;
-  animation: LoadedAnimation;
-}
-
-export type RenderFrame = (payload: RenderFramePayload) => void;
-
-export interface AnimationInstance {
-  draw(frame: ObjectRenderPayload): void;
-  advance?(elapsed: number): void;
-  destroy?(): void;
-}
-
-// Функция вызывается при запуске play, а не на каждом кадре.
-export type AnimationSource = (go: GameObject) => AnimationInstance;
-
-export type PlayableAnimation = LoadedAnimation | AnimationSource;
-
-export type Animations = Record<string, PlayableAnimation>;
-export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };

@@ -1,14 +1,14 @@
 export { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 
 export { GameObject } from "#engine/game-objects/game-object";
-export { GameObjectServant } from "#engine/game-objects/servant";
+export { ServantObject } from "#engine/game-objects/servant-object";
 export type * from "#engine/game-objects/game-object";
 
 export { BackgroundObject } from "#engine/game-objects/background-object";
-export type { BackgroundObjectDebugOptions } from "#engine/game-objects/background-object";
+export type * from "#engine/game-objects/background-object";
 
 export { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
-export type { BackgroundFlowDirection, BackgroundFlowGap, BackgroundFlowOrder, DefaultBackgroundFlowObjectOptions } from "#engine/game-objects/background-flow-object";
+export type * from "#engine/game-objects/background-flow-object";
 
 export { StaticObject } from "#engine/game-objects/static-object";
 export { DynamicObject } from "#engine/game-objects/dynamic-object";

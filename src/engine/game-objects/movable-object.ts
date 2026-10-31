@@ -68,7 +68,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return status;
   }
 
-  updateState(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
+  updateStats(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
     Object.assign(this.stats, patch(this.stats));
   }
 

@@ -1,4 +1,4 @@
-import { GameObjectServant } from "#engine/game-objects/servant";
+import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { MovementOptions, PathMovement } from "#engine/game-objects/game-object/movement/types";
@@ -6,8 +6,8 @@ import type { MovePoint, MoveSpeed, MovePath, Sine, Circle } from "#engine/game-
 
 export type * from "#engine/game-objects/game-object/movement/types";
 
-export class Movement extends GameObjectServant {
-  #cancelMovementHandler: (() => void) | null = null;
+export class Movement extends ServantObject {
+  #cancelMovementHandler: Destructor | null = null;
 
   constructor(go: GameObject) {
     super(go);

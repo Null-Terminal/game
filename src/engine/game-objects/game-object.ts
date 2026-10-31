@@ -14,25 +14,24 @@ import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
-import type {
-  Animations, AnimationEvents, PlayableAnimation, RenderFrame, RenderFramePayload,
-  GameObjectOptions, Effects, WithMap, Refs, RefOf
-} from "#engine/game-objects/game-object/types";
+
+import type * as go from "#engine/game-objects/game-object/types";
+import type { BitmapRenderFrame, BitmapRenderPayload } from "#engine/game-objects/game-object/render";
 
 export type * from "#engine/game-objects/game-object/types";
 
-export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
-  static refs<O extends GameObjectOptions>() {
-    return <const E extends WithMap<O>>(entries: { [I in keyof E]: RefOf<O, E[I]> }): E => entries as E;
+export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectOptions> extends KindedObject {
+  static refs<O extends go.GameObjectOptions>() {
+    return <const E extends go.WithMap<O>>(entries: { [I in keyof E]: go.RefOf<O, E[I]> }): E => entries as E;
   }
 
-  static readonly with: WithMap = {};
+  static readonly with: go.WithMap = {};
 
-  readonly refs: Refs<(typeof GameObject)["with"]> = {};
+  readonly refs: go.Refs<(typeof GameObject)["with"]> = {};
 
   acceptor: GameObject | null = null;
 
-  static readonly animations: Animations = {};
+  static readonly animations: go.Animations = {};
   readonly animations = GameObject.animations;
 
   @cache
@@ -47,7 +46,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     return entries;
   }
 
-  readonly animation: EventEmitter<AnimationEvents<this["animations"]>> = new EventEmitter({
+  readonly animation: EventEmitter<go.AnimationEvents<this["animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
       map[name] = handler<string>();
       return map;
@@ -58,7 +57,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   poolPointer!: PoolPointer;
 
   options!: T;
-  effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
+  effects!: go.Effects & Required<Pick<go.Effects, "speed" | "scale">>;
   bbox: BBoxTuple | null = null;
 
   x = 0;
@@ -72,7 +71,11 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   visualOffsetY = 0;
 
   readonly status = new GameObjectStatus(this);
-  readonly render = new GameObjectRender(this);
+
+  @cache
+  get render(): GameObjectRender {
+    return new GameObjectRender(this);
+  }
 
   @cache
   get movement(): Movement {
@@ -100,7 +103,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     return this.game.world;
   }
 
-  get nowPlaying(): PlayableAnimation | null {
+  get nowPlaying(): go.PlayableAnimation | null {
     return this.render.nowPlaying;
   }
 
@@ -197,78 +200,29 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   }
 
   @ifAlive
-  ensurePlaying(animation: PlayableAnimation) {
+  ensurePlaying(animation: go.PlayableAnimation) {
     if (this.nowPlaying !== animation) {
       this.play(animation);
     }
   }
 
   @ifAlive
-  play(animation: PlayableAnimation) {
+  play(animation: go.PlayableAnimation) {
     this.render.stopRedraw();
 
-    if (typeof animation === "function") {
-      const playback = animation(this);
+    const playback = typeof animation === "function" ?
+      animation(this) :
+      this.#createBitmapPlayback(animation);
 
-      this.render.onRedraw((frame) => {
-        playback.draw(frame);
-        playback.advance?.(frame.elapsed);
-      }, animation, () => playback.destroy?.());
+    this.render.onRedraw((frame) => {
+      playback.draw(frame);
 
-      return;
-    }
-
-    const playback = new AnimationPlayback(animation);
-    const { bbox, effects } = this;
-
-    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
-    if (bbox == null) {
-      this.width = animation.maxWidth * effects.scale;
-      this.height = animation.maxHeight * effects.scale;
-    }
-
-    const renderFrame: RenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, resolveY }) => {
-      const { width: w, height: h } = this;
-
-      const top = resolveY(y);
-
-      const finiteBounds =
-        Number.isFinite(x) && Number.isFinite(top) &&
-        Number.isFinite(w) && Number.isFinite(h);
-
-      if (finiteBounds && !this.isVisibleInViewport(x, top, x + w, top + h)) {
-        return;
+      if (this.options.debug?.outline) {
+        this.debug.draw(frame);
       }
 
-      if (pattern) {
-        const image = animation.getPatternFrame(frameIndex, w, h, effects);
-        ctx.drawImage(image, 0, 0, w, h, x, top, w, h);
-
-      } else {
-        const image = animation.getSpriteFrame(frameIndex, effects);
-
-        // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
-        // из-за разницы высот между отдельным фреймом и максимальным
-        const diffY = h - image.height;
-        ctx.drawImage(image, x, top + diffY, image.width, image.height);
-      }
-    };
-
-    this.render.onRedraw((payload) => {
-      const framePayload = payload as RenderFramePayload;
-
-      framePayload.pattern = bbox != null;
-      framePayload.frameIndex = playback.frameIndex;
-      framePayload.animation = animation;
-
-      this.renderFrame(framePayload, renderFrame);
-
-      if (playback.shouldEmitEvent && animation.name in this.animation.events) {
-        this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);
-      }
-
-      playback.advance(payload.elapsed);
-    }, animation);
+      playback.advance?.(frame.elapsed);
+    }, animation, () => playback.destroy?.());
   }
 
   protected bindFlush() {}
@@ -293,11 +247,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     });
   }
 
-  protected isVisibleInViewport(left: number, top: number, right: number, bottom: number): boolean {
-    const { width, height } = this.canvas.canvas;
-    return left < right && top < bottom && left < width && right > 0 && top < height && bottom > 0;
-  }
-
   protected kinematicMove(dx: number, dy: number): number {
     this.prevX = this.x;
     this.prevY = this.y;
@@ -309,11 +258,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
     // У подклассов коды могут отличаться
     return 0;
-  }
-
-  protected renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
-    defaultRender(payload);
-    this.debug.draw(payload);
   }
 
   protected onMove(_status: number) {
@@ -356,8 +300,62 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     this.acceptor = options.acceptor ?? null;
   }
 
+  #createBitmapPlayback(animation: LoadedAnimation): go.AnimationInstance {
+    const playback = new AnimationPlayback(animation);
+    const { bbox, effects } = this;
+
+    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту.
+    if (bbox == null) {
+      this.width = animation.maxWidth * effects.scale;
+      this.height = animation.maxHeight * effects.scale;
+    }
+
+    const drawDefault: BitmapRenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, toCanvasTop }) => {
+      const { width: w, height: h } = this;
+      const top = toCanvasTop(y);
+
+      const finiteBounds =
+        Number.isFinite(x) && Number.isFinite(top) &&
+        Number.isFinite(w) && Number.isFinite(h);
+
+      if (finiteBounds && !this.render.isVisibleInViewport(x, top, x + w, top + h)) {
+        return;
+      }
+
+      if (pattern) {
+        const image = animation.getPatternFrame(frameIndex, w, h, effects);
+        ctx.drawImage(image, 0, 0, w, h, x, top, w, h);
+
+      } else {
+        const image = animation.getSpriteFrame(frameIndex, effects);
+
+        // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе.
+        const diffY = h - image.height;
+        ctx.drawImage(image, x, top + diffY, image.width, image.height);
+      }
+    };
+
+    return {
+      draw: (frame) => {
+        const bitmapFrame = frame as BitmapRenderPayload;
+
+        bitmapFrame.pattern = bbox != null;
+        bitmapFrame.frameIndex = playback.frameIndex;
+        bitmapFrame.animation = animation;
+
+        this.render.drawBitmap(bitmapFrame, drawDefault);
+
+        if (playback.shouldEmitEvent && animation.name in this.animation.events) {
+          this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);
+        }
+      },
+
+      advance: (elapsed) => playback.advance(elapsed)
+    };
+  }
+
   #createRefs() {
-    const withMap = (this.constructor as typeof GameObject).with as WithMap<T>;
+    const withMap = (this.constructor as typeof GameObject).with as go.WithMap<T>;
 
     for (const [name, entry] of Object.entries(withMap)) {
       const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
@@ -384,7 +382,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     }
 
     if (this.options.accept != null) {
-      const acceptMap = this.options.accept as WithMap<T>;
+      const acceptMap = this.options.accept as go.WithMap<T>;
 
       for (const [name, entry] of Object.entries(acceptMap)) {
         const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;

@@ -1,14 +1,15 @@
-import type { LoadedAnimation } from "#engine/animation-loader";
+import { cache } from "#decorators/cache";
+import { ifAlive } from "#engine/game-objects/decorators";
 
 import { BackgroundObject } from "#engine/game-objects/background-object";
-import { ifAlive } from "#engine/game-objects/decorators";
-import type { AnimationInstance, GameObject, GameObjectOptions, ObjectRenderPayload, PlayableAnimation } from "#engine/game-objects/game-object";
-
 import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 
 import { FlowLayout } from "#engine/game-objects/background-flow-object/layout";
-import type { FlowPosition } from "#engine/game-objects/background-flow-object/layout";
-import type { BackgroundFlowDirection, DefaultBackgroundFlowObjectOptions } from "#engine/game-objects/background-flow-object/types";
+import { BackgroundFlowObjectRender } from "#engine/game-objects/background-flow-object/render";
+
+import type { LoadedAnimation } from "#engine/animation-loader";
+import type { AnimationInstance, GameObject, GameObjectOptions, PlayableAnimation } from "#engine/game-objects/game-object";
+import type { BackgroundFlowRenderState, DefaultBackgroundFlowObjectOptions } from "#engine/game-objects/background-flow-object/types";
 
 export type * from "#engine/game-objects/background-flow-object/types";
 
@@ -25,14 +26,13 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
 
   override readonly animations = BackgroundFlowObject.animations;
 
-  #layout: FlowLayout | null = null;
-  #playbacks: AnimationPlayback[] = [];
+  @cache
+  override get render(): BackgroundFlowObjectRender {
+    return new BackgroundFlowObjectRender(this);
+  }
 
   #playingSprites: readonly LoadedAnimation[] | null = null;
-  #direction: BackgroundFlowDirection = "horizontal";
-
   #seed = 0;
-  #maxSize = 0;
 
   init() {
     this.#seed = this.options.seed ?? Math.floor(Math.random() * 0x100000000);
@@ -46,11 +46,8 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
 
     super.destroy();
 
-    this.#layout = null;
-    this.#playbacks.length = 0;
     this.#playingSprites = null;
     this.#seed = 0;
-    this.#maxSize = 0;
   }
 
   @ifAlive
@@ -127,10 +124,12 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
       seed: this.#seed
     });
 
-    this.#playbacks = playbacks;
-    this.#layout = layout;
-    this.#maxSize = direction === "horizontal" ? maxWidth : maxHeight;
-    this.#direction = direction;
+    const state: BackgroundFlowRenderState = {
+      layout,
+      playbacks,
+      direction,
+      maxSize: direction === "horizontal" ? maxWidth : maxHeight
+    };
 
     if (this.bbox == null) {
       this.width = maxWidth;
@@ -138,183 +137,17 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
     }
 
     return {
-      draw: (frame) => this.#drawComposition(frame),
+      draw: (frame) => this.render.drawComposition(frame, state),
 
       advance: (elapsed) => {
-        for (const playback of this.#playbacks) {
+        for (const playback of state.playbacks) {
           playback.advance(elapsed);
         }
       },
 
       destroy: () => {
-        this.#layout = null;
-        this.#playbacks.length = 0;
-        this.#maxSize = 0;
+        state.playbacks.length = 0;
       }
     };
-  }
-
-  #drawComposition(frame: ObjectRenderPayload) {
-    const scrollX = this.getScrollOffset("w");
-    const scrollY = this.getScrollOffset("h");
-
-    this.prepareRenderFrame(frame, scrollX, scrollY);
-
-    const bounds = this.getVisibleBounds(scrollX, scrollY);
-    const layout = this.#layout;
-
-    if (bounds == null || layout == null) {
-      return;
-    }
-
-    const { width: viewWidth, height: viewHeight } = this.canvas.canvas;
-
-    const stretchWidth = this.options.stretch?.includes("w") ?? false;
-    const stretchHeight = this.options.stretch?.includes("h") ?? false;
-
-    const staticWidth = this.options.static?.includes("w");
-    const staticHeight = this.options.static?.includes("h");
-
-    const wrapWidth = stretchWidth && !staticWidth;
-    const wrapHeight = stretchHeight && !staticHeight;
-
-    const tileWidth = stretchWidth ? this.#getTileSize("w", viewWidth) : Infinity;
-    const tileHeight = stretchHeight ? this.#getTileSize("h", viewHeight) : Infinity;
-
-    const originX = Number.isFinite(frame.x) ? frame.x : -scrollX;
-    const originBottom = Number.isFinite(frame.y) ? viewHeight - frame.y : viewHeight + scrollY;
-
-    const horizontal = this.#direction === "horizontal";
-
-    const layoutEnd = horizontal ?
-      (stretchWidth ? tileWidth : bounds.right - originX) :
-      (stretchHeight ? tileHeight : originBottom - bounds.top);
-
-    if (layoutEnd > 0) {
-      layout.extendTo(layoutEnd);
-    }
-
-    const stepX = wrapWidth ? Math.max(1, tileWidth - 1) : Infinity;
-    const stepY = wrapHeight ? Math.max(1, tileHeight - 1) : Infinity;
-
-    const firstX = wrapWidth ? originX + Math.floor((bounds.left - originX) / stepX) * stepX : originX;
-
-    const originTop = originBottom - tileHeight;
-    const firstY = wrapHeight ? originTop + Math.floor((bounds.top - originTop) / stepY) * stepY : bounds.top;
-
-    for (let tileX = firstX; tileX < bounds.right; tileX += stepX) {
-      const left = Math.max(bounds.left, tileX);
-      const right = stretchWidth ? Math.min(bounds.right, tileX + tileWidth) : bounds.right;
-
-      if (left >= right) {
-        continue;
-      }
-
-      for (let tileY = firstY; tileY < bounds.bottom; tileY += stepY) {
-        const top = Math.max(bounds.top, tileY);
-        const bottom = stretchHeight ? Math.min(bounds.bottom, tileY + tileHeight) : bounds.bottom;
-
-        if (top >= bottom) {
-          continue;
-        }
-
-        const tileBottom = wrapHeight ? tileY + tileHeight : originBottom;
-        this.#drawTile(frame.ctx, layout.positions, tileX, tileBottom, left, top, right, bottom);
-
-        if (this.options.debug?.stretchSeams) {
-          this.debug.drawStretchSeams(frame.ctx, {
-            x: tileX,
-            y: tileY,
-            left,
-            top,
-            right,
-            bottom
-          }, wrapWidth, wrapHeight);
-        }
-      }
-    }
-
-    this.debug.draw(frame, this.bbox != null ? bounds : undefined);
-  }
-
-  #drawTile(
-    ctx: CanvasRenderingContext2D,
-    positions: readonly FlowPosition[],
-    originX: number,
-    originBottom: number,
-    left: number,
-    top: number,
-    right: number,
-    bottom: number
-  ) {
-    const horizontal = this.#direction === "horizontal";
-
-    const localStart = horizontal ? left - originX : originBottom - bottom;
-    const localEnd = horizontal ? right - originX : originBottom - top;
-
-    const firstVisible = this.#findFirstVisiblePosition(positions, localStart);
-
-    if (firstVisible === positions.length || positions[firstVisible]!.position >= localEnd) {
-      return;
-    }
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(left, top, right - left, bottom - top);
-    ctx.clip();
-
-    for (let i = firstVisible; i < positions.length; i++) {
-      const { index, position } = positions[i]!;
-
-      if (position >= localEnd) {
-        break;
-      }
-
-      const playback = this.#playbacks[index]!;
-
-      if (position + (horizontal ? playback.animation.maxWidth : playback.animation.maxHeight) * this.effects.scale <= localStart) {
-        continue;
-      }
-
-      const image = playback.animation.getSpriteFrame(playback.frameIndex, this.effects);
-
-      const x = horizontal ? originX + position : originX;
-      const y = horizontal ? originBottom - image.height : originBottom - position - image.height;
-
-      ctx.drawImage(image, x, y);
-    }
-
-    ctx.restore();
-  }
-
-  #getTileSize(axis: "w" | "h", fallback: number): number {
-    const bbox = this.bbox;
-
-    if (bbox == null) {
-      return fallback;
-    }
-
-    const min = bbox[axis === "w" ? 0 : 1];
-    const max = bbox[axis === "w" ? 2 : 3];
-
-    return Number.isFinite(min) && Number.isFinite(max) ? Math.max(1, max - min) : fallback;
-  }
-
-  #findFirstVisiblePosition(positions: readonly FlowPosition[], start: number): number {
-    let from = 0;
-    let to = positions.length;
-
-    while (from < to) {
-      const middle = (from + to) >>> 1;
-
-      if (positions[middle]!.position < start - this.#maxSize) {
-        from = middle + 1;
-
-      } else {
-        to = middle;
-      }
-    }
-
-    return from;
   }
 }

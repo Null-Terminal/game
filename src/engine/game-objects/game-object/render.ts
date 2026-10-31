@@ -1,28 +1,46 @@
 import { ifAlive } from "#engine/game-objects/decorators";
-import { GameObjectServant } from "#engine/game-objects/servant";
+import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { Handler, Handlers } from "#/event-emitter";
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { ObjectRenderPayload, PlayableAnimation } from "#engine/game-objects/game-object/types";
 
-export class GameObjectRender extends GameObjectServant {
+import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
+import type { BitmapRenderFrame, BitmapRenderPayload, ObjectRenderPayload } from "#engine/game-objects/game-object/render/types";
+
+export type * from "#engine/game-objects/game-object/render/types";
+
+export class GameObjectRender<T extends GameObject = GameObject> extends ServantObject<T> {
   readonly #payload: ObjectRenderPayload;
-  readonly #listeners = new Set<() => void>();
+  readonly #listeners = new Set<Destructor>();
 
-  #stopRedraw: (() => void) | null = null;
+  #originX = 0;
+  #originY = 0;
+  #cameraX = 0;
+  #cameraY = 0;
+
+  #stopRedraw: Destructor | null = null;
   #playing: PlayableAnimation | null = null;
 
-  constructor(go: GameObject) {
+  constructor(go: T) {
     super(go);
 
     this.#payload = {
       ctx: null as CanvasRenderingContext2D | null,
       now: 0,
+
       delta: 0,
       elapsed: 0,
+
       x: 0,
       y: 0,
-      resolveY: (y: number) => go.canvas.canvas.height - y - go.height
+
+      getScrollOffsetX: (factor = 1) => factor === 1 ? Math.round(this.#cameraX) : this.#cameraX * factor,
+      getScrollOffsetY: (factor = 1) => factor === 1 ? Math.round(this.#cameraY) : this.#cameraY * factor,
+
+      getScreenX: (factor = 1) => this.#originX - this.#payload.getScrollOffsetX(factor),
+      getScreenY: (factor = 1) => this.#originY - this.#payload.getScrollOffsetY(factor),
+
+      toCanvasTop: (y: number) => go.canvas.canvas.height - y - go.height
     } as ObjectRenderPayload;
   }
 
@@ -30,8 +48,17 @@ export class GameObjectRender extends GameObjectServant {
     return this.#playing;
   }
 
+  isVisibleInViewport(left: number, top: number, right: number, bottom: number): boolean {
+    const { width, height } = this.go.canvas.canvas;
+    return left < right && top < bottom && left < width && right > 0 && top < height && bottom > 0;
+  }
+
+  drawBitmap(payload: BitmapRenderPayload, defaultRender: BitmapRenderFrame) {
+    defaultRender(payload);
+  }
+
   @ifAlive
-  on<E extends Handlers>(event: E, listener: Handler<E["PayloadType"]>): () => void {
+  on<E extends Handlers>(event: E, listener: Handler<E["PayloadType"]>): Destructor {
     const unsubscribe = this.go.canvas.emitter.on(event, listener);
 
     const stop = () => {
@@ -48,7 +75,7 @@ export class GameObjectRender extends GameObjectServant {
   onRedraw(
     draw: (payload: ObjectRenderPayload) => void,
     animation: PlayableAnimation | null = null,
-    onStop?: () => void
+    onStop?: Destructor
   ) {
     this.stopRedraw();
     this.#playing = animation;
@@ -70,11 +97,18 @@ export class GameObjectRender extends GameObjectServant {
       }
 
       lastNow = frame.now;
+
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
-      payload.x = go.x - go.game.camera.x;
-      payload.y = go.y - go.game.camera.y - go.visualOffsetY;
+
+      this.#originX = go.x;
+      this.#originY = go.y - go.visualOffsetY;
+      this.#cameraX = go.game.camera.x;
+      this.#cameraY = go.game.camera.y;
+
+      payload.x = payload.getScreenX();
+      payload.y = payload.getScreenY();
 
       draw(payload);
     });

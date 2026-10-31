@@ -1,5 +1,8 @@
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 
+import type { BackgroundObject } from "#engine/game-objects/background-object";
+import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
+
 export interface StretchTileBounds {
   x: number;
   y: number;
@@ -9,7 +12,22 @@ export interface StretchTileBounds {
   bottom: number;
 }
 
-export class BackgroundObjectDebug extends GameObjectDebug {
+export class BackgroundObjectDebug extends GameObjectDebug<BackgroundObject> {
+  override draw(payload: ObjectRenderPayload) {
+    const { go } = this;
+
+    if (go.bbox == null) {
+      super.draw(payload);
+      return;
+    }
+
+    const bounds = go.render.getVisibleBounds(payload);
+
+    if (bounds != null) {
+      super.draw(payload, bounds);
+    }
+  }
+
   drawStretchSeams(
     ctx: CanvasRenderingContext2D,
     tile: StretchTileBounds,

@@ -1,6 +1,7 @@
-import type { MovableObject } from "#engine/game-objects/movable-object";
 import { ifAlive } from "#engine/game-objects/decorators";
-import { GameObjectServant } from "#engine/game-objects/servant";
+import { ServantObject } from "#engine/game-objects/servant-object";
+
+import type { MovableObject } from "#engine/game-objects/movable-object";
 
 enum State {
   // Объект не взаимодействует со внешним миром, движение без коллизий
@@ -10,7 +11,7 @@ enum State {
   Solid,
 }
 
-export class MovableObjectMotion extends GameObjectServant<MovableObject> {
+export class MovableObjectMotion extends ServantObject<MovableObject> {
   static readonly State = State;
 
   #state = State.Solid;

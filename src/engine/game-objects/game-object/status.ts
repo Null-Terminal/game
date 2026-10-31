@@ -1,5 +1,5 @@
 import { ifAlive } from "#engine/game-objects/decorators";
-import { GameObjectServant } from "#engine/game-objects/servant";
+import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 
@@ -9,7 +9,7 @@ enum State {
   Shadowed,
 }
 
-export class GameObjectStatus extends GameObjectServant {
+export class GameObjectStatus extends ServantObject {
   static readonly State = State;
 
   #state = State.Active;

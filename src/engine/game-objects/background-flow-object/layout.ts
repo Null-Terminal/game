@@ -1,3 +1,5 @@
+import { SeededRandom } from "#/utils/seeded-random";
+
 import type { BackgroundFlowGap, BackgroundFlowOrder } from "#engine/game-objects/background-flow-object/types";
 
 export interface FlowPosition {
@@ -24,10 +26,10 @@ export class FlowLayout {
 
   readonly #positions: FlowPosition[] = [];
   readonly #shuffledIndices: number[] = [];
+  readonly #random: SeededRandom;
 
   #nextPosition = 0;
   #roundRobinIndex = 0;
-  #randomState: number;
 
   constructor(sizes: readonly number[], opts: FlowLayoutOptions) {
     const hasInvalidSizes =
@@ -55,7 +57,7 @@ export class FlowLayout {
     this.#minGap = minGap;
     this.#maxGap = maxGap;
 
-    this.#randomState = seed >>> 0;
+    this.#random = new SeededRandom(seed);
   }
 
   extendTo(endPosition: number) {
@@ -68,7 +70,7 @@ export class FlowLayout {
       }
 
       const gap = this.#minGap === this.#maxGap ?
-        this.#minGap : this.#minGap + this.#random() * (this.#maxGap - this.#minGap);
+        this.#minGap : this.#minGap + this.#random.next() * (this.#maxGap - this.#minGap);
 
       // Даже при отрицательном промежутке следующая позиция должна быть дальше текущей.
       this.#nextPosition += Math.max(1, size + gap);
@@ -78,7 +80,7 @@ export class FlowLayout {
   #selectNextIndex(): number {
     switch (this.#order) {
       case "random": {
-        return Math.floor(this.#random() * this.#sizes.length);
+        return Math.floor(this.#random.next() * this.#sizes.length);
       }
 
       case "round-robin": {
@@ -103,17 +105,11 @@ export class FlowLayout {
     }
 
     for (let i = this.#shuffledIndices.length - 1; i > 0; i--) {
-      const j = Math.floor(this.#random() * (i + 1));
+      const j = Math.floor(this.#random.next() * (i + 1));
       const current = this.#shuffledIndices[i]!;
 
       this.#shuffledIndices[i] = this.#shuffledIndices[j]!;
       this.#shuffledIndices[j] = current;
     }
-  }
-
-  #random(): number {
-    // Линейный конгруэнтный генератор: новое состояние вычисляется по модулю 2³²
-    this.#randomState = (Math.imul(this.#randomState, 1664525) + 1013904223) >>> 0;
-    return this.#randomState / 0x100000000;
   }
 }
