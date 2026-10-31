@@ -84,7 +84,10 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
       ctx.drawImage(this.#sky, 0, 0);
     }
 
-    const celestialScrollX = Math.round(frame.getScrollOffsetX(this.go.options.celestialScrollFactor ?? 0));
+    const celestialScrollX = Math.round(
+      frame.getScrollOffsetX(this.go.options.celestialScrollFactor ?? 0)
+    );
+
     if (this.#stars) {
       this.#drawTiles(ctx, this.#stars, celestialScrollX, width);
     }
