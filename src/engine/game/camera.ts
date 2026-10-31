@@ -54,7 +54,7 @@ export class Camera extends Disposable {
     );
   }
 
-  bindTo(target: MovableObject): () => void {
+  bindTo(target: MovableObject): Destructor {
     this.#target = target;
 
     return () => {

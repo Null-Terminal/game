@@ -1,7 +1,5 @@
 export type Handler<T = any> = (payload: T) => void;
 
-export type Destructor = () => void;
-
 export type Handlers<P = any> = ({ handler: Handler; ptr: number })[] & {
   PayloadType: P;
   flush?: Handlers<P>;

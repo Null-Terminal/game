@@ -13,15 +13,15 @@ export abstract class Disposable {
 
   #destroyed = false;
 
-  readonly #destructors: (() => void)[] = [];
+  readonly #destructors: Destructor[] = [];
   #abortController = new AbortController();
 
-  onDestroy<T extends () => void>(destructor: T): T {
+  onDestroy<T extends Destructor>(destructor: T): T {
     this.#destructors.push(destructor);
     return destructor;
   }
 
-  nextTick(cb: () => void): () => void {
+  nextTick(cb: () => void): Destructor {
     let executed = false;
 
     queueMicrotask(() => {
