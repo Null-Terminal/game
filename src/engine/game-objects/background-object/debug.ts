@@ -1,7 +1,7 @@
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 
-import type { BackgroundObject } from "#engine/game-objects/background-object";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
+import type { BackgroundObject } from "#engine/game-objects/background-object";
 
 export interface StretchTileBounds {
   x: number;

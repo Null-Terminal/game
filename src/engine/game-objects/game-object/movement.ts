@@ -1,8 +1,7 @@
 import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { MovementOptions, PathMovement } from "#engine/game-objects/game-object/movement/types";
-import type { MovePoint, MoveSpeed, MovePath, Sine, Circle } from "#engine/game-objects/game-object/movement/types";
+import type * as t from "#engine/game-objects/game-object/movement/types";
 
 export type * from "#engine/game-objects/game-object/movement/types";
 
@@ -13,7 +12,7 @@ export class Movement extends ServantObject {
     super(go);
   }
 
-  follow(movement: MovementOptions) {
+  follow(movement: t.MovementOptions) {
     this.reset();
 
     if ("path" in movement) {
@@ -44,7 +43,7 @@ export class Movement extends ServantObject {
     this.#cancelMovementHandler = null;
   }
 
-  #followPath(path: MovePath, { tolerance = 5, speed = 100 }: Pick<PathMovement, "tolerance" | "speed">) {
+  #followPath(path: t.MovePath, { tolerance = 5, speed = 100 }: Pick<t.PathMovement, "tolerance" | "speed">) {
     if (path.length === 0) {
       return;
     }
@@ -79,7 +78,7 @@ export class Movement extends ServantObject {
     });
   }
 
-  #followAt(at: (distance: number) => MovePoint, speed?: MoveSpeed) {
+  #followAt(at: (distance: number) => t.MovePoint, speed?: t.MoveSpeed) {
     const go = this.go;
 
     let elapsed = 0;
@@ -114,11 +113,11 @@ export class Movement extends ServantObject {
     });
   }
 
-  #velocity(speed: MoveSpeed, elapsed: number) {
+  #velocity(speed: t.MoveSpeed, elapsed: number) {
     return typeof speed === "function" ? speed(elapsed) : speed;
   }
 
-  #followSine({ axis = "x", amplitude, length, period, speed, origin }: Sine) {
+  #followSine({ axis = "x", amplitude, length, period, speed, origin }: t.Sine) {
     if (period <= 0) {
       return;
     }
@@ -139,7 +138,7 @@ export class Movement extends ServantObject {
     }, speed);
   }
 
-  #followCircle({ center, radius, period, speed }: Circle) {
+  #followCircle({ center, radius, period, speed }: t.Circle) {
     if (period <= 0) {
       return;
     }

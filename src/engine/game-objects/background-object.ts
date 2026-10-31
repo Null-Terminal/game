@@ -1,14 +1,14 @@
 import { cache } from "#decorators/cache";
 
 import type { Game } from "#engine/game";
-
 import type { PoolPointer } from "#engine/game-object-pool";
 
 import { GameObject } from "#engine/game-objects/game-object";
+import type { GameObjectOptions } from "#engine/game-objects/game-object";
+
 import { BackgroundObjectDebug } from "#engine/game-objects/background-object/debug";
 import { BackgroundObjectRender } from "#engine/game-objects/background-object/render";
 
-import type { GameObjectOptions } from "#engine/game-objects/game-object";
 import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object/types";
 
 export type * from "#engine/game-objects/background-object/types";

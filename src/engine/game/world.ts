@@ -7,9 +7,9 @@ import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
 import type { Game } from "#engine/game";
 import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
 
-import type { WorldObject, WorldOptions, Collision } from "#engine/game/world/types";
+import type * as t from "#engine/game/world/types";
 
-export * from "#engine/game/world/types";
+export type * from "#engine/game/world/types";
 
 export class World extends Disposable {
   static of<const T extends [new (...args: any[]) => GameObject, object?][]>(entries: {
@@ -24,7 +24,7 @@ export class World extends Disposable {
   }
 
   game!: Game;
-  readonly options: Required<WorldOptions>;
+  readonly options: Required<t.WorldOptions>;
 
   readonly statics = new RTree();
   readonly dynamics = new RTree();
@@ -36,7 +36,7 @@ export class World extends Disposable {
 
   #mounted = false;
 
-  constructor(opts: WorldOptions) {
+  constructor(opts: t.WorldOptions) {
     super();
     this.options = { ...opts };
   }
@@ -68,7 +68,7 @@ export class World extends Disposable {
     this.objects.destroy();
   }
 
-  createObject(go: WorldObject[0], opts?: WorldObject[1]): PoolPointer {
+  createObject(go: t.WorldObject[0], opts?: t.WorldObject[1]): PoolPointer {
     return this.objects.add(go, this.game, opts);
   }
 
@@ -99,7 +99,7 @@ export class World extends Disposable {
     return true;
   }
 
-  findDynamicCollision(minX: number, minY: number, maxX: number, maxY: number): Collision | null {
+  findDynamicCollision(minX: number, minY: number, maxX: number, maxY: number): t.Collision | null {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
@@ -113,7 +113,7 @@ export class World extends Disposable {
     return collision;
   }
 
-  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {
+  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
@@ -129,7 +129,7 @@ export class World extends Disposable {
     return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly Collision[] {
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
@@ -155,7 +155,7 @@ export class World extends Disposable {
     };
   }
 
-  #collisionMapper = ({ bbox, pointer: [kind, i] }: RTreePublicNode): Collision => {
+  #collisionMapper = ({ bbox, pointer: [kind, i] }: RTreePublicNode): t.Collision => {
     return { bbox, object: this.objects.get(kind, i)! };
   };
 }

@@ -1,26 +1,26 @@
 import { cache } from "#decorators/cache";
-import { ifAlive } from "#engine/game-objects/decorators";
+import type { LoadedAnimation } from "#engine/animation-loader";
 
+import { ifAlive } from "#engine/game-objects/decorators";
 import { BackgroundObject } from "#engine/game-objects/background-object";
 import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
+import type * as go from "#engine/game-objects/game-object";
 
 import { FlowLayout } from "#engine/game-objects/background-flow-object/layout";
 import { BackgroundFlowObjectRender } from "#engine/game-objects/background-flow-object/render";
 
-import type { LoadedAnimation } from "#engine/animation-loader";
-import type { AnimationInstance, GameObject, GameObjectOptions, PlayableAnimation } from "#engine/game-objects/game-object";
 import type { BackgroundFlowRenderState, DefaultBackgroundFlowObjectOptions } from "#engine/game-objects/background-flow-object/types";
 
 export type * from "#engine/game-objects/background-flow-object/types";
 
-export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<DefaultBackgroundFlowObjectOptions>> {
+export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<DefaultBackgroundFlowObjectOptions>> {
   static override readonly animations = {
-    flow: (go: GameObject) => {
-      if (!(go instanceof BackgroundFlowObject)) {
+    flow: (object: go.GameObject) => {
+      if (!(object instanceof BackgroundFlowObject)) {
         throw new TypeError("Flow animation requires a BackgroundFlowObject");
       }
 
-      return go.#createCompositionPlayback();
+      return object.#createCompositionPlayback();
     }
   };
 
@@ -51,7 +51,7 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
   }
 
   @ifAlive
-  override play(input: PlayableAnimation | readonly LoadedAnimation[]) {
+  override play(input: go.PlayableAnimation | readonly LoadedAnimation[]) {
     if (this.#isComposition(input)) {
       this.#playingSprites = input;
       super.play(this.animations.flow);
@@ -63,7 +63,7 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
   }
 
   @ifAlive
-  override ensurePlaying(input: PlayableAnimation | readonly LoadedAnimation[]) {
+  override ensurePlaying(input: go.PlayableAnimation | readonly LoadedAnimation[]) {
     if (this.#isComposition(input)) {
       if (this.#playingSprites !== input) {
         this.play(input);
@@ -81,11 +81,11 @@ export class BackgroundFlowObject extends BackgroundObject<GameObjectOptions<Def
     return false;
   }
 
-  #isComposition(input: PlayableAnimation | readonly LoadedAnimation[]): input is readonly LoadedAnimation[] {
+  #isComposition(input: go.PlayableAnimation | readonly LoadedAnimation[]): input is readonly LoadedAnimation[] {
     return Array.isArray(input);
   }
 
-  #createCompositionPlayback(): AnimationInstance {
+  #createCompositionPlayback(): go.AnimationInstance {
     const sprites = this.#playingSprites ?? this.options.sprites;
 
     if (sprites.length === 0) {

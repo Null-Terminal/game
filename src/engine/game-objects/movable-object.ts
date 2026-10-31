@@ -1,10 +1,11 @@
+import type { Collision, Game, RenderPayload } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
+
 import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
-import { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
-
-import type { Game, RenderPayload, Collision } from "#engine/game";
-import type { PoolPointer } from "#engine/game-object-pool";
 import type { GameObjectOptions } from "#engine/game-objects/game-object";
+
+import { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
 
 export { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
 

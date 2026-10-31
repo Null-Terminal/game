@@ -1,8 +1,9 @@
+import type { BakedFrame } from "#engine/animation-loader/types";
+
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 
-import type { BakedFrame } from "#engine/animation-loader/types";
+import type * as go from "#engine/game-objects/game-object";
 import type { BackgroundObject } from "#engine/game-objects/background-object";
-import type { BitmapRenderFrame, BitmapRenderPayload, ObjectRenderPayload } from "#engine/game-objects/game-object";
 
 type Axis = "w" | "h";
 
@@ -17,7 +18,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   // Переиспользуем границы, чтобы не создавать объект на каждом кадре
   readonly #visibleBounds: VisibleBounds = { left: 0, top: 0, right: 0, bottom: 0 };
 
-  getVisibleBounds(frame: ObjectRenderPayload): Readonly<VisibleBounds> | null {
+  getVisibleBounds(frame: go.ObjectRenderPayload): Readonly<VisibleBounds> | null {
     const { bbox } = this.go;
     const { width, height } = this.go.canvas.canvas;
 
@@ -42,7 +43,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
     return this.isVisibleInViewport(bounds.left, bounds.top, bounds.right, bounds.bottom) ? bounds : null;
   }
 
-  override drawBitmap(payload: BitmapRenderPayload, defaultRender: BitmapRenderFrame) {
+  override drawBitmap(payload: go.BitmapRenderPayload, defaultRender: go.BitmapRenderFrame) {
     const { go } = this;
     const { options: opts } = go;
 
@@ -72,7 +73,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   }
 
   drawPattern(
-    payload: ObjectRenderPayload,
+    payload: go.ObjectRenderPayload,
     pattern: BakedFrame,
     bounds?: Readonly<VisibleBounds>
   ) {

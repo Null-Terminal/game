@@ -1,16 +1,16 @@
+import type { Handler, Handlers } from "#/event-emitter";
+
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
 
-import type { Handler, Handlers } from "#/event-emitter";
 import type { GameObject } from "#engine/game-objects/game-object";
-
 import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
-import type { BitmapRenderFrame, BitmapRenderPayload, ObjectRenderPayload } from "#engine/game-objects/game-object/render/types";
+import type * as t from "#engine/game-objects/game-object/render/types";
 
 export type * from "#engine/game-objects/game-object/render/types";
 
 export class GameObjectRender<T extends GameObject = GameObject> extends ServantObject<T> {
-  readonly #payload: ObjectRenderPayload;
+  readonly #payload: t.ObjectRenderPayload;
   readonly #listeners = new Set<Destructor>();
 
   #originX = 0;
@@ -41,7 +41,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       getScreenY: (factor = 1) => this.#originY - this.#payload.getScrollOffsetY(factor),
 
       toCanvasTop: (y: number) => go.canvas.canvas.height - y - go.height
-    } as ObjectRenderPayload;
+    } as t.ObjectRenderPayload;
   }
 
   get nowPlaying(): PlayableAnimation | null {
@@ -53,7 +53,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     return left < right && top < bottom && left < width && right > 0 && top < height && bottom > 0;
   }
 
-  drawBitmap(payload: BitmapRenderPayload, defaultRender: BitmapRenderFrame) {
+  drawBitmap(payload: t.BitmapRenderPayload, defaultRender: t.BitmapRenderFrame) {
     defaultRender(payload);
   }
 
@@ -73,7 +73,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
 
   @ifAlive
   onRedraw(
-    draw: (payload: ObjectRenderPayload) => void,
+    draw: (payload: t.ObjectRenderPayload) => void,
     animation: PlayableAnimation | null = null,
     onStop?: Destructor
   ) {

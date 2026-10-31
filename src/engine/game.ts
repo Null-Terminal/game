@@ -5,16 +5,14 @@ import type { Camera } from "#engine/game/camera";
 import type { World } from "#engine/game/world";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 
-export { GameStatus } from "#engine/game/game-status";
-
 export { Camera } from "#engine/game/camera";
-export type { CameraOptions, CameraDeadZone, CameraLimit } from "#engine/game/camera";
+export type * from "#engine/game/camera";
 
 export { World } from "#engine/game/world";
-export type { WorldOptions, Collision, WorldObject, WorldObjects } from "#engine/game/world";
+export type * from "#engine/game/world";
 
 export { RenderCanvas } from "#engine/game/render-canvas";
-export type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas";
+export type * from "#engine/game/render-canvas";
 
 export class Game extends Disposable {
   static camera(camera: Camera) {

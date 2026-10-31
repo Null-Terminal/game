@@ -5,7 +5,7 @@ import type { MovableObject } from "#engine/game-objects";
 
 import type { CameraDeadZone, CameraOptions } from "#engine/game/camera/types";
 
-export * from "#engine/game/camera/types";
+export type * from "#engine/game/camera/types";
 
 export class Camera extends Disposable {
   static readonly DEFAULT_SMOOTHNESS = 0.3;

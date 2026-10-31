@@ -4,7 +4,7 @@ import { EventEmitter, handler } from "#/event-emitter";
 import { Disposable } from "#engine/disposable";
 import type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas/types";
 
-export * from "#engine/game/render-canvas/types";
+export type * from "#engine/game/render-canvas/types";
 
 export class RenderCanvas extends Disposable {
   readonly canvas: HTMLCanvasElement;

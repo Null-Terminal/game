@@ -1,19 +1,19 @@
-import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
+import { cache } from "#decorators/cache";
+import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
 
 import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
-import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
 
 import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 
-import { Movement } from "#engine/game-objects/game-object/movement";
-import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import { Movement } from "#engine/game-objects/game-object/movement";
+import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 
 import type * as go from "#engine/game-objects/game-object/types";
 import type { BitmapRenderFrame, BitmapRenderPayload } from "#engine/game-objects/game-object/render";

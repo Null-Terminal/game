@@ -1,5 +1,5 @@
-import type { RenderPayload } from "#engine/game";
 import type { LoadedAnimation } from "#engine/animation-loader";
+import type { RenderPayload } from "#engine/game";
 
 export type ScrollFactor = [both: number] | [x: number, y: number];
 
