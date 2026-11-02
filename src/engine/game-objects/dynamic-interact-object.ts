@@ -1,6 +1,7 @@
 import { MovableObject } from "#engine/game-objects/movable-object";
+import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
-export abstract class DynamicInteractObject extends MovableObject {
+export abstract class DynamicInteractObject<T extends GameObjectOptions = GameObjectOptions> extends MovableObject<T> {
   override get redrawEvent() {
     return this.canvas.events.interact;
   }
