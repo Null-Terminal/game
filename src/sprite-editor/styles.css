@@ -2,6 +2,27 @@
   font-family: Arial, sans-serif;
 }
 
+summary {
+  cursor: pointer;
+}
+
+details p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+details label {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+details input[type="number"] {
+  width: 7rem;
+}
+
 .editor {
   display: flex;
   justify-content: space-between;
