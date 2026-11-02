@@ -21,7 +21,7 @@ export function removeCanvasBackground(canvas: OffscreenCanvas, color: string | 
     return;
   }
 
-  removeTargetColor(targetColor, data, canvas.width, canvas.height, tolerance, typeof color === "string");
+  removeTargetColor(targetColor, data, canvas.width, canvas.height, tolerance);
 
   ctx.putImageData(imageData, 0, 0);
 }
@@ -35,8 +35,7 @@ export function removeTargetColor(
   data: Uint8ClampedArray,
   width: number,
   height: number,
-  tolerance: number,
-  expandChroma: boolean
+  tolerance: number
 ) {
   if (color.length !== 3 && color.length !== 4) {
     throw new TypeError("Color must have 3 (RGB) or 4 (RGBA) channels");
@@ -47,7 +46,7 @@ export function removeTargetColor(
   const keyMin = Math.min(color[0]!, color[1]!, color[2]!);
   const keyRange = keyMax - keyMin;
 
-  const chromatic = expandChroma && keyRange >= 64;
+  const chromatic = keyRange >= 64;
   const dominant = color[0] === keyMax ? 0 : color[1] === keyMax ? 1 : 2;
   const otherChannels = [0, 1, 2].filter((channel) => channel !== dominant);
 
