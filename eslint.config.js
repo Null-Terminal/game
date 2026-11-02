@@ -15,6 +15,7 @@ export default defineConfig([
       languageOptions: { globals: globals.node },
       rules: {
         "semi": ["error", "always"],
+        "curly": ["error", "all"],
         "arrow-parens": ["error", "always"],
         "no-extra-semi": "error",
         "object-curly-spacing": ["warn", "always"],
