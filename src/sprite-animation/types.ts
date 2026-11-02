@@ -13,17 +13,33 @@ export interface SpriteDescriptor {
 }
 
 export interface OptionalAnimationParameters {
+  // Размер, в который вписываются кадры до применения scale
   maxWidth?: number;
   maxHeight?: number;
-  randomDuration?: number[];
+
+  // Диапазон случайной длительности кадра в миллисекундах
+  randomDuration?: readonly [min: number, max: number];
+
+  // Смещение изображения относительно объекта в пикселях исходного кадра
+  visualOffsetX?: number;
+  visualOffsetY?: number;
 }
 
 export interface RequiredAnimationParameters {
+  // Множители скорости воспроизведения и размера кадра
   speed: number;
   scale: number;
+
+  // Прозрачность кадра от 0 до 1
   opacity: number;
+
+  // Кадр, с которого анимация повторяется после завершения
   loopFrom: number;
+
+  // Воспроизведение кадров в обратном порядке после последнего
   loopReverse: boolean;
+
+  // Случайный выбор следующего кадра
   randomOrder: boolean;
 }
 

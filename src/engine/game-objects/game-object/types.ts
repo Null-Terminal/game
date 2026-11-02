@@ -20,6 +20,7 @@ export interface Effects extends FrameEffects {
 
 export interface DefaultGameObjectOptions {
   name?: string;
+
   show?: string | PlayableAnimation;
   movement?: MovementOptions;
 

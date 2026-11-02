@@ -1,5 +1,6 @@
 import type { Handler, Handlers } from "#/event-emitter";
 
+import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
 
@@ -17,6 +18,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   #originY = 0;
   #cameraX = 0;
   #cameraY = 0;
+  #visualOffsetY = 0;
 
   #stopRedraw: Destructor | null = null;
   #playing: PlayableAnimation | null = null;
@@ -55,6 +57,10 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
 
   drawBitmap(payload: t.BitmapRenderPayload, defaultRender: t.BitmapRenderFrame) {
     defaultRender(payload);
+  }
+
+  setVisualOffsetY(offset: number) {
+    this.#visualOffsetY = offset;
   }
 
   @ifAlive
@@ -102,8 +108,11 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       payload.now = frame.now;
       payload.delta = frame.delta;
 
-      this.#originX = go.x;
-      this.#originY = go.y - go.visualOffsetY;
+      const bitmap = this.#playing instanceof LoadedAnimation ? this.#playing : null;
+      const scale = go.effects.scale ?? 1;
+
+      this.#originX = go.x - (bitmap?.visualOffsetX ?? 0) * scale;
+      this.#originY = go.y - this.#visualOffsetY - (bitmap?.visualOffsetY ?? 0) * scale;
       this.#cameraX = go.game.camera.x;
       this.#cameraY = go.game.camera.y;
 
@@ -128,6 +137,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
 
   clear() {
     this.stopRedraw();
+    this.#visualOffsetY = 0;
 
     for (const stop of this.#listeners) {
       stop();

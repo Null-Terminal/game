@@ -81,7 +81,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
       return CollisionStatus.NoCollision;
     }
 
-    let moveStatus = this.#updateRiding();
+    let moveStatus = this.#updateRiding(dy);
 
     if (dy < 0 && moveStatus & CollisionStatus.BottomCollision) {
       dy = 0;
@@ -163,7 +163,14 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return this.world.findCollisions(x, y, x + width, y + height);
   }
 
-  #updateRiding() {
+  #updateRiding(dy: number) {
+    // При движении вверх отрываемся от платформы, чтобы она не притягивала объект обратно
+    if (dy > 0) {
+      this.#riding = null;
+      this.render.setVisualOffsetY(0);
+      return CollisionStatus.NoCollision;
+    }
+
     const { fps } = this.canvas;
 
     // Для разных FPS стартовое значение погрешности будет отличаться.
@@ -193,9 +200,10 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     const riding = collision != null ? collision.object : lastRiding;
 
     // Проверяем, что мы все еще стоим на платформе
+    const distanceToPlatform = riding == null ? Infinity : this.y - riding.y - riding.height;
     const isStandingOnPlatform = riding == null || riding.destroyed ?
       false :
-      this.y - riding.y - riding.height <= ridingYTolerance &&
+      Math.abs(distanceToPlatform) <= ridingYTolerance &&
       this.x + this.width - riding.x > ridingXTolerance &&
       riding.x + riding.width - this.x > ridingXTolerance;
 
@@ -213,14 +221,14 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
       // Из‑за потери точности при работе с дробными числами иногда возникает
       // эффект "парения в воздухе" при движении на быстрой платформе.
       // Это значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
-      this.visualOffsetY = riding.y - riding.prevY;
+      this.render.setVisualOffsetY(riding.y - riding.prevY);
 
       riding.visit(this);
       status |= CollisionStatus.BottomCollision;
 
     } else {
       this.#riding = null;
-      this.visualOffsetY = 0;
+      this.render.setVisualOffsetY(0);
     }
 
     return status;

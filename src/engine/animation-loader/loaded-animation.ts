@@ -19,6 +19,14 @@ export class LoadedAnimation {
     return this.#maxHeight * this.scale;
   }
 
+  get visualOffsetX(): number {
+    return (this.animation.params.visualOffsetX ?? 0) * this.scale;
+  }
+
+  get visualOffsetY(): number {
+    return (this.animation.params.visualOffsetY ?? 0) * this.scale;
+  }
+
   @cache
   get scale(): number {
     const { params } = this.animation;

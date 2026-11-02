@@ -78,7 +78,7 @@ export class AnimationPlayback {
       return sprites.at(this.#frameIndex)!.duration;
     }
 
-    const [min = 100, max = min] = randomDuration;
+    const [min, max] = randomDuration;
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }

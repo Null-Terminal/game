@@ -66,10 +66,6 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   y = 0;
   prevY = 0;
 
-  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
-  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
-  visualOffsetY = 0;
-
   readonly status = new GameObjectStatus(this);
 
   @cache
@@ -274,8 +270,6 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
     this.width = 0;
     this.height = 0;
-
-    this.visualOffsetY = 0;
     this.bbox = null;
 
     if ("bbox" in options && options.bbox != null) {
