@@ -18,7 +18,7 @@ export class AnimationPlayback {
     }
 
     this.animation = animation;
-    this.#frameIndex = sprites.params.randomOrder ? sprites.randomIndex() : 0;
+    this.#frameIndex = sprites.params.order === "random" ? sprites.randomIndex() : 0;
     this.#duration = this.#pickDuration();
   }
 
@@ -39,11 +39,11 @@ export class AnimationPlayback {
     const { params } = sprites;
 
     if (elapsed - this.#lastFrameElapsed >= this.#duration / params.speed) {
-      if (params.randomOrder) {
+      if (params.order === "random") {
         this.#frameIndex = sprites.randomIndex();
 
       } else {
-        if (params.loopReverse) {
+        if (params.order === "ping-pong") {
           if (this.#frameIndex + this.#direction === sprites.length) {
             this.#direction = -1;
 
@@ -72,13 +72,13 @@ export class AnimationPlayback {
 
   #pickDuration(): number {
     const { animation: sprites } = this.animation;
-    const { randomDuration } = sprites.params;
+    const { frameDurationRange } = sprites.params;
 
-    if (randomDuration == null) {
+    if (frameDurationRange == null) {
       return sprites.at(this.#frameIndex)!.duration;
     }
 
-    const [min, max] = randomDuration;
+    const [min, max] = frameDurationRange;
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }

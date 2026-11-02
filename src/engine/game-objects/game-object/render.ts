@@ -111,8 +111,8 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       const bitmap = this.#playing instanceof LoadedAnimation ? this.#playing : null;
       const scale = go.effects.scale ?? 1;
 
-      this.#originX = go.x - (bitmap?.visualOffsetX ?? 0) * scale;
-      this.#originY = go.y - this.#visualOffsetY - (bitmap?.visualOffsetY ?? 0) * scale;
+      this.#originX = go.x + (bitmap?.visualOffsetX ?? 0) * scale;
+      this.#originY = go.y - this.#visualOffsetY + (bitmap?.visualOffsetY ?? 0) * scale;
       this.#cameraX = go.game.camera.x;
       this.#cameraY = go.game.camera.y;
 

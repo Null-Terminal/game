@@ -1,10 +1,11 @@
-import type { TexturePacker } from "#/sprite-animation/types";
-import type { Animation, AnimationParameters, SpriteDescriptor } from "#/sprite-animation/types";
+import type { TexturePacker } from "#/animation-definition/types";
+import type { Animation, AnimationParameters, SpriteDescriptor } from "#/animation-definition/types";
+import { isInRange } from "#/utils/validators";
 
-export type * from "#/sprite-animation/types";
+export type * from "#/animation-definition/types";
 
-export class SpriteAnimation {
-  static fromJSON(json: string): SpriteAnimation {
+export class AnimationDefinition {
+  static fromJSON(json: string): AnimationDefinition {
     let data = JSON.parse(json);
 
     if ("frames" in data) {
@@ -21,7 +22,7 @@ export class SpriteAnimation {
       throw new TypeError(`${this.constructor.name}: expected object with "sprites" array, got ${got}`);
     }
 
-    return new SpriteAnimation(data);
+    return new AnimationDefinition(data);
   }
 
   static fromTexturePacker(data: TexturePacker): { sprites: SpriteDescriptor[] } {
@@ -52,15 +53,43 @@ export class SpriteAnimation {
   constructor(animation: Animation) {
     this.#sprites = animation.sprites;
 
+    const order = animation.params?.order ?? "forward";
+
+    switch (order) {
+      case "forward":
+      case "ping-pong":
+      case "random":
+        break;
+
+      default:
+        throw new RangeError(`Unknown animation order: ${order}`);
+    }
+
     this.params = {
       speed: 1,
       scale: 1,
       opacity: 1,
       loopFrom: 0,
-      loopReverse: false,
-      randomOrder: false,
-      ...animation.params
+      ...animation.params,
+      order
     };
+
+    for (const axis of ["width", "height"] as const) {
+      const region = this.params.repeat?.[axis];
+
+      if (region == null) {
+        continue;
+      }
+
+      const { x, y, width, height } = region;
+      const validSize = isInRange(x, 0, Infinity) && isInRange(y, 0, Infinity) &&
+        isInRange(width, 0, Infinity) && isInRange(height, 0, Infinity) &&
+        width > 0 && height > 0;
+
+      if (!validSize || this.#sprites.some((sprite) => x + width > sprite.width || y + height > sprite.height)) {
+        throw new RangeError(`repeat.${axis} must fit within every sprite frame`);
+      }
+    }
   }
 
   isEmpty() {

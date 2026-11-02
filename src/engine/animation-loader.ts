@@ -1,4 +1,4 @@
-import { SpriteAnimation } from "#/sprite-animation";
+import { AnimationDefinition } from "#/animation-definition";
 
 import { loadSprite } from "#engine/animation-loader/sprite-loader";
 import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
@@ -16,7 +16,7 @@ export async function loadAnimation(
   const [spriteUrl, animationOpts] = await Promise.all([resolve(sprite), resolve(options.animation)]);
 
   const image = await loadSprite(spriteUrl.default, options.sprite);
-  const animation = new SpriteAnimation(animationOpts.default);
+  const animation = new AnimationDefinition(animationOpts.default);
 
   return new LoadedAnimation(image, animation);
 

@@ -3,11 +3,14 @@ export interface Animation {
   params?: RawAnimationParameters | undefined;
 }
 
-export interface SpriteDescriptor {
+export interface SpriteRegion {
   x: number;
   y: number;
   width: number;
   height: number;
+}
+
+export interface SpriteDescriptor extends SpriteRegion {
   duration: number;
   spriteId: string;
 }
@@ -18,14 +21,18 @@ export interface OptionalAnimationParameters {
   maxHeight?: number;
 
   // Диапазон случайной длительности кадра в миллисекундах
-  randomDuration?: readonly [min: number, max: number];
+  frameDurationRange?: readonly [min: number, max: number];
 
-  // Смещение изображения относительно объекта в пикселях исходного кадра
-  visualOffsetX?: number;
-  visualOffsetY?: number;
+  // Смещение изображения по координатам мира в пикселях исходного кадра
+  visualOffset?: { x?: number; y?: number };
+
+  // Области повтора относительно левого верхнего угла кадра, в пикселях исходника
+  repeat?: { width?: SpriteRegion; height?: SpriteRegion };
 }
 
-export interface RequiredAnimationParameters {
+export type AnimationOrder = "forward" | "ping-pong" | "random";
+
+export interface DefaultAnimationParameters {
   // Множители скорости воспроизведения и размера кадра
   speed: number;
   scale: number;
@@ -36,16 +43,15 @@ export interface RequiredAnimationParameters {
   // Кадр, с которого анимация повторяется после завершения
   loopFrom: number;
 
-  // Воспроизведение кадров в обратном порядке после последнего
-  loopReverse: boolean;
-
-  // Случайный выбор следующего кадра
-  randomOrder: boolean;
+  // Порядок воспроизведения кадров
+  order: AnimationOrder;
 }
 
-export interface RawAnimationParameters extends Partial<RequiredAnimationParameters>, OptionalAnimationParameters {}
+export interface RawAnimationParameters extends Omit<Partial<DefaultAnimationParameters>, "order">, OptionalAnimationParameters {
+  order?: string;
+}
 
-export interface AnimationParameters extends RequiredAnimationParameters, OptionalAnimationParameters {}
+export interface AnimationParameters extends DefaultAnimationParameters, OptionalAnimationParameters {}
 
 export interface TexturePacker {
   frames: Record<string, {

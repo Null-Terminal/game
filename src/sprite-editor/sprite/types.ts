@@ -1,4 +1,4 @@
-import type { SpriteDescriptor } from "#/sprite-animation";
+import type { SpriteDescriptor } from "#/animation-definition";
 
 export type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 

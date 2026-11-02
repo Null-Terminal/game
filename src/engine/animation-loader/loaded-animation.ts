@@ -1,13 +1,15 @@
 import { cache } from "#decorators/cache";
 
-import type { SpriteAnimation } from "#/sprite-animation";
+import type { AnimationDefinition } from "#/animation-definition";
 import type { BakedFrame, FrameEffects } from "#engine/animation-loader/types";
+
+const MAX_REPEAT_PATTERN_SIZE = 1024;
 
 export class LoadedAnimation {
   name = "";
 
   readonly image;
-  readonly animation: Readonly<SpriteAnimation>;
+  readonly animation: Readonly<AnimationDefinition>;
 
   @cache
   get maxWidth(): number {
@@ -20,11 +22,11 @@ export class LoadedAnimation {
   }
 
   get visualOffsetX(): number {
-    return (this.animation.params.visualOffsetX ?? 0) * this.scale;
+    return (this.animation.params.visualOffset?.x ?? 0) * this.scale;
   }
 
   get visualOffsetY(): number {
-    return (this.animation.params.visualOffsetY ?? 0) * this.scale;
+    return (this.animation.params.visualOffset?.y ?? 0) * this.scale;
   }
 
   @cache
@@ -73,7 +75,7 @@ export class LoadedAnimation {
 
   readonly #images: Record<string, ImageBitmap | OffscreenCanvas> = {};
 
-  constructor(image: ImageBitmap, animation: SpriteAnimation) {
+  constructor(image: ImageBitmap, animation: AnimationDefinition) {
     this.image = image;
     this.animation = animation;
   }
@@ -129,23 +131,71 @@ export class LoadedAnimation {
     return canvas;
   }
 
-  getPatternFrame(index: number, width: number, height: number, effects: FrameEffects = {}): BakedFrame {
+  getPatternFrame(index: number, width: number, height: number, effects?: FrameEffects): BakedFrame;
+  getPatternFrame(index: number, width: number, height: number, axis: "width" | "height", effects?: FrameEffects): BakedFrame;
+  getPatternFrame(
+    index: number,
+    width: number,
+    height: number,
+    axisOrEffects: "width" | "height" | FrameEffects = {},
+    effects: FrameEffects = {}
+  ): BakedFrame {
+    const axis = typeof axisOrEffects === "string" ? axisOrEffects : null;
+    effects = typeof axisOrEffects === "string" ? effects : axisOrEffects;
+
+    const region = axis == null ? null : this.animation.params.repeat?.[axis];
     width = this.#resolveSize(width);
     height = this.#resolveSize(height);
 
-    const cacheKey = this.#getKey(index, effects, width, height);
+    if (axis != null) {
+      width = Math.min(width, MAX_REPEAT_PATTERN_SIZE);
+      height = Math.min(height, MAX_REPEAT_PATTERN_SIZE);
+    }
+
+    const cacheKey = `${this.#getKey(index, effects, width, height)}-${axis ?? ""}`;
     const fromCache = this.#images[cacheKey];
 
     if (fromCache != null) {
       return fromCache;
     }
 
+    const sprite = this.animation.at(index);
+
+    if (sprite == null) {
+      throw new Error(`${this.constructor.name}: Sprite frame ${index} not found (total: ${this.animation.length})`);
+    }
+
+    const image = this.getSpriteFrame(index, effects);
+    const tileWidth = this.#getPatternTileSize(region?.width, sprite.width, image.width);
+    const tileHeight = this.#getPatternTileSize(region?.height, sprite.height, image.height);
+
+    if (axis != null) {
+      width = Math.max(tileWidth, Math.floor(width / tileWidth) * tileWidth);
+      height = Math.max(tileHeight, Math.floor(height / tileHeight) * tileHeight);
+    }
+
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d")!;
 
-    const image = this.getSpriteFrame(index, effects);
+    let source: BakedFrame = image;
 
-    ctx.fillStyle = ctx.createPattern(image, "repeat")!;
+    if (region != null) {
+      const fragment = new OffscreenCanvas(tileWidth, tileHeight);
+      const fragmentCtx = fragment.getContext("2d")!;
+
+      fragmentCtx.drawImage(
+        image,
+        region.x * image.width / sprite.width,
+        region.y * image.height / sprite.height,
+        region.width * image.width / sprite.width,
+        region.height * image.height / sprite.height,
+        0, 0, tileWidth, tileHeight
+      );
+
+      source = fragment;
+    }
+
+    ctx.fillStyle = ctx.createPattern(source, "repeat")!;
     ctx.fillRect(0, 0, width, height);
 
     this.#images[cacheKey] = canvas;
@@ -183,6 +233,10 @@ export class LoadedAnimation {
     }
 
     return size;
+  }
+
+  #getPatternTileSize(regionSize: number | undefined, frameSize: number, imageSize: number) {
+    return regionSize == null ? imageSize : Math.max(1, Math.round(regionSize * imageSize / frameSize));
   }
 
   #getKey(index: number, effects: FrameEffects, width = 0, height = 0) {

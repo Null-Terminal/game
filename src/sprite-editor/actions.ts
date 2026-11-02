@@ -1,6 +1,6 @@
 import { loadText } from "#/file-loader";
 
-import { SpriteAnimation } from "#/sprite-animation";
+import { AnimationDefinition } from "#/animation-definition";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
@@ -56,7 +56,7 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         }
 
       } else {
-        const animation = SpriteAnimation.fromJSON(sprite.animation);
+        const animation = AnimationDefinition.fromJSON(sprite.animation);
 
         editor.speed = animation.params.speed;
         editor.scale = animation.params.scale;

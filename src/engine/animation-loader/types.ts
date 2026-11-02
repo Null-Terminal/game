@@ -1,4 +1,4 @@
-import type { Animation } from "#/sprite-animation";
+import type { Animation } from "#/animation-definition";
 
 export type Import<T> = T | Promise<{ default: T }>;
 
