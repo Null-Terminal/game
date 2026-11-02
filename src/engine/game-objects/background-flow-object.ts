@@ -34,9 +34,12 @@ export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<
   #playingSprites: readonly LoadedAnimation[] | null = null;
   #seed = 0;
 
-  init() {
+  override init() {
     this.#seed = this.options.seed ?? Math.floor(Math.random() * 0x100000000);
-    this.play(this.options.sprites);
+
+    if (this.options.show == null) {
+      this.play(this.options.sprites);
+    }
   }
 
   override destroy() {
@@ -58,8 +61,8 @@ export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<
       return;
     }
 
+    this.#playingSprites = input === this.animations.flow ? this.options.sprites : null;
     super.play(input);
-    this.#playingSprites = null;
   }
 
   @ifAlive

@@ -13,7 +13,7 @@ import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/backgr
 
 export type * from "#engine/game-objects/background-object/types";
 
-export abstract class BackgroundObject<
+export class BackgroundObject<
   T extends GameObjectOptions<DefaultBackgroundObjectOptions> = GameObjectOptions<DefaultBackgroundObjectOptions>
 > extends GameObject<T> {
   @cache
@@ -30,6 +30,8 @@ export abstract class BackgroundObject<
     const { background, overlay } = this.canvas.events;
     return this.options?.overlay ? overlay : background;
   }
+
+  init() {}
 
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     const options = super.create(game, poolPointer, opts);

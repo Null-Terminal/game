@@ -169,8 +169,12 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       this.#createRefs();
       this.init();
 
-      if (options.show != null && options.show in this.animations) {
-        this.play(this.animations[options.show]!);
+      const animation = typeof options.show === "string" ?
+        this.animations[options.show] :
+        options.show;
+
+      if (animation != null) {
+        this.play(animation);
       }
 
       if (options.movement != null) {
