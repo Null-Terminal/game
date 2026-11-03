@@ -41,6 +41,11 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   #stats = MovableObject.stats;
   #riding: GameObject | null = null;
 
+  // Опора может быть отдельной частью объекта, например крышей лифта
+  #ridingLeft = 0;
+  #ridingRight = 0;
+  #ridingTop = 0;
+
   readonly #MAX_RIDING_TOLERANCE = 10;
   readonly #INITIAL_RIDING_TOLERANCE = 5;
   readonly #COLLISION_EPSILON = 0.001;
@@ -196,7 +201,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     // Из-за динамической природы платформ и ошибок округления, нужно закладывать некоторую погрешность.
     // В базовом случае берется просто примерное подходящее число, а в дальнейшем учитываем скорость платформы.
     const ridingYTolerance = lastRiding != null ?
-      Math.ceil(Math.abs(lastRiding.y - lastRiding.prevY)) :
+      Math.max(1, Math.ceil(Math.abs(lastRiding.y - lastRiding.prevY))) :
       RIDING_TOLERANCE;
 
     const ridingXTolerance = lastRiding != null ?
@@ -207,29 +212,39 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     const collision = this.findDynamicCollision(this.x, this.y - ridingYTolerance);
     const riding = collision != null ? collision.object : lastRiding;
 
+    const shiftX = riding == null ? 0 : riding.x - riding.prevX;
+    const shiftY = riding == null ? 0 : riding.y - riding.prevY;
+
+    const left = collision?.bbox[0] ?? this.#ridingLeft + shiftX;
+    const right = collision?.bbox[2] ?? this.#ridingRight + shiftX;
+    const top = collision?.bbox[3] ?? this.#ridingTop + shiftY;
+
     // Проверяем, что мы все еще стоим на платформе
-    const distanceToPlatform = riding == null ? Infinity : this.y - riding.y - riding.height;
+    const distanceToPlatform = riding == null ? Infinity : this.y - top;
     const isStandingOnPlatform = riding == null || riding.destroyed ?
       false :
       Math.abs(distanceToPlatform) <= ridingYTolerance &&
-      this.x + this.width - riding.x > ridingXTolerance &&
-      riding.x + riding.width - this.x > ridingXTolerance;
+      this.x + this.width - left > ridingXTolerance &&
+      right - this.x > ridingXTolerance;
 
     let status: number = CollisionStatus.NoCollision;
 
     if (riding != null && isStandingOnPlatform) {
       this.#riding = riding;
+      this.#ridingLeft = left;
+      this.#ridingRight = right;
+      this.#ridingTop = top;
 
       // Корректирую позицию объекта под позицию платформы на которой он стоит
-      this.x += riding.x - riding.prevX;
+      this.x += shiftX;
 
       // Ставим объект чуть-чуть выше, чтобы не провоцировать расчеты коллизий
-      this.y = riding.y + riding.height + this.#COLLISION_EPSILON;
+      this.y = top + this.#COLLISION_EPSILON;
 
       // Из‑за потери точности при работе с дробными числами иногда возникает
       // эффект "парения в воздухе" при движении на быстрой платформе.
       // Это значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
-      this.render.setVisualOffsetY(riding.y - riding.prevY);
+      this.render.setVisualOffsetY(shiftY);
 
       riding.visit(this);
       status |= CollisionStatus.BottomCollision;
