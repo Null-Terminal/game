@@ -20,3 +20,6 @@ export interface FrameEffects {
   flipX?: boolean;
   flipY?: boolean;
 }
+
+export type SpriteAnchorX = "left" | "center" | "right";
+export type SpriteAnchorY = "bottom" | "center" | "top";

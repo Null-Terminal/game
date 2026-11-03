@@ -1,4 +1,4 @@
-import type { LoadedAnimation } from "#engine/animation-loader";
+import type { LoadedAnimation } from "#engine/animation";
 import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object";
 
 export type { BackgroundFlowRenderState } from "#engine/game-objects/background-flow-object/render";

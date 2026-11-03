@@ -1,13 +1,9 @@
 import { AnimationDefinition } from "#/animation-definition";
 
-import { loadSprite } from "#engine/animation-loader/sprite-loader";
-import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
+import { LoadedAnimation } from "#engine/animation/loaded-animation";
+import { loadSprite } from "#engine/animation/load-sprite";
 
-import type { LoadAnimationOptions, Import } from "#engine/animation-loader/types";
-
-export type { LoadedAnimation };
-
-export * from "#engine/animation-loader/types";
+import type { Import, LoadAnimationOptions } from "#engine/animation/types";
 
 export async function loadAnimation(
   sprite: Import<string>,

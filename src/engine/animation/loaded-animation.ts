@@ -1,7 +1,7 @@
 import { cache } from "#decorators/cache";
 
 import type { AnimationDefinition } from "#/animation-definition";
-import type { BakedFrame, FrameEffects } from "#engine/animation-loader/types";
+import type { BakedFrame, FrameEffects } from "#engine/animation/types";
 
 const MAX_REPEAT_PATTERN_SIZE = 1024;
 

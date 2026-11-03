@@ -1,9 +1,9 @@
 import { cache } from "#decorators/cache";
-import type { LoadedAnimation } from "#engine/animation-loader";
+import { AnimationPlayback } from "#engine/animation";
+import type { LoadedAnimation } from "#engine/animation";
 
 import { ifAlive } from "#engine/game-objects/decorators";
 import { BackgroundObject } from "#engine/game-objects/background-object";
-import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 import type * as go from "#engine/game-objects/game-object";
 
 import { FlowLayout } from "#engine/game-objects/background-flow-object/layout";

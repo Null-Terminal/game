@@ -1,5 +1,5 @@
-import type { LoadSpriteOptions } from "#engine/animation-loader/types";
-import { removeCanvasBackground } from "#engine/animation-loader/remove-background";
+import { removeCanvasBackground } from "#engine/animation/remove-background";
+import type { LoadSpriteOptions } from "#engine/animation/types";
 
 const spriteCache = new Map<string, Promise<ImageBitmap>>();
 

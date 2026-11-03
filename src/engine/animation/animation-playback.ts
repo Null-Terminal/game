@@ -1,4 +1,4 @@
-import type { LoadedAnimation } from "#engine/animation-loader";
+import type { LoadedAnimation } from "#engine/animation/loaded-animation";
 
 export class AnimationPlayback {
   readonly animation: LoadedAnimation;

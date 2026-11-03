@@ -1,6 +1,6 @@
 import type { Handlers } from "#/event-emitter";
 
-import type { FrameEffects, LoadedAnimation } from "#engine/animation-loader";
+import type { FrameEffects, LoadedAnimation } from "#engine/animation";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
