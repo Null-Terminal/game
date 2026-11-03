@@ -93,10 +93,18 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
 
     if (dx !== 0) {
       const targetX = this.x + dx;
-      const newX = this.#moveX(dx);
+      const startY = this.y;
+
+      const canStep = dy <= 0 && (this.stats.onGround || Boolean(moveStatus & CollisionStatus.BottomCollision));
+      const newX = this.#moveX(dx, canStep);
 
       if (newX !== this.x) {
         this.x = newX;
+      }
+
+      if (this.y > startY) {
+        moveStatus |= CollisionStatus.BottomCollision;
+        dy = 0;
       }
 
       if (newX !== targetX) {
@@ -292,7 +300,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return false;
   }
 
-  #moveX(delta: number): number {
+  #moveX(delta: number, canStep: boolean): number {
     const target = this.x + delta;
 
     const left = Math.min(this.x, target);
@@ -311,6 +319,10 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
         Math.max(resolved, bbox[2]);
     }
 
+    if (resolved !== target && canStep && this.#stepUp(left, right, resolved, delta > 0, collisions)) {
+      return target;
+    }
+
     if (resolved !== target) {
       for (const { bbox, object } of collisions) {
         const edge = delta > 0 ? bbox[0] - this.width : bbox[2];
@@ -322,6 +334,45 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     }
 
     return resolved;
+  }
+
+  #stepUp(left: number, right: number, stopX: number, movingRight: boolean, collisions: readonly Collision[]): boolean {
+    let surfaceY = this.y;
+    let support: GameObject | null = null;
+
+    for (const { bbox, object } of collisions) {
+      const edge = movingRight ? bbox[0] - this.width : bbox[2];
+
+      if (edge !== stopX) {
+        continue;
+      }
+
+      const height = bbox[3] - this.y;
+
+      if (height <= 0 || !Number.isFinite(height) || object.allows(this, "stepUp", height) !== true) {
+        return false;
+      }
+
+      if (bbox[3] > surfaceY) {
+        surfaceY = bbox[3];
+        support = object;
+      }
+    }
+
+    if (support == null) {
+      return false;
+    }
+
+    const raisedY = surfaceY + this.#COLLISION_EPSILON;
+
+    if (this.hasCollision(this.x, this.y, this.width, raisedY - this.y + this.height) ||
+      this.hasCollision(left, raisedY, right - left, this.height)) {
+      return false;
+    }
+
+    this.y = raisedY;
+    support.visit(this);
+    return true;
   }
 
   #moveY(delta: number): number {

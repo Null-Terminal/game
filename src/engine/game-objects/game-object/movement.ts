@@ -66,8 +66,7 @@ export class Movement extends ServantObject {
       if (distance < tolerance) {
         // Достигли цели - переключаемся на следующую
         pathIndex = (pathIndex + 1) % path.length;
-        // move(0, 0) обновляет prev, чтобы стоящий сверху не получил этот шаг ещё раз
-        go.move(0, 0);
+        go.move(dx, dy);
         return;
       }
 

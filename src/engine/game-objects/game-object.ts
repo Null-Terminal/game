@@ -191,6 +191,12 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     // Ничего не делаю по умолчанию
   }
 
+  allows(go: GameObject, kind: "stepUp", height: number): boolean | null;
+  allows(go: GameObject, kind: string, options?: unknown): boolean | null;
+  allows(_go: GameObject, _kind: string, _options?: unknown): boolean | null {
+    return null;
+  }
+
   @ifAlive
   @ifShadowed(0)
   move(dx: number, dy: number): number {
