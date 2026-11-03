@@ -5,7 +5,9 @@ import type { RTreeEntry } from "#engine/rtree";
 import { GameObject } from "#engine/game-objects/game-object";
 import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
-export abstract class StaticObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
+export class StaticObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
+  init() {}
+
   override get redrawEvent() {
     return this.canvas.events.static;
   }
