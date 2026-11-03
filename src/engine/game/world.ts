@@ -50,7 +50,7 @@ export class World extends Disposable {
     this.game = game;
 
     this.onDestroy(
-      game.canvas.emitter.on(game.canvas.events.background, () => {
+      game.canvas.emitter.on(game.canvas.events.beforeRender, () => {
         this.dynamics.clear();
         this.dynamicInteracts.clear();
       })

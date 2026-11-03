@@ -153,7 +153,7 @@ export class Movement extends ServantObject {
   #drive(step: (delta: number) => void) {
     const go = this.go;
 
-    this.#cancelMovementHandler = go.render.on(go.redrawEvent, ({ delta }) => {
+    this.#cancelMovementHandler = go.render.on(go.canvas.events.beforeRender, ({ delta }) => {
       step(delta);
     });
   }

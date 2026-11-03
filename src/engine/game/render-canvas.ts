@@ -11,6 +11,7 @@ export class RenderCanvas extends Disposable {
   readonly options: Required<RenderCanvasOptions>;
 
   readonly emitter = new EventEmitter({
+    beforeRender: handler<RenderPayload>(),
     background: handler<RenderPayload>(),
     static: handler<RenderPayload>(),
     dynamic: handler<RenderPayload>({ withFlush: true }),
@@ -148,6 +149,7 @@ export class RenderCanvas extends Disposable {
       lastRedraw = now;
       payload.now = now;
 
+      this.emitter.emit(this.events.beforeRender, payload);
       this.emitter.emit(this.events.background, payload);
       this.emitter.emit(this.events.static, payload);
       this.emitter.emit(this.events.dynamic, payload);
