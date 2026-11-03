@@ -1,4 +1,4 @@
-import type { BakedFrame } from "#engine/animation-loader/types";
+import type { BakedFrame } from "#engine/animation/types";
 
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 
@@ -44,7 +44,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
     return this.isVisibleInViewport(bounds.left, bounds.top, bounds.right, bounds.bottom) ? bounds : null;
   }
 
-  override drawBitmap(payload: go.BitmapRenderPayload, defaultRender: go.BitmapRenderFrame) {
+  override drawBitmap(payload: go.BitmapRenderPayload) {
     const { go } = this;
     const { options: opts } = go;
 
@@ -65,7 +65,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
     }
 
     if (!wrapWidth && !wrapHeight) {
-      defaultRender(payload);
+      super.drawBitmap(payload);
       return;
     }
 

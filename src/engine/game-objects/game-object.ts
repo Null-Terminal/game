@@ -1,6 +1,6 @@
 import { EventEmitter, handler } from "#/event-emitter";
 import { cache } from "#decorators/cache";
-import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
+import { AnimationPlayback, LoadedAnimation } from "#engine/animation";
 
 import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
@@ -9,14 +9,13 @@ import type { BBoxTuple } from "#engine/rtree";
 import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 
-import { AnimationPlayback } from "#engine/game-objects/game-object/animation-playback";
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 import { Movement } from "#engine/game-objects/game-object/movement";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 
 import type * as go from "#engine/game-objects/game-object/types";
-import type { BitmapRenderFrame, BitmapRenderPayload } from "#engine/game-objects/game-object/render";
+import type { BitmapRenderPayload } from "#engine/game-objects/game-object/render";
 
 export type * from "#engine/game-objects/game-object/types";
 
@@ -314,31 +313,6 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       this.height = animation.maxHeight * effects.scale;
     }
 
-    const drawDefault: BitmapRenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, toCanvasTop }) => {
-      const { width: w, height: h } = this;
-      const top = toCanvasTop(y);
-
-      const finiteBounds =
-        Number.isFinite(x) && Number.isFinite(top) &&
-        Number.isFinite(w) && Number.isFinite(h);
-
-      if (finiteBounds && !this.render.isVisibleInViewport(x, top, x + w, top + h)) {
-        return;
-      }
-
-      if (pattern) {
-        const image = animation.getPatternFrame(frameIndex, w, h, effects);
-        ctx.drawImage(image, 0, 0, w, h, x, top, w, h);
-
-      } else {
-        const image = animation.getSpriteFrame(frameIndex, effects);
-
-        // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе.
-        const diffY = h - image.height;
-        ctx.drawImage(image, x, top + diffY, image.width, image.height);
-      }
-    };
-
     return {
       draw: (frame) => {
         const bitmapFrame = frame as BitmapRenderPayload;
@@ -347,7 +321,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
         bitmapFrame.frameIndex = playback.frameIndex;
         bitmapFrame.animation = animation;
 
-        this.render.drawBitmap(bitmapFrame, drawDefault);
+        this.render.drawBitmap(bitmapFrame);
 
         if (playback.shouldEmitEvent && animation.name in this.animation.events) {
           this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);

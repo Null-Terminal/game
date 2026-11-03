@@ -1,9 +1,11 @@
-import type { Handler, Handlers } from "#/event-emitter";
+import type { Handlers } from "#/event-emitter";
 
-import { LoadedAnimation } from "#engine/animation-loader/loaded-animation";
+import { AnimationLayer, LoadedAnimation } from "#engine/animation";
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
 
+import type { SpriteAnchorX, SpriteAnchorY } from "#engine/animation";
+import type { RenderPayload } from "#engine/game";
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
 import type * as t from "#engine/game-objects/game-object/render/types";
@@ -55,8 +57,32 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     return left < right && top < bottom && left < width && right > 0 && top < height && bottom > 0;
   }
 
-  drawBitmap(payload: t.BitmapRenderPayload, defaultRender: t.BitmapRenderFrame) {
-    defaultRender(payload);
+  drawBitmap(payload: t.BitmapRenderPayload) {
+    const { width, height, effects } = this.go;
+    const { ctx, pattern, frameIndex, animation, x, y, toCanvasTop } = payload;
+
+    const top = toCanvasTop(y);
+
+    const finiteBounds =
+      Number.isFinite(x) && Number.isFinite(top) &&
+      Number.isFinite(width) && Number.isFinite(height);
+
+    if (finiteBounds && !this.isVisibleInViewport(x, top, x + width, top + height)) {
+      return;
+    }
+
+    if (pattern) {
+      const image = animation.getPatternFrame(frameIndex, width, height, effects);
+      ctx.drawImage(image, 0, 0, width, height, x, top, width, height);
+
+    } else {
+      const image = animation.getSpriteFrame(frameIndex, effects);
+      ctx.drawImage(image, x, top + height - image.height, image.width, image.height);
+    }
+  }
+
+  sprite(animation: LoadedAnimation, anchorX: SpriteAnchorX = "left", anchorY: SpriteAnchorY = "bottom") {
+    return new AnimationLayer(animation, this.go.game.camera, this.go.effects, anchorX, anchorY);
   }
 
   setVisualOffsetY(offset: number) {
@@ -64,8 +90,23 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   }
 
   @ifAlive
-  on<E extends Handlers>(event: E, listener: Handler<E["PayloadType"]>): Destructor {
-    const unsubscribe = this.go.canvas.emitter.on(event, listener);
+  on<E extends Handlers<RenderPayload>>(
+    event: E,
+    listener: (payload: E["PayloadType"], elapsed: number) => void
+  ): Destructor {
+    const { go } = this;
+
+    let elapsed = 0;
+    let lastNow = 0;
+
+    const unsubscribe = go.canvas.emitter.on(event, (frame) => {
+      if (lastNow !== 0 && !go.status.paused && !go.status.shadowed) {
+        elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
+      }
+
+      lastNow = frame.now;
+      listener(frame, elapsed);
+    });
 
     const stop = () => {
       if (this.#listeners.delete(stop)) {
@@ -83,30 +124,21 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     animation: PlayableAnimation | null = null,
     onStop?: Destructor
   ) {
+    const { go } = this;
+
     this.stopRedraw();
     this.#playing = animation;
 
-    const go = this.go;
-
     const payload = this.#payload;
-    payload.elapsed = 0;
-
-    let lastNow = 0;
-
-    const unsubscribe = this.on(go.redrawEvent, (frame) => {
+    const unsubscribe = this.on(go.redrawEvent, (frame, elapsed) => {
       if (go.status.shadowed) {
         return;
       }
 
-      if (lastNow !== 0 && !go.status.paused) {
-        payload.elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
-      }
-
-      lastNow = frame.now;
-
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
+      payload.elapsed = elapsed;
 
       const bitmap = this.#playing instanceof LoadedAnimation ? this.#playing : null;
       const scale = go.effects.scale ?? 1;
@@ -116,8 +148,8 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       this.#cameraX = go.game.camera.x;
       this.#cameraY = go.game.camera.y;
 
-      payload.x = payload.getScreenX();
-      payload.y = payload.getScreenY();
+      payload.x = bitmap == null ? payload.getScreenX() : Math.round(payload.getScreenX());
+      payload.y = bitmap == null ? payload.getScreenY() : Math.round(payload.getScreenY());
 
       draw(payload);
     });

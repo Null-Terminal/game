@@ -1,4 +1,4 @@
-import type { LoadedAnimation } from "#engine/animation-loader";
+import type { LoadedAnimation } from "#engine/animation";
 import type { RenderPayload } from "#engine/game";
 
 export type ScrollFactor = [both: number] | [x: number, y: number];
@@ -27,5 +27,3 @@ export interface BitmapRenderPayload extends ObjectRenderPayload {
   frameIndex: number;
   animation: LoadedAnimation;
 }
-
-export type BitmapRenderFrame = (payload: BitmapRenderPayload) => void;
