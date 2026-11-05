@@ -1,204 +1,276 @@
-import { WallObject } from "#game/wall-object";
+import { World, type WorldObjects } from "#engine/game";
+
+import {
+  BackgroundFlowObject,
+  BackgroundObject,
+  StaticObject,
+  type BackgroundObjectDebugOptions
+} from "#engine/game-objects";
+
+import { FogObject } from "#game/background/fog-object";
+import { SkyObject, duskSky } from "#game/background/sky-object";
+
+import { distantCity } from "#game/background/presets/distant-city";
+import { citySkyline } from "#game/background/presets/city-skyline";
+import { farRoadsideScenery } from "#game/background/presets/far-roadside-scenery";
+import { roadsideStructures } from "#game/background/presets/roadside-structures";
+
+import { nearRoadsideScenery } from "#game/background/presets/near-roadside-scenery";
+import { nearRoadVegetation } from "#game/background/presets/near-road-vegetation";
+import { nearRoadWrecks } from "#game/background/presets/near-road-wrecks";
+
+import { moundEdgeDebris } from "#game/background/presets/mound-edge-debris";
+import { curbDebris } from "#game/background/presets/curb-debris";
+
+import { ControlObject } from "#game/control-object";
 import { LiquidObject } from "#game/liquid-object";
-import { FillerObject } from "#game/filler-object";
+import { PickupObject } from "#game/pickup-object";
 
-import { UsefulObject } from "#game/useful-object";
-import { PlatformObject } from "#game/platform-object";
-import { FallingPlatformObject } from "#game/falling-platform-object";
+import { ElevatorObject, industrialElevator } from "#game/platforms/elevator-object";
+import { FallingPlatformObject } from "#game/platforms/falling-platform-object";
+import { PlatformObject } from "#game/platforms/platform-object";
 
-import { FloorObject } from "#game/floor-object";
+import { terminalStand } from "#/sprites/interactables/terminal-stand";
 
-import { World } from "#engine/game";
+import { barrel } from "#/sprites/platforms/barrel";
+import { elevatorShaft } from "#/sprites/platforms/elevator/shaft";
+import { hoverDisc } from "#/sprites/platforms/hover-disc";
+import { scaffoldFrame } from "#/sprites/platforms/scaffold-frame";
+import { scaffoldPlank } from "#/sprites/platforms/scaffold-plank";
 
-export const world = World.of([
-  [FillerObject, { show: "night", stretch: "wh", static: "h", scrollFactor: [0.5] }],
-  [FillerObject, { show: "night", stretch: "w", static: "h", scrollFactor: [0.5] }],
+import { asphalt } from "#/sprites/terrain/asphalt";
+import { roadsideGround } from "#/sprites/terrain/roadside-ground";
+import { sidewalk } from "#/sprites/terrain/sidewalk";
 
-  [FillerObject, { show: "meshFence", y: 140, stretch: "w" }],
+const floors = [[-Infinity, Infinity]] as const;
+const fogTexture = { density: 22, seed: 0x4e2d9a71 } as const;
 
-  [FloorObject, { show: "asphalt", bbox: [-Infinity, 130, Infinity, 135] }],
-  [LiquidObject, { show: "lava", bbox: [900, 134, 1500, 204] }],
-  [LiquidObject, { show: "water", bbox: [2800, 134, 3400, 204] }],
+export function createDemoWorld(showSeams = false): WorldObjects {
+  const backdropDebug: BackgroundObjectDebugOptions = { stretchSeams: showSeams };
+  const objects: WorldObjects = World.of([
+    // Небо: звёзды, редкие молнии, облака и дальние ступенчатые полосы.
+    [SkyObject, {
+      show: "sky",
+      celestialScrollFactor: 0,
+      ...duskSky,
+      dusk: { ...duskSky.dusk, bandsOpacity: 0.45 },
+      moon: { ...duskSky.moon, position: [0.85, 0.15], radius: 70, haloRadius: 120, haloOpacity: 0.35 },
+      clouds: { ...duskSky.clouds, clusters: 10, density: 6, opacity: 0.75 }
+    }],
 
-  [WallObject, { show: "bricks", bbox: [160, 220, 340, 240] }],
-  [WallObject, { show: "bricks", bbox: [380, 340, 560, 360] }],
-  [WallObject, { show: "bricks", bbox: [640, 500, 900, 520] }],
+    // Самая дальняя панорама города и слабая дымка перед следующим слоем.
+    [BackgroundFlowObject, { sprites: distantCity, y: 145, stretch: "w", debug: backdropDebug, scrollFactor: [0.06, 0.18], effects: { scale: 0.7 } }],
+    [FogObject, {
+      show: "fog", bbox: [-Infinity, 266, Infinity, 353], texture: fogTexture,
+      opacity: 0.25, speed: 1, scrollFactor: [0.08, 0.18], sway: 1
+    }],
 
-  [UsefulObject, { show: "fuel", x: 240, y: 280 }],
-  [UsefulObject, { show: "fuel", x: 470, y: 410 }],
-  [UsefulObject, { show: "fuel", x: 760, y: 570 }],
+    // Высокие здания и лёгкий туман перед придорожной застройкой.
+    [BackgroundFlowObject, { sprites: citySkyline, x: -295, y: 135, debug: backdropDebug, order: "shuffle", gap: [300, 700], seed: 32, scrollFactor: [0.16, 0.55], effects: { scale: 0.9 } }],
+    [FogObject, {
+      show: "fog", bbox: [-Infinity, 259, Infinity, 346], texture: fogTexture,
+      opacity: 0.3, speed: 2, scrollFactor: [0.2, 0.55], sway: 1
+    }],
 
-  // // Сразу, с задержкой, по пути, по синусу до контакта.
-  [FallingPlatformObject, { name: "fall", bbox: [960, 488, 1080, 520] }],
+    // Дальние стены, постройки и отдельные объекты за насыпью.
+    [BackgroundFlowObject, { sprites: roadsideStructures, y: 245, stretch: "w", debug: backdropDebug, order: "shuffle", gap: [100, 310], seed: 41, scrollFactor: [0.25, 1], effects: { scale: 0.6 } }],
+    [BackgroundFlowObject, { sprites: farRoadsideScenery, y: 245, debug: backdropDebug, gap: [700, 1400], seed: 73, scrollFactor: [0.25, 1], effects: { scale: 0.6 } }],
 
-  [FallingPlatformObject, {
-    name: "fall-delay",
-    fallAfterSeconds: 2,
-    bbox: [1120, 488, 1240, 520]
-  }],
+    // Дымка проходит перед дальними постройками и скрывается за насыпью.
+    [FogObject, {
+      show: "fog", bbox: [-Infinity, 225, Infinity, 430], texture: fogTexture,
+      opacity: 0.75, speed: 3, scrollFactor: [0.25, 1], sway: 2, flow: true
+    }],
 
-  [FallingPlatformObject, {
-    name: "fall-path",
-    fallAfterSeconds: 1,
-    bbox: [1280, 488, 1400, 520],
+    // Насыпь перекрывает основания дальних объектов. Дорога и тротуар лежат перед ней.
+    [BackgroundObject, { show: roadsideGround, bbox: [-Infinity, 180, Infinity, 295], scrollFactor: [0.38, 1] }],
 
-    movement: {
-      path: [
-        [1280, 488],
-        [1280, 680]
-      ],
+    [BackgroundObject, { show: asphalt, bbox: [-Infinity, -Infinity, Infinity, 245], stretch: "wh", debug: backdropDebug }],
+    [StaticObject, { bbox: [-Infinity, 180, Infinity, 245] }],
+    [BackgroundObject, { show: sidewalk, bbox: [-Infinity, 210, Infinity, 275] }],
 
-      speed: 140
+    // Вода с нефтяной плёнкой и разлив кислоты на дороге
+    [LiquidObject, { kind: "water", bbox: [2300, 210, 2510, 285] }],
+    [LiquidObject, { kind: "acid", bbox: [4450, 210, 4660, 285] }],
+
+    // Бочки ведут к строительным лесам, а повреждённая доска обрушивается под игроком
+    [PlatformObject, { show: barrel, x: 650, y: 233 }],
+    [PlatformObject, { show: barrel, x: 720, y: 233 }],
+    [PlatformObject, { show: barrel, x: 785, y: 233 }],
+    [PlatformObject, { show: barrel, x: 770, y: 307 }],
+
+    [PlatformObject, { show: scaffoldPlank.intact, x: 886, y: 485 }],
+
+    [FallingPlatformObject, {
+      show: scaffoldPlank.intact,
+      showBroken: scaffoldPlank.broken,
+      fallAfterSeconds: 0.25,
+      x: 1326,
+      y: 485
+    }],
+
+    [PlatformObject, {
+      show: hoverDisc,
+      x: 1750,
+      y: 360,
+      movement: { sine: { axis: "x", amplitude: 12, length: 120, period: 5 } }
+    }],
+
+    [PlatformObject, {
+      show: hoverDisc,
+      x: 2100,
+      y: 435,
+      movement: { sine: { axis: "x", amplitude: 15, length: 90, period: 4 } }
+    }],
+
+    [ControlObject, {
+      x: 550,
+      y: 225,
+      kind: "floorLever"
+    }],
+
+    [ControlObject, {
+      x: 1450,
+      y: 225,
+      kind: "wallLever"
+    }],
+
+    [ControlObject, {
+      x: 2500,
+      y: 225,
+      kind: "emergencyButton"
+    }],
+
+    [ControlObject, {
+      x: 3300,
+      y: 225,
+      kind: "accessButton"
+    }],
+
+    [ControlObject, {
+      x: 4790,
+      y: 225,
+      kind: "aiTerminal"
+    }],
+
+    [ControlObject, {
+      x: 6480,
+      y: 276,
+      kind: "resistanceTerminal"
+    }],
+
+    [PickupObject, { kind: "fuel", x: 370, y: 270 }],
+    [PickupObject, { kind: "medkit", x: 1200, y: 270 }],
+    [PickupObject, { kind: "fuel", x: 2250, y: 270 }],
+    [PickupObject, { kind: "medkit", x: 3650, y: 270 }],
+    [PickupObject, { kind: "fuel", x: 5350, y: 270 }],
+    [PickupObject, { kind: "medkit", x: 7000, y: 270 }],
+
+    // Плотный туман лежит поверх покрытия дороги, но позади ближних предметов.
+    [FogObject, {
+      show: "fog", bbox: [-Infinity, -180, Infinity, 266], texture: { ...fogTexture, density: 24 },
+      opacity: 0.45, speed: 12, scrollFactor: [0.38, 1], sway: 3, flow: true
+    }],
+
+    // Ближние предметы на насыпи и мусор вдоль её края.
+    [BackgroundFlowObject, { sprites: nearRoadsideScenery, y: 275, debug: backdropDebug, order: "shuffle", gap: [175, 440], seed: 81, scrollFactor: [0.38, 1], effects: { scale: 0.6 } }],
+    [BackgroundFlowObject, { sprites: moundEdgeDebris, y: 270, gap: [160, 400], seed: 97, scrollFactor: [0.38, 1] }],
+    [BackgroundFlowObject, { sprites: curbDebris, y: 225, gap: [180, 360], seed: 193 }],
+
+    [BackgroundObject, { show: terminalStand, x: 6458, y: 225 }],
+
+    [BackgroundObject, { show: scaffoldFrame, x: 930, y: 225 }],
+    [BackgroundObject, { show: scaffoldFrame, x: 1370, y: 225 }],
+
+    [ElevatorObject, {
+      ...industrialElevator,
+      x: 2830,
+      y: 225,
+      stops: [[0, 0], [0, 600], [0, 1200]],
+      speed: 180
+    }],
+
+    // [CityWindowObject, {}],
+
+  ]) as WorldObjects;
+
+  // Каркас лесов под четырьмя настилами, от земли до верхней остановки лифта
+  for (let tier = 0; tier < 4; tier++) {
+    for (let column = 0; column < 11; column++) {
+      objects.push([BackgroundObject, {
+        show: scaffoldFrame,
+        x: 2730 + column * 165,
+        y: 225 + tier * 300
+      }]);
     }
-  }],
-
-  [FallingPlatformObject, {
-    name: "fall-sine-x",
-    fallAfterSeconds: 1.5,
-    bbox: [1500, 488, 1620, 520],
-
-    movement: {
-      sine: {
-        axis: "x",
-        amplitude: 24,
-        length: 70,
-        period: 3,
-        origin: [1500, 488]
-      }
-    }
-  }],
-
-  [WallObject, { show: "bricks", bbox: [1700, 488, 1880, 508] }],
-  [UsefulObject, { show: "fuel", x: 1760, y: 560 }],
-
-  [PlatformObject, {
-    name: "path-slow",
-    bbox: [1960, 460, 2080, 492],
-
-    movement: {
-      path: [
-        [1960, 460],
-        [2200, 460],
-        [2200, 620],
-        [1960, 620]
-      ],
-
-      speed: 80,
-      tolerance: 4
-    }
-  }],
-
-  [PlatformObject, {
-    name: "path-fast",
-    bbox: [2400, 500, 2520, 532],
-
-    movement: {
-      path: [
-        [2400, 500],
-        [2680, 620],
-        [2400, 740],
-        [2680, 500]
-      ],
-
-      speed: 380,
-      tolerance: 64
-    }
-  }],
-
-  [WallObject, { show: "bricks", bbox: [2860, 500, 3040, 520] }],
-
-  [PlatformObject, {
-    name: "sine-y",
-    bbox: [3120, 540, 3240, 572],
-
-    movement: {
-      sine: {
-        axis: "y",
-        amplitude: 40,
-        length: 160,
-        period: 4,
-        origin: [3120, 540]
-      }
-    },
-
-    accept: {
-      trigger: [UsefulObject, { show: "trigger", x: 2920, y: 540 }]
-    }
-  }],
-
-  [PlatformObject, {
-    name: "sine-x",
-    bbox: [3400, 600, 3520, 632],
-
-    movement: {
-      sine: {
-        axis: "x",
-        amplitude: 48,
-        length: 220,
-        period: 4,
-        origin: [3400, 600]
-      }
-    }
-  }],
-
-  [PlatformObject, {
-    name: "circle",
-    bbox: [4000, 560, 4120, 592],
-
-    movement: {
-      circle: {
-        center: [3920, 560],
-        radius: 80,
-        period: 5
-      }
-    }
-  }],
-
-  [UsefulObject, { show: "fuel", x: 3960, y: 720 }],
-
-  [PlatformObject, {
-    name: "triangle",
-    bbox: [4280, 520, 4400, 552],
-
-    movement: {
-      at: triangle,
-      speed: 120
-    }
-  }]
-]);
-
-function triangle(t: number): [number, number] {
-  const points: [number, number][] = [
-    [4280, 520],
-    [4520, 520],
-    [4400, 700]
-  ];
-
-  const lengths = points.map((point, index) => {
-    const next = points[(index + 1) % points.length]!;
-    return Math.hypot(next[0] - point[0], next[1] - point[1]);
-  });
-
-  const total = lengths.reduce((sum, length) => sum + length, 0);
-  let distance = ((t % total) + total) % total;
-
-  for (let index = 0; index < points.length; index++) {
-    const edge = lengths[index]!;
-
-    if (distance > edge) {
-      distance -= edge;
-      continue;
-    }
-
-    const from = points[index]!;
-    const to = points[(index + 1) % points.length]!;
-    const ratio = edge === 0 ? 0 : distance / edge;
-
-    return [
-      from[0] + (to[0] - from[0]) * ratio,
-      from[1] + (to[1] - from[1]) * ratio
-    ];
   }
 
-  return points[0]!;
+  // Шахта закрывает каркас лесов за кабинкой на всей высоте её хода
+  for (let segment = 0; segment < 5; segment++) {
+    objects.push([BackgroundObject, {
+      show: elevatorShaft,
+      x: 2815,
+      y: 225 + segment * 330
+    }]);
+  }
+
+  const fragileColumnsByTier = [[2, 4], [3, 5], [1, 4], [2, 5]];
+
+  for (let tier = 0; tier < 4; tier++) {
+    const y = 543 + tier * 300;
+
+    for (let column = 0; column < 6; column++) {
+      const x = 3020 + column * 250;
+
+      if (fragileColumnsByTier[tier]!.includes(column)) {
+        objects.push(...World.of([[FallingPlatformObject, {
+          show: scaffoldPlank.intact,
+          showBroken: scaffoldPlank.broken,
+          fallAfterSeconds: 0.35,
+          x,
+          y
+        }]]));
+
+      } else {
+        objects.push([PlatformObject, { show: scaffoldPlank.intact, x, y }]);
+      }
+    }
+  }
+
+  for (const [index, [left, right]] of floors.entries()) {
+    // Передний план: машины и деревья на дороге перекрывают ноги персонажа.
+    objects.push(...World.of([[BackgroundFlowObject, {
+      sprites: nearRoadWrecks,
+      bbox: [left, 75, right, 330],
+      overlay: true,
+      order: "shuffle",
+      gap: [550, 900],
+      seed: 111 + index,
+      effects: { scale: 0.52 }
+    }]]));
+
+    objects.push(...World.of([[BackgroundFlowObject, {
+      sprites: nearRoadVegetation,
+      bbox: [left, 75, right, 330],
+      overlay: true,
+      order: "shuffle",
+      gap: [500, 800],
+      seed: 217 + index,
+      effects: { scale: 0.38 }
+    }]]));
+  }
+
+  // Низкая полоса скрывает основания машин и деревьев, сохраняя верх спрайтов чётким.
+  objects.push(...World.of([[FogObject, {
+    show: "fog",
+    bbox: [-Infinity, -100, Infinity, 200],
+    texture: fogTexture,
+    overlay: true,
+    opacity: 0.45,
+    speed: 5,
+    scrollFactor: [1, 1],
+    flow: true
+  }]]));
+
+  return objects;
 }
