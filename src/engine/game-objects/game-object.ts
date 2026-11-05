@@ -1,42 +1,51 @@
-import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
+import { cache } from "#decorators/cache";
+import { AnimationPlayback, LoadedAnimation } from "#engine/animation";
 
 import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
-import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
+import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 
-import { Movement } from "#engine/game-objects/movement";
-import { GameObjectStatus } from "#engine/game-objects/game-object-status";
+import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import { Movement } from "#engine/game-objects/game-object/movement";
+import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 
-import type { Animations, AnimationEvents } from "#engine/game-objects/types";
-import type { RenderFrame, RenderFramePayload } from "#engine/game-objects/types";
-import type { GameObjectOptions, Effects, WithMap, Refs, RefOf } from "#engine/game-objects/types";
+import type * as go from "#engine/game-objects/game-object/types";
+import type { BitmapRenderPayload } from "#engine/game-objects/game-object/render";
 
-export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions> extends KindedObject {
-  static refs<O extends GameObjectOptions>() {
-    return <const E extends WithMap<O>>(entries: { [I in keyof E]: RefOf<O, E[I]> }): E => entries as E;
+export type * from "#engine/game-objects/game-object/types";
+
+export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectOptions> extends KindedObject {
+  static refs<O extends go.GameObjectOptions>() {
+    return <const E extends go.WithMap<O>>(entries: { [I in keyof E]: go.RefOf<O, E[I]> }): E => entries as E;
   }
 
-  static readonly with: WithMap = {};
+  static readonly with: go.WithMap = {};
 
-  readonly refs: Refs<(typeof GameObject)["with"]> = {};
+  readonly refs: go.Refs<(typeof GameObject)["with"]> = {};
 
   acceptor: GameObject | null = null;
 
-  static readonly animations: Animations = {};
+  static readonly animations: go.Animations = {};
   readonly animations = GameObject.animations;
 
   @cache
   static get animationEntries() {
     const entries = Object.entries(this.animations);
-    entries.forEach(([name, value]) => value.name = name);
+    entries.forEach(([name, value]) => {
+      if (value instanceof LoadedAnimation) {
+        value.name = name;
+      }
+    });
+
     return entries;
   }
 
-  readonly animation: EventEmitter<AnimationEvents<this["animations"]>> = new EventEmitter({
+  readonly animation: EventEmitter<go.AnimationEvents<this["animations"]>> = new EventEmitter({
     ...(this.constructor as typeof GameObject).animationEntries.reduce((map, [name]) => {
       map[name] = handler<string>();
       return map;
@@ -47,7 +56,8 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   poolPointer!: PoolPointer;
 
   options!: T;
-  effects!: Effects & Required<Pick<Effects, "speed" | "scale">>;
+  effects!: go.Effects & Required<Pick<go.Effects, "speed" | "scale">>;
+  bbox: BBoxTuple | null = null;
 
   x = 0;
   prevX = 0;
@@ -55,10 +65,22 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   y = 0;
   prevY = 0;
 
-  bbox: BBoxTuple | null = null;
-
-  readonly movement = new Movement(this);
   readonly status = new GameObjectStatus(this);
+
+  @cache
+  get render(): GameObjectRender {
+    return new GameObjectRender(this);
+  }
+
+  @cache
+  get movement(): Movement {
+    return this.#movement = new Movement(this);
+  }
+
+  @cache
+  get debug(): GameObjectDebug {
+    return new GameObjectDebug(this);
+  }
 
   get name(): string {
     return this.constructor.name;
@@ -76,8 +98,8 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     return this.game.world;
   }
 
-  get nowPlaying(): Animations[keyof Animations] | null {
-    return this.#nowPlaying;
+  get nowPlaying(): go.PlayableAnimation | null {
+    return this.render.nowPlaying;
   }
 
   get width() {
@@ -87,10 +109,6 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   get height() {
     return this.#height;
   }
-
-  // Из‑за потери точности при работе с дробными числами иногда возникает эффект "парения в воздухе".
-  // Это значение используется для визуальной фиксации отображаемого спрайта без реального изменения координат.
-  protected visualOffsetY = 0;
 
   protected set width(value: number) {
     this.#width = value;
@@ -103,8 +121,7 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   #width = 0;
   #height = 0;
 
-  #nowPlaying: Animations[keyof Animations] | null = null;
-  #cancelRedrawHandler: Function | null = null;
+  #movement: Movement | null = null;
 
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
@@ -121,133 +138,62 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
 
     super.destroy();
 
+    this.render.clear();
+    this.animation.off();
+    this.#movement?.reset();
     this.status.reset();
-    this.#nowPlaying = null;
   }
 
   reindex(index: number) {
     this.poolPointer = [this.poolPointer[0], index];
   }
 
+  @ifDead
   create(game: Game, poolPointer: PoolPointer, opts?: T): T {
-    if (!this.destroyed) {
-      throw new Error(`${this.constructor.name}.create: called on a live object`);
-    }
-
     this.destroyed = false;
     this.status.reset();
 
     this.game = game;
     this.poolPointer = poolPointer;
 
-    opts = { ...opts! };
-    this.options = opts;
+    const options = { ...opts! } as T;
+    this.options = options;
 
-    if ("bbox" in opts!) {
-      this.bbox = opts.bbox;
-      const [minX, minY, maxX, maxY] = this.bbox;
+    try {
+      this.#initializeState(options);
+      this.#createRefs();
+      this.init();
 
-      this.x = minX;
-      this.y = minY;
+      const animation = typeof options.show === "string" ?
+        this.animations[options.show] :
+        options.show;
 
-      if (Number.isFinite(minX) && Number.isFinite(maxX)) {
-        this.width = maxX - minX;
-
-      } else {
-        this.width = Infinity;
+      if (animation != null) {
+        this.play(animation);
       }
 
-      if (Number.isFinite(minY) && Number.isFinite(maxY)) {
-        this.height = maxY - minY;
-
-      } else {
-        this.height = Infinity;
+      if (options.movement != null) {
+        this.movement.follow(options.movement);
       }
 
-    } else {
-      this.bbox = null;
+      this.mountFlush();
+      return options;
 
-      if ("x" in opts) {
-        this.x = opts.x;
-      }
-
-      if ("y" in opts) {
-        this.y = opts.y;
-      }
+    } catch (err) {
+      this.destroy();
+      throw err;
     }
-
-    this.prevX = this.x;
-    this.prevY = this.y;
-
-    this.effects = { scale: 1, speed: 1, ...opts.effects };
-    this.acceptor = opts.acceptor ?? null;
-
-    const createRef = (name: string, go: WorldObject[0], opts: WorldObject[1]) => {
-      const instance = game.world.objects.get(...game.world.createObject(go, opts))!;
-      this.refs[name] = instance;
-
-      this.onDestroy(() => {
-        const [kind, index] = instance.poolPointer;
-        game.world.objects.delete(kind, index);
-
-        instance.acceptor = null;
-        this.refs[name] = null;
-      });
-    };
-
-    const withMap = (this.constructor as typeof GameObject).with as WithMap<T>;
-
-    Object.entries(withMap).forEach(([name, entry]) => {
-      const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
-      const resolvedOpts = { ...this.options, x: 0, y: 0, ...opts, acceptor: this };
-
-      if (opts != null) {
-        // Бесконечный край не сдвигает детей: -Infinity + x остаётся -Infinity.
-        const originX = Number.isFinite(this.x) ? this.x : 0;
-        const originY = Number.isFinite(this.y) ? this.y : 0;
-
-        if ("bbox" in opts && opts.bbox != null && "bbox" in resolvedOpts) {
-          const { bbox } = opts;
-          resolvedOpts.bbox = [bbox[0] + originX, bbox[1] + originY, bbox[2] + originX, bbox[3] + originY];
-
-        } else {
-          // Коробка родителя не наследуется: bbox ребёнка задаёт только его запись.
-          delete resolvedOpts.bbox;
-          resolvedOpts.x += originX;
-          resolvedOpts.y += originY;
-        }
-      }
-
-      createRef(name, go, resolvedOpts);
-    });
-
-    if (opts.accept != null) {
-      const acceptMap = opts.accept as WithMap<T>;
-
-      Object.entries(acceptMap).forEach(([name, entry]) => {
-        const [go, opts] = typeof entry === "function" ? entry(this.options) : entry;
-        createRef(name, go, { ...opts, acceptor: this });
-      });
-    }
-
-    this.init();
-
-    if (opts.show != null && opts.show in this.animations) {
-      this.play(this.animations[opts.show]!);
-    }
-
-    if (opts.movement != null) {
-      this.movement.follow(opts.movement);
-    }
-
-    this.mountFlush();
-
-    return opts;
   }
 
   @ifAlive
   visit(_go: GameObject) {
     // Ничего не делаю по умолчанию
+  }
+
+  allows(go: GameObject, kind: "stepUp", height: number): boolean | null;
+  allows(go: GameObject, kind: string, options?: unknown): boolean | null;
+  allows(_go: GameObject, _kind: string, _options?: unknown): boolean | null {
+    return null;
   }
 
   @ifAlive
@@ -259,134 +205,29 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
   }
 
   @ifAlive
-  ensurePlaying(animation: Animations[keyof Animations]) {
-    if (this.#nowPlaying !== animation) {
+  ensurePlaying(animation: go.PlayableAnimation) {
+    if (this.nowPlaying !== animation) {
       this.play(animation);
     }
   }
 
   @ifAlive
-  play(animation: Animations[keyof Animations]) {
-    const spriteAnimation = animation.animation;
-    const params = spriteAnimation.params;
+  play(animation: go.PlayableAnimation) {
+    this.render.stopRedraw();
 
-    let lastFrameTime = 0;
-    let frameIndex = params.randomOrder ? spriteAnimation.randomIndex() : 0;
+    const playback = typeof animation === "function" ?
+      animation(this) :
+      this.#createBitmapPlayback(animation);
 
-    this.#cancelRedrawHandler?.();
-    this.#nowPlaying = animation;
+    this.render.onRedraw((frame) => {
+      playback.draw(frame);
 
-    const { game: { camera }, canvas: { canvas, emitter }, bbox, effects } = this;
-
-    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
-    if (bbox == null) {
-      this.width = animation.maxWidth * effects.scale;
-      this.height = animation.maxHeight * effects.scale;
-    }
-
-    let inc = 1;
-    let rendered = 0;
-
-    // Нормализует y, так как canvas считает 0 верхом, а не низом
-    const resolveY = (y: number) => canvas.height - y - this.height;
-
-    const framePayload = {
-      ctx: null as CanvasRenderingContext2D | null,
-      now: 0,
-      delta: 0,
-      pattern: false,
-      frameIndex: 0,
-      animation: null as typeof animation | null,
-      x: 0,
-      y: 0,
-      resolveY
-    } as RenderFramePayload;
-
-    const renderFrame: RenderFrame = ({ ctx, pattern, frameIndex, animation, x, y, resolveY }) => {
-      const { width: w, height: h } = this;
-
-      if (pattern) {
-        const image = animation.getPatternFrame(frameIndex, w, h, effects);
-        ctx.drawImage(image, 0, 0, w, h, x, resolveY(y), w, h);
-
-      } else {
-        const image = animation.getSpriteFrame(frameIndex, effects);
-
-        // Центрируем спрайт по нижней границе, чтобы изображение "не висело" в воздухе
-        // из-за разницы высот между отдельным фреймом и максимальным
-        const diffY = h - image.height;
-        ctx.drawImage(image, x, resolveY(y) + diffY, image.width, image.height);
-      }
-    };
-
-    this.#cancelRedrawHandler = this.onDestroy(emitter.on(this.redrawEvent, (payload) => {
-      if (this.status.shadowed) {
-        return;
+      if (this.options.debug?.outline) {
+        this.debug.draw(frame);
       }
 
-      const sprite = spriteAnimation.at(frameIndex)!;
-
-      const x = this.x - camera.x;
-      const y = this.y - camera.y - this.visualOffsetY;
-
-      framePayload.ctx = payload.ctx;
-      framePayload.now = payload.now;
-      framePayload.delta = payload.delta;
-      framePayload.pattern = bbox != null;
-      framePayload.frameIndex = frameIndex;
-      framePayload.animation = animation;
-      framePayload.x = x;
-      framePayload.y = y;
-
-      this.renderFrame(framePayload, renderFrame);
-
-      if ((!rendered || sprite.spriteId !== "") && animation.name in this.animation.events) {
-        this.animation.emit(this.animation.events[animation.name]!, sprite.spriteId);
-      }
-
-      let duration;
-
-      if (params.randomDuration != null) {
-        const max = params.randomDuration[0] ?? 100;
-        const min = params.randomDuration[1] ?? 100;
-        duration = Math.floor(Math.random() * (max - min + 1)) + min;
-
-      } else {
-        duration = sprite?.duration;
-      }
-
-      duration /= (params.speed * effects.speed);
-
-      if (!this.status.paused && (payload.now - lastFrameTime >= duration)) {
-        if (params.randomOrder) {
-          frameIndex = spriteAnimation.randomIndex();
-
-        } else {
-          if (params.loopReverse) {
-            if (frameIndex + inc === spriteAnimation.length) {
-              inc = -1;
-
-            } else if (frameIndex + inc === params.loopFrom - 1) {
-              inc = 1;
-            }
-          }
-
-          if (frameIndex === spriteAnimation.length - 1) {
-            rendered = 2;
-          }
-
-          frameIndex = (frameIndex + inc) % spriteAnimation.length;
-
-          if (frameIndex === 0 && rendered > 1) {
-            frameIndex += params.loopFrom;
-          }
-        }
-
-        lastFrameTime = payload.now;
-      }
-
-      rendered ||= 1;
-    }));
+      playback.advance?.(frame.elapsed);
+    }, animation, () => playback.destroy?.());
   }
 
   protected bindFlush() {}
@@ -402,13 +243,13 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
       return;
     }
 
-    this.onDestroy(this.canvas.emitter.on(flush, () => {
+    this.render.on(flush, () => {
       if (this.destroyed || this.status.shadowed) {
         return;
       }
 
       this.bindFlush();
-    }));
+    });
   }
 
   protected kinematicMove(dx: number, dy: number): number {
@@ -424,11 +265,127 @@ export abstract class GameObject<T extends GameObjectOptions = GameObjectOptions
     return 0;
   }
 
-  protected renderFrame(payload: RenderFramePayload, defaultRender: RenderFrame) {
-    defaultRender(payload);
+  protected createRefOptions(childOptions?: go.WithEntry[1]): go.DefaultGameObjectOptions & {
+    x: number;
+    y: number;
+    bbox?: BBoxTuple;
+  } {
+    return { ...this.options, x: 0, y: 0, ...childOptions, acceptor: this };
   }
 
   protected onMove(_status: number) {
     // Ничего не делает по умолчанию
+  }
+
+  #initializeState(options: T) {
+    this.x = 0;
+    this.y = 0;
+
+    this.width = 0;
+    this.height = 0;
+    this.bbox = null;
+
+    if ("bbox" in options && options.bbox != null) {
+      const [minX, minY, maxX, maxY] = options.bbox;
+      this.bbox = options.bbox;
+
+      this.x = minX;
+      this.y = minY;
+
+      this.width = Number.isFinite(minX) && Number.isFinite(maxX) ? maxX - minX : Infinity;
+      this.height = Number.isFinite(minY) && Number.isFinite(maxY) ? maxY - minY : Infinity;
+
+    } else {
+      if ("x" in options) {
+        this.x = options.x ?? 0;
+      }
+
+      if ("y" in options) {
+        this.y = options.y ?? 0;
+      }
+    }
+
+    this.prevX = this.x;
+    this.prevY = this.y;
+    this.effects = { scale: 1, speed: 1, ...options.effects };
+    this.acceptor = options.acceptor ?? null;
+  }
+
+  #createBitmapPlayback(animation: LoadedAnimation): go.AnimationInstance {
+    const playback = new AnimationPlayback(animation);
+    const { bbox, effects } = this;
+
+    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту.
+    if (bbox == null) {
+      this.width = animation.maxWidth * effects.scale;
+      this.height = animation.maxHeight * effects.scale;
+    }
+
+    return {
+      draw: (frame) => {
+        const bitmapFrame = frame as BitmapRenderPayload;
+
+        bitmapFrame.frameIndex = playback.frameIndex;
+        bitmapFrame.animation = animation;
+
+        this.render.drawBitmap(bitmapFrame);
+
+        if (playback.shouldEmitEvent && animation.name in this.animation.events) {
+          this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);
+        }
+      },
+
+      advance: (elapsed) => playback.advance(elapsed)
+    };
+  }
+
+  #createRefs() {
+    const withMap = (this.constructor as typeof GameObject).with as go.WithMap<T>;
+
+    for (const [name, entry] of Object.entries(withMap)) {
+      const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
+      const resolvedOptions = this.createRefOptions(childOptions);
+
+      if (childOptions != null) {
+        // Бесконечный край не сдвигает детей: -Infinity + x остаётся -Infinity
+        const originX = Number.isFinite(this.x) ? this.x : 0;
+        const originY = Number.isFinite(this.y) ? this.y : 0;
+
+        if ("bbox" in childOptions && childOptions.bbox != null) {
+          const { bbox } = childOptions;
+          resolvedOptions.bbox = [bbox[0] + originX, bbox[1] + originY, bbox[2] + originX, bbox[3] + originY];
+
+        } else {
+          // Коробка родителя не наследуется: bbox ребёнка задаёт только его запись
+          delete resolvedOptions.bbox;
+          resolvedOptions.x = (resolvedOptions.x ?? 0) + originX;
+          resolvedOptions.y = (resolvedOptions.y ?? 0) + originY;
+        }
+      }
+
+      this.#createRef(name, go, resolvedOptions);
+    }
+
+    if (this.options.accept != null) {
+      const acceptMap = this.options.accept as go.WithMap<T>;
+
+      for (const [name, entry] of Object.entries(acceptMap)) {
+        const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
+        this.#createRef(name, go, { ...childOptions, acceptor: this });
+      }
+    }
+  }
+
+  #createRef(name: string, go: WorldObject[0], options: WorldObject[1]) {
+    const instance = this.world.objects.get(...this.world.createObject(go, options))!;
+    this.refs[name] = instance;
+
+    this.onDestroy(() => {
+      const [kind, index] = instance.poolPointer;
+      this.world.objects.delete(kind, index);
+
+      instance.acceptor = null;
+      this.refs[name] = null;
+    });
   }
 }

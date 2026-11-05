@@ -3,9 +3,11 @@ import type { PoolPointer } from "#engine/game-object-pool";
 import type { RTreeEntry } from "#engine/rtree";
 
 import { GameObject } from "#engine/game-objects/game-object";
-import type { GameObjectOptions } from "#engine/game-objects/types";
+import type { GameObjectOptions, PlayableAnimation } from "#engine/game-objects/game-object";
 
-export abstract class StaticObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
+export class StaticObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
+  init() {}
+
   override get redrawEvent() {
     return this.canvas.events.static;
   }
@@ -19,22 +21,34 @@ export abstract class StaticObject<T extends GameObjectOptions = GameObjectOptio
   override create(game: Game, poolPointer: PoolPointer, opts?: T) {
     const options = super.create(game, poolPointer, opts);
 
-    this.world.addToWorld(this, this.collisionTree, (...entry) => {
-      this.#entry = entry;
+    if (!(this.width > 0 && this.height > 0)) {
+      throw new RangeError(`${this.name}.create: static collision needs width and height`);
+    }
 
-      this.onDestroy(() => {
-        const saved = this.#entry;
+    this.#syncCollision();
 
-        if (saved == null) {
-          return;
-        }
+    this.onDestroy(() => {
+      const entry = this.#entry;
 
-        this.collisionTree.remove(...saved);
+      if (entry != null) {
+        this.collisionTree.remove(...entry);
         this.#entry = null;
-      });
+      }
     });
 
     return options;
+  }
+
+  override play(animation: PlayableAnimation) {
+    super.play(animation);
+
+    if (this.#entry != null) {
+      this.#syncCollision();
+    }
+  }
+
+  #syncCollision() {
+    this.#entry = this.world.addToWorld(this, this.collisionTree, this.#entry);
   }
 
   override reindex(index: number) {

@@ -1,15 +1,19 @@
 import { loadText } from "#/file-loader";
 
-import { SpriteAnimation } from "#/sprite-animation";
+import { AnimationDefinition } from "#/animation-definition";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
 import { mergeSprites } from "#sprite-editor/merge-sprites";
 import { Handlers } from "#sprite-editor/handlers";
+import type { AnimationParametersForm } from "#sprite-editor/animation-parameters-form";
 
 export class ActionHandlers extends Handlers<SpriteEditor> {
-  constructor(parent: SpriteEditor) {
+  readonly #animationParameters: AnimationParametersForm;
+
+  constructor(parent: SpriteEditor, animationParameters: AnimationParametersForm) {
     super(parent);
+    this.#animationParameters = animationParameters;
   }
 
   override destroy() {
@@ -56,10 +60,9 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
         }
 
       } else {
-        const animation = SpriteAnimation.fromJSON(sprite.animation);
+        const animation = AnimationDefinition.fromJSON(sprite.animation);
 
-        editor.speed = animation.params.speed;
-        editor.scale = animation.params.scale;
+        this.#animationParameters.write(animation.params);
 
         for (const spriteDescriptor of animation) {
           editor.grid?.append(new Sprite(sprite.image, {
@@ -100,18 +103,21 @@ export class ActionHandlers extends Handlers<SpriteEditor> {
 
   renderGrid() {
     const editor = this.parent;
+    const params = this.#animationParameters.read();
 
-    if (!editor.settings.checkValidity()) {
+    if (params == null) {
+      return;
+    }
+
+    const invalid = editor.settings.querySelector<HTMLInputElement>(":invalid");
+    invalid?.closest("details")?.setAttribute("open", "");
+
+    if (!editor.settings.reportValidity()) {
       return;
     }
 
     const { canvas, animation } = mergeSprites(
-      Array.from(this.parent.grid.querySelectorAll("sprite-item")) as Sprite[],
-
-      {
-        speed: editor.speed,
-        scale: editor.scale,
-      }
+      Array.from(editor.grid.querySelectorAll("sprite-item")) as Sprite[], params
     );
 
     const image = document.createElement("a");

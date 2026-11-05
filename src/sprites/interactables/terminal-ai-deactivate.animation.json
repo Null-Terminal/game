@@ -1,0 +1,24 @@
+{
+  "params": {
+    "maxHeight": 225,
+    "loopFrom": 1
+  },
+  "sprites": [
+    {
+      "x": 616,
+      "y": 0,
+      "width": 616,
+      "height": 1533,
+      "duration": 90,
+      "spriteId": ""
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "width": 616,
+      "height": 1533,
+      "duration": 100,
+      "spriteId": ""
+    }
+  ]
+}

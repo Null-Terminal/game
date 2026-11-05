@@ -4,6 +4,8 @@ interface Uint8Array {
   toHex(): string;
 }
 
+type Destructor = () => void;
+
 namespace Tb {
   export type Head<T extends any[]> = T extends [infer H, ...any] ? H : never;
   export type Tail<T extends any[]> = T extends [any, ...infer Tail] ? Tail : [];

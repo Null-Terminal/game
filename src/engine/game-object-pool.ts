@@ -1,10 +1,10 @@
 import type { CreateParameters, GameObject } from "#engine/game-objects";
-import type { GameObjectStore, KindedGameObjectCtor, PoolPointer } from "#engine/game-object-pool/types";
+import type * as t from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
 
 export class GameObjectPool {
-  readonly objects: Record<number, GameObjectStore> = {};
+  readonly objects: Record<number, t.GameObjectStore> = {};
 
   has(kind: number, index: number) {
     const store = this.objects[kind];
@@ -20,10 +20,10 @@ export class GameObjectPool {
   }
 
   add<T extends typeof GameObject, A extends CreateParameters<T>>(
-    GObject: KindedGameObjectCtor<T>,
+    GObject: t.KindedGameObjectCtor<T>,
     game: A[0],
     opts: A[2]
-  ): PoolPointer {
+  ): t.PoolPointer {
     const kind = GObject.kind;
 
     const init = kind in this.objects;
@@ -34,18 +34,34 @@ export class GameObjectPool {
     }
 
     const { length, buffer } = store;
+    const poolPointer: t.PoolPointer = [kind, length];
 
-    const poolPointer: PoolPointer = [kind, store.length++];
     const fromPool = buffer.length > length;
-
     const object = fromPool ? buffer[length]! : new GObject();
-    object.create(game, poolPointer, opts);
 
-    if (!fromPool) {
-      buffer.push(object);
+    store.length++;
+
+    try {
+      object.create(game, poolPointer, opts);
+
+      if (!fromPool) {
+        buffer.push(object);
+      }
+
+      return poolPointer;
+
+    } catch (err) {
+      try {
+        if (!object.destroyed) {
+          object.destroy();
+        }
+
+      } finally {
+        store.length = length;
+      }
+
+      throw err;
     }
-
-    return poolPointer;
   }
 
   delete(kind: number, index: number) {

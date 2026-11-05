@@ -15,6 +15,8 @@ export default defineConfig([
       languageOptions: { globals: globals.node },
       rules: {
         "semi": ["error", "always"],
+        "curly": ["error", "all"],
+        "arrow-parens": ["error", "always"],
         "no-extra-semi": "error",
         "object-curly-spacing": ["warn", "always"],
         "no-multi-spaces": ["warn", {
@@ -23,7 +25,7 @@ export default defineConfig([
             VariableDeclarator: true
           }
         }],
-        "quotes": ["warn", "double"]
+        "quotes": ["warn", "double", { avoidEscape: true }]
       }
   },
 
@@ -36,5 +38,19 @@ export default defineConfig([
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-unused-vars": "off"
     }
-  }))
+  })),
+
+  {
+    files: ["**/*.{ts,mts,cts}"],
+    rules: {
+      "@typescript-eslint/consistent-type-imports": ["error", {
+        prefer: "type-imports",
+        fixStyle: "separate-type-imports"
+      }],
+      "no-restricted-syntax": ["error", {
+        selector: ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)[returnType.typeAnnotation.type="TSVoidKeyword"][body.type="BlockStatement"]',
+        message: "Omit explicit void on implemented functions; TypeScript infers it"
+      }]
+    }
+  }
 ]);

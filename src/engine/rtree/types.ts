@@ -7,6 +7,12 @@ export interface RTreePublicNode {
 }
 
 export type RTreePredicate = (node: RTreePublicNode) => boolean;
+export type RTreeScore = (node: RTreePublicNode) => number;
+
+export interface BestSearchState {
+  node: RTreePublicNode | null;
+  score: number;
+}
 
 export interface RTreeView {
   uints8: Uint8Array;

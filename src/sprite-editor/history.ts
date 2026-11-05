@@ -1,5 +1,5 @@
-import { State, type StateEvent } from "#sprite-editor/state";
-import { SpriteEditor } from "#/sprite-editor";
+import type { State, StateEvent } from "#sprite-editor/state";
+import type { SpriteEditor } from "#/sprite-editor";
 
 export type Command = Pick<State, "undo" | "redo">;
 

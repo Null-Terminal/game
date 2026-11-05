@@ -47,9 +47,81 @@
 
       <label>
         Базовый коэффициент масштабирования
-        <input name="scale" type="number" value="1" step="0.01" required>
+        <input name="scale" type="number" value="1" min="0.01" step="0.01" required>
+      </label>
+
+      <label>
+        Порядок кадров
+        <select name="order">
+          <option value="forward">По порядку</option>
+          <option value="ping-pong">Вперёд и назад</option>
+          <option value="random">Случайный</option>
+        </select>
       </label>
     </p>
+
+    <details>
+      <summary>Дополнительные параметры анимации</summary>
+
+      <p>
+        <label>
+          Прозрачность
+          <input name="opacity" type="number" value="1" min="0" max="1" step="0.01" required>
+        </label>
+
+        <label>
+          Повтор с кадра
+          <input name="loopFrom" type="number" value="0" min="0" step="1" required>
+        </label>
+
+        <label>
+          Случайная длительность кадра, мс: от
+          <input name="durationMin" type="number" min="1" step="1" placeholder="не задана">
+        </label>
+
+        <label>
+          до
+          <input name="durationMax" type="number" min="1" step="1" placeholder="не задана">
+        </label>
+      </p>
+
+      <p>
+        <label>
+          Вписать кадр в ширину
+          <input name="maxWidth" type="number" min="1" step="1" placeholder="не задана">
+        </label>
+
+        <label>
+          Вписать кадр в высоту
+          <input name="maxHeight" type="number" min="1" step="1" placeholder="не задана">
+        </label>
+
+      </p>
+
+      <p>
+        Область коллизии, в пикселях кадра:
+        <label>X <input name="collisionBoundsX" type="number" min="0" step="1" placeholder="—"></label>
+        <label>Y <input name="collisionBoundsY" type="number" min="0" step="1" placeholder="—"></label>
+        <label>Ширина <input name="collisionBoundsWidth" type="number" min="1" step="1" placeholder="—"></label>
+        <label>Высота <input name="collisionBoundsHeight" type="number" min="1" step="1" placeholder="—"></label>
+      </p>
+
+      <p>
+        Область повтора по ширине, в пикселях кадра:
+        <label>X <input name="repeatWidthX" type="number" min="0" step="1" placeholder="—"></label>
+        <label>Y <input name="repeatWidthY" type="number" min="0" step="1" placeholder="—"></label>
+        <label>Ширина <input name="repeatWidthWidth" type="number" min="1" step="1" placeholder="—"></label>
+        <label>Высота <input name="repeatWidthHeight" type="number" min="1" step="1" placeholder="—"></label>
+      </p>
+
+      <p>
+        Область повтора по высоте, в пикселях кадра:
+        <label>X <input name="repeatHeightX" type="number" min="0" step="1" placeholder="—"></label>
+        <label>Y <input name="repeatHeightY" type="number" min="0" step="1" placeholder="—"></label>
+        <label>Ширина <input name="repeatHeightWidth" type="number" min="1" step="1" placeholder="—"></label>
+        <label>Высота <input name="repeatHeightHeight" type="number" min="1" step="1" placeholder="—"></label>
+      </p>
+    </details>
 
     <p>
       <label>

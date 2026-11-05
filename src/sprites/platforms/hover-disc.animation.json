@@ -1,0 +1,56 @@
+{
+    "params": {
+        "maxHeight": 42,
+        "collisionBounds": { "x": 0, "y": 125, "width": 1902, "height": 250 }
+    },
+    "sprites":  [
+                    {
+                        "x":  0,
+                        "y":  0,
+                        "width":  1902,
+                        "height":  375,
+                        "duration":  160,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  1902,
+                        "y":  0,
+                        "width":  1902,
+                        "height":  375,
+                        "duration":  130,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  3804,
+                        "y":  0,
+                        "width":  1902,
+                        "height":  375,
+                        "duration":  110,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  5706,
+                        "y":  0,
+                        "width":  1902,
+                        "height":  375,
+                        "duration":  130,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  7608,
+                        "y":  0,
+                        "width":  1902,
+                        "height":  375,
+                        "duration":  110,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  9510,
+                        "y":  0,
+                        "width":  1902,
+                        "height":  375,
+                        "duration":  130,
+                        "spriteId":  ""
+                    }
+                ]
+}

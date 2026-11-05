@@ -17,3 +17,5 @@ export interface Collision {
   bbox: BBoxTuple;
   object: GameObject;
 }
+
+export type CollisionScore = (bbox: BBoxTuple, object: GameObject) => number;

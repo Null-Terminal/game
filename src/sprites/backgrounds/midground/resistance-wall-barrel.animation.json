@@ -1,0 +1,56 @@
+{
+  "params": {
+    "maxHeight": 559,
+    "opacity": 1
+  },
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 1300,
+      "height": 499,
+      "duration": 145,
+      "spriteId": ""
+    },
+    {
+      "x": 1308,
+      "y": 0,
+      "width": 1300,
+      "height": 499,
+      "duration": 125,
+      "spriteId": ""
+    },
+    {
+      "x": 2616,
+      "y": 0,
+      "width": 1300,
+      "height": 499,
+      "duration": 155,
+      "spriteId": ""
+    },
+    {
+      "x": 3924,
+      "y": 0,
+      "width": 1300,
+      "height": 499,
+      "duration": 130,
+      "spriteId": ""
+    },
+    {
+      "x": 5232,
+      "y": 0,
+      "width": 1300,
+      "height": 499,
+      "duration": 150,
+      "spriteId": ""
+    },
+    {
+      "x": 6540,
+      "y": 0,
+      "width": 1300,
+      "height": 499,
+      "duration": 140,
+      "spriteId": ""
+    }
+  ]
+}

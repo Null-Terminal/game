@@ -1,0 +1,104 @@
+{
+  "params": {
+    "maxHeight": 1836,
+    "opacity": 1
+  },
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 768,
+      "y": 0,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 1536,
+      "y": 0,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 2304,
+      "y": 0,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 0,
+      "y": 1536,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 768,
+      "y": 1536,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 1536,
+      "y": 1536,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 2304,
+      "y": 1536,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 0,
+      "y": 3072,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 768,
+      "y": 3072,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 1536,
+      "y": 3072,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    },
+    {
+      "x": 2304,
+      "y": 3072,
+      "width": 768,
+      "height": 1536,
+      "duration": 170,
+      "spriteId": ""
+    }
+  ]
+}

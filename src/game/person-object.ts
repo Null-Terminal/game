@@ -1,33 +1,9 @@
-import { CollisionStatus, MovableObject, type RenderPayload } from "#engine/game-objects";
+import type { RenderPayload } from "#engine/game";
+import { CollisionStatus, MovableObject } from "#engine/game-objects";
 
-import { loadAnimation } from "#engine/animation-loader";
-
-const [stay, run, jump, fly, flyEnd] = await Promise.all([
-  loadAnimation(import("#/sprites/stay.webp"), {
-    sprite: { removeBackground: true },
-    animation: import("#/sprites/stay.animation.json")
-  }),
-
-  loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true },
-    animation: import("#/sprites/run.animation.json")
-  }),
-
-  loadAnimation(import("#/sprites/run.webp"), {
-    sprite: { removeBackground: true } ,
-    animation: import("#/sprites/jump.animation.json")
-  }),
-
-  loadAnimation(import("#/sprites/fly.webp"), {
-    sprite: { removeBackground: true },
-    animation: import("#/sprites/fly.animation.json")
-  }),
-
-  loadAnimation(import("#/sprites/fly.webp"), {
-    sprite: { removeBackground: true },
-    animation: import("#/sprites/fly-end.animation.json")
-  })
-]);
+import { fly, flyEnd } from "#/sprites/character/fly";
+import { run, jump } from "#/sprites/character/run";
+import { stay } from "#/sprites/character/stay";
 
 export class PersonObject extends MovableObject {
   static override readonly animations = { stay, run, jump, fly, flyEnd };
@@ -52,7 +28,7 @@ export class PersonObject extends MovableObject {
     return super.stats as typeof PersonObject.stats;
   }
 
-  override updateState(patch: (stats: PersonObject["stats"]) => Partial<PersonObject["stats"]>) {
+  override updateStats(patch: (stats: PersonObject["stats"]) => Partial<PersonObject["stats"]>) {
     const next = patch(this.stats);
 
     if (next.hp != null) {
@@ -67,12 +43,13 @@ export class PersonObject extends MovableObject {
       next.fuel = Math.max(0, Math.min(this.stats.fuelMax, next.fuel));
     }
 
-    super.updateState(() => next);
+    super.updateStats(() => next);
   }
 
   #fallPeak = 0;
   #forgiveFall = true;
   #grounded = false;
+  #usePressed = false;
 
   readonly actions = {
     left: 0,
@@ -94,6 +71,7 @@ export class PersonObject extends MovableObject {
     this.#fallPeak = 0;
     this.#grounded = false;
     this.#forgiveFall = true;
+    this.#usePressed = false;
 
     this.onDestroy(this.game.camera.bindTo(this));
     this.play(this.animations.stay);
@@ -106,6 +84,15 @@ export class PersonObject extends MovableObject {
         this.#renderStats(ctx);
       })
     );
+  }
+
+  consumeUse() {
+    if (!this.#usePressed) {
+      return false;
+    }
+
+    this.#usePressed = false;
+    return true;
   }
 
   #initPhysics = ({ delta }: RenderPayload) => {
@@ -140,7 +127,7 @@ export class PersonObject extends MovableObject {
       stats.onGround = false;
       stats.usingJetpack = true;
 
-      this.updateState(({ fuel }) => ({ fuel: fuel - stats.fuelPerTick }));
+      this.updateStats(({ fuel }) => ({ fuel: fuel - stats.fuelPerTick }));
       actions.jump = 0;
 
       this.ensurePlaying(this.animations.fly);
@@ -191,7 +178,7 @@ export class PersonObject extends MovableObject {
       return;
     }
 
-    this.updateState(({ hp }) => ({ hp: hp - extra * this.stats.fallDamage }));
+    this.updateStats(({ hp }) => ({ hp: hp - extra * this.stats.fallDamage }));
   }
 
   #initControls() {
@@ -205,6 +192,10 @@ export class PersonObject extends MovableObject {
         const control = controls[key]!;
 
         if (control in actions) {
+          if (control === "use" && !e.repeat && actions.use === 0) {
+            this.#usePressed = true;
+          }
+
           actions[control] = Math.min(2, actions[control] + 1);
         }
       }
@@ -220,6 +211,10 @@ export class PersonObject extends MovableObject {
 
         if (control in actions) {
           actions[control] = 0;
+
+          if (control === "use") {
+            this.#usePressed = false;
+          }
         }
       }
     }, { signal: this.abortSignal });

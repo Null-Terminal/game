@@ -1,4 +1,5 @@
 import type { Game } from "#engine/game";
+import type { World } from "#engine/game/world";
 
 enum State {
   Playing,
@@ -13,6 +14,7 @@ export class GameStatus {
   readonly #game: Game;
 
   #state: State = State.Playing;
+  #loadingLevel = false;
 
   constructor(game: Game) {
     this.#game = game;
@@ -34,6 +36,46 @@ export class GameStatus {
     return this.#state === State.Restarting;
   }
 
+  get loadingLevel() {
+    return this.#loadingLevel;
+  }
+
+  async runLevelLoad(load: () => Promise<World>): Promise<World> {
+    const game = this.#game;
+    const { events } = game;
+
+    if (game.destroyed || this.#loadingLevel) {
+      throw new Error("Game.status: game is destroyed or a level is already loading");
+    }
+
+    this.#loadingLevel = true;
+    game.canvas.pause();
+
+    try {
+      game.emitter.emit(events.levelLoading, null);
+
+      let world: World;
+
+      try {
+        world = await load();
+
+      } catch (err) {
+        game.emitter.emit(events.levelLoadFailed, err);
+        throw err;
+      }
+
+      game.emitter.emit(events.levelLoaded, world);
+      return world;
+
+    } finally {
+      this.#loadingLevel = false;
+
+      if (this.playing && !game.destroyed) {
+        game.canvas.resume();
+      }
+    }
+  }
+
   pause() {
     if (!this.playing) {
       return;
@@ -49,7 +91,10 @@ export class GameStatus {
     }
 
     this.#set(State.Playing);
-    this.#game.canvas.resume();
+
+    if (!this.loadingLevel) {
+      this.#game.canvas.resume();
+    }
   }
 
   togglePause() {
@@ -70,16 +115,29 @@ export class GameStatus {
     this.#game.canvas.pause();
 
     alert("Вы проиграли!");
-    this.restart();
+    void this.restart().catch(console.error);
   }
 
-  restart() {
-    if (this.restarting) {
+  async restart() {
+    if (this.restarting || this.loadingLevel) {
       return;
     }
 
     this.#set(State.Restarting);
-    location.reload();
+    this.#game.canvas.pause();
+
+    try {
+      await this.#game.reloadLevel();
+      this.#set(State.Playing);
+      this.#game.canvas.resume();
+
+    } catch (error) {
+      if (!this.#game.destroyed) {
+        this.#set(State.Finished);
+      }
+
+      throw error;
+    }
   }
 
   #set(state: State) {

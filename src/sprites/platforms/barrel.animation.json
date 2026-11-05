@@ -1,0 +1,16 @@
+{
+  "params": {
+    "maxHeight": 90,
+    "collisionBounds": { "x": 0, "y": 96, "width": 780, "height": 984 }
+  },
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 780,
+      "height": 1080,
+      "duration": 100,
+      "spriteId": ""
+    }
+  ]
+}

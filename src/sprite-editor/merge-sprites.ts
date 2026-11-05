@@ -1,10 +1,10 @@
-import { SpriteAnimation, type RawAnimationParameters } from "#/sprite-animation";
+import { AnimationDefinition, type RawAnimationParameters } from "#/animation-definition";
 
 import type { Sprite } from "#sprite-editor/sprite";
 
 export interface MergedSprite {
   canvas: HTMLCanvasElement;
-  animation: SpriteAnimation;
+  animation: AnimationDefinition;
 }
 
 export function mergeSprites(sprites: Sprite[], params?: RawAnimationParameters): MergedSprite {
@@ -52,7 +52,7 @@ export function mergeSprites(sprites: Sprite[], params?: RawAnimationParameters)
 
   // Вычисляем итоговые размеры атласа
   const totalHeight = rows.reduce((sum, row) => sum + row.height, 0);
-  const totalWidth = Math.min(MAX_WIDTH, Math.max(...rows.map(r => r.x)));
+  const totalWidth = Math.min(MAX_WIDTH, Math.max(...rows.map((r) => r.x)));
 
   // Создаём результирующий canvas
   const resultCanvas = document.createElement("canvas");
@@ -92,5 +92,5 @@ export function mergeSprites(sprites: Sprite[], params?: RawAnimationParameters)
     currentY += row.height;
   }
 
-  return { canvas: resultCanvas, animation: new SpriteAnimation({ sprites: spriteDescriptors, params }) };
+  return { canvas: resultCanvas, animation: new AnimationDefinition({ sprites: spriteDescriptors, params }) };
 }

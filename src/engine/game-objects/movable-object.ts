@@ -1,12 +1,13 @@
-import { ifAlive, ifShadowed } from "#engine/game-objects/decorators";
-import { GameObject } from "#engine/game-objects/game-object";
-import { MovableObjectMotion } from "#engine/game-objects/movable-object-motion";
-
-import type { Game, RenderPayload, Collision } from "#engine/game";
+import type { Collision, CollisionScore, Game, RenderPayload } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
-import type { GameObjectOptions } from "#engine/game-objects/types";
 
-export { MovableObjectMotion } from "#engine/game-objects/movable-object-motion";
+import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
+import { GameObject } from "#engine/game-objects/game-object";
+import type { GameObjectOptions } from "#engine/game-objects/game-object";
+
+import { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
+
+export { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
 
 export enum CollisionStatus {
   NoCollision     = 0b00000,
@@ -40,6 +41,11 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   #stats = MovableObject.stats;
   #riding: GameObject | null = null;
 
+  // Опора может быть отдельной частью объекта, например крышей лифта
+  #ridingLeft = 0;
+  #ridingRight = 0;
+  #ridingTop = 0;
+
   readonly #MAX_RIDING_TOLERANCE = 10;
   readonly #INITIAL_RIDING_TOLERANCE = 5;
   readonly #COLLISION_EPSILON = 0.001;
@@ -50,6 +56,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     this.motion.reset();
   }
 
+  @ifDead
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
     this.#stats = { ...(this.constructor as typeof MovableObject).stats };
     this.motion.reset();
@@ -67,7 +74,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return status;
   }
 
-  updateState(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
+  updateStats(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
     Object.assign(this.stats, patch(this.stats));
   }
 
@@ -79,7 +86,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
       return CollisionStatus.NoCollision;
     }
 
-    let moveStatus = this.#updateRiding();
+    let moveStatus = this.#updateRiding(dy);
 
     if (dy < 0 && moveStatus & CollisionStatus.BottomCollision) {
       dy = 0;
@@ -90,23 +97,35 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     }
 
     if (dx !== 0) {
-      const newX = this.#moveX(dx);
+      const targetX = this.x + dx;
+      const startY = this.y;
+
+      const canStep = dy <= 0 && (this.stats.onGround || Boolean(moveStatus & CollisionStatus.BottomCollision));
+      const newX = this.#moveX(dx, canStep);
 
       if (newX !== this.x) {
         this.x = newX;
+      }
 
-      } else {
+      if (this.y > startY) {
+        moveStatus |= CollisionStatus.BottomCollision;
+        dy = 0;
+      }
+
+      if (newX !== targetX) {
         moveStatus |= dx > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision;
       }
     }
 
     if (dy !== 0) {
+      const targetY = this.y + dy;
       const newY = this.#moveY(dy);
 
       if (newY !== this.y) {
         this.y = newY;
+      }
 
-      } else {
+      if (newY !== targetY) {
         moveStatus |= dy < 0 ? CollisionStatus.BottomCollision : CollisionStatus.TopCollision;
       }
     }
@@ -120,46 +139,62 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   ) {
     const { stats } = this;
 
-    this.onDestroy(
-      this.canvas.emitter.on(this.redrawEvent, (payload) => {
-        initializer?.(payload);
+    this.render.on(this.redrawEvent, (payload) => {
+      initializer?.(payload);
 
-        // Гравитация
-        stats.vy = Math.max(stats.gravity, stats.vy + stats.gravity * payload.delta);
+      // Гравитация
+      stats.vy = Math.max(stats.gravity, stats.vy + stats.gravity * payload.delta);
 
-        const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
+      const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
 
-        stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
+      stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
 
-        if (moveStatus & CollisionStatus.TopCollision) {
-          stats.vy = 0;
+      if (moveStatus & CollisionStatus.TopCollision) {
+        stats.vy = 0;
 
-        } else if (stats.onGround) {
-          stats.vy = stats.gravity;
-        }
+      } else if (stats.onGround) {
+        stats.vy = stats.gravity;
+      }
 
-        effect?.(moveStatus);
-      })
-    );
+      effect?.(moveStatus);
+    });
   }
 
-  protected hasCollision(x = this.x, y = this.y): boolean {
-    return this.world.hasCollision(x, y, x + this.width, y + this.height);
+  protected hasCollision(x = this.x, y = this.y, width = this.width, height = this.height): boolean {
+    return this.world.hasCollision(x, y, x + width, y + height);
   }
 
-  protected findDynamicCollision(x = this.x, y = this.y): Collision | null {
+  protected findDynamicCollision(
+    x = this.x,
+    y = this.y
+  ): Collision | null {
     return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
+  }
+
+  protected findBestDynamicCollision(
+    x: number,
+    y: number,
+    score: CollisionScore
+  ): Collision | null {
+    return this.world.findBestDynamicCollision(x, y, x + this.width, y + this.height, score);
   }
 
   protected findInteractCollisions(x = this.x, y = this.y): readonly Collision[] {
     return this.world.findInteractCollisions(x, y, x + this.width, y + this.height);
   }
 
-  protected findCollisions(x = this.x, y = this.y): readonly Collision[] {
-    return this.world.findCollisions(x, y, x + this.width, y + this.height);
+  protected findCollisions(x = this.x, y = this.y, width = this.width, height = this.height): readonly Collision[] {
+    return this.world.findCollisions(x, y, x + width, y + height);
   }
 
-  #updateRiding() {
+  #updateRiding(dy: number) {
+    // При движении вверх отрываемся от платформы, чтобы она не притягивала объект обратно
+    if (dy > 0) {
+      this.#riding = null;
+      this.render.setVisualOffsetY(0);
+      return CollisionStatus.NoCollision;
+    }
+
     const { fps } = this.canvas;
 
     // Для разных FPS стартовое значение погрешности будет отличаться.
@@ -177,46 +212,74 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     // Из-за динамической природы платформ и ошибок округления, нужно закладывать некоторую погрешность.
     // В базовом случае берется просто примерное подходящее число, а в дальнейшем учитываем скорость платформы.
     const ridingYTolerance = lastRiding != null ?
-      Math.ceil(Math.abs(lastRiding.y - lastRiding.prevY)) :
+      Math.max(1, Math.ceil(Math.abs(lastRiding.y - lastRiding.prevY))) :
       RIDING_TOLERANCE;
 
     const ridingXTolerance = lastRiding != null ?
       Math.ceil(Math.abs(lastRiding.x - lastRiding.prevX)) :
       RIDING_TOLERANCE;
 
-    // Проверяем, не стоим ли мы на двигающейся платформе
-    const collision = this.findDynamicCollision(this.x, this.y - ridingYTolerance);
+    const lastShiftY = lastRiding == null ? 0 : lastRiding.y - lastRiding.prevY;
+    const predictedTop = this.#ridingTop + lastShiftY;
+
+    // Выбираем поверхность у ног, сохраняя прежнюю опору при близких результатах
+    const collision = this.findBestDynamicCollision(this.x, this.y - ridingYTolerance, (bbox, object) => {
+      const top = bbox[3];
+      const distance = Math.abs(this.y - top);
+      const overlap = Math.min(this.x + this.width, bbox[2]) - Math.max(this.x, bbox[0]);
+
+      if (distance > ridingYTolerance || overlap <= ridingXTolerance) {
+        return Infinity;
+      }
+
+      const sameSurface = object === lastRiding && Math.abs(top - predictedTop) <= 1;
+
+      // Небольшой приоритет прежней опоры, чтобы не переключаться между близкими поверхностями
+      return distance - (sameSurface ? 0.25 : 0);
+    });
+
     const riding = collision != null ? collision.object : lastRiding;
 
+    const shiftX = riding == null ? 0 : riding.x - riding.prevX;
+    const shiftY = riding == null ? 0 : riding.y - riding.prevY;
+
+    const left = collision?.bbox[0] ?? this.#ridingLeft + shiftX;
+    const right = collision?.bbox[2] ?? this.#ridingRight + shiftX;
+    const top = collision?.bbox[3] ?? this.#ridingTop + shiftY;
+
     // Проверяем, что мы все еще стоим на платформе
+    const distanceToPlatform = riding == null ? Infinity : this.y - top;
     const isStandingOnPlatform = riding == null || riding.destroyed ?
       false :
-      this.y - riding.y - riding.height <= ridingYTolerance &&
-      this.x + this.width - riding.x > ridingXTolerance &&
-      riding.x + riding.width - this.x > ridingXTolerance;
+      Math.abs(distanceToPlatform) <= ridingYTolerance &&
+      this.x + this.width - left > ridingXTolerance &&
+      right - this.x > ridingXTolerance;
 
     let status: number = CollisionStatus.NoCollision;
 
     if (riding != null && isStandingOnPlatform) {
       this.#riding = riding;
+      this.#ridingLeft = left;
+      this.#ridingRight = right;
+      this.#ridingTop = top;
 
       // Корректирую позицию объекта под позицию платформы на которой он стоит
-      this.x += riding.x - riding.prevX;
+      this.x += shiftX;
 
       // Ставим объект чуть-чуть выше, чтобы не провоцировать расчеты коллизий
-      this.y = riding.y + riding.height + this.#COLLISION_EPSILON;
+      this.y = top + this.#COLLISION_EPSILON;
 
       // Из‑за потери точности при работе с дробными числами иногда возникает
       // эффект "парения в воздухе" при движении на быстрой платформе.
       // Это значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
-      this.visualOffsetY = riding.y - riding.prevY;
+      this.render.setVisualOffsetY(shiftY);
 
       riding.visit(this);
       status |= CollisionStatus.BottomCollision;
 
     } else {
       this.#riding = null;
-      this.visualOffsetY = 0;
+      this.render.setVisualOffsetY(0);
     }
 
     return status;
@@ -280,61 +343,110 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return false;
   }
 
-  #moveX(delta: number): number {
-    if (delta === 0) {
-      return this.x;
+  #moveX(delta: number, canStep: boolean): number {
+    const target = this.x + delta;
+
+    const left = Math.min(this.x, target);
+    const right = Math.max(this.x, target) + this.width;
+
+    if (!this.hasCollision(left, this.y, right - left, this.height)) {
+      return target;
     }
 
-    const newX = this.x + delta;
+    const collisions = this.findCollisions(left, this.y, right - left, this.height);
+    let resolved = target;
 
-    if (!this.hasCollision(newX, this.y)) {
-      return newX;
+    for (const { bbox } of collisions) {
+      resolved = delta > 0 ?
+        Math.min(resolved, bbox[0] - this.width) :
+        Math.max(resolved, bbox[2]);
     }
 
-    const step = Math.sign(delta);
+    if (resolved !== target && canStep && this.#stepUp(left, right, resolved, delta > 0, collisions)) {
+      return target;
+    }
 
-    let start = this.x;
+    if (resolved !== target) {
+      for (const { bbox, object } of collisions) {
+        const edge = delta > 0 ? bbox[0] - this.width : bbox[2];
 
-    while (Math.abs(start - this.x) < Math.abs(delta)) {
-      const next = start + step;
-
-      if (!this.hasCollision(next, this.y)) {
-        start = next;
-
-      } else {
-        break;
+        if (edge === resolved) {
+          object.visit(this);
+        }
       }
     }
 
-    return start;
+    return resolved;
+  }
+
+  #stepUp(left: number, right: number, stopX: number, movingRight: boolean, collisions: readonly Collision[]): boolean {
+    let surfaceY = this.y;
+    let support: GameObject | null = null;
+
+    for (const { bbox, object } of collisions) {
+      const edge = movingRight ? bbox[0] - this.width : bbox[2];
+
+      if (edge !== stopX) {
+        continue;
+      }
+
+      const height = bbox[3] - this.y;
+
+      if (height <= 0 || !Number.isFinite(height) || object.allows(this, "stepUp", height) !== true) {
+        return false;
+      }
+
+      if (bbox[3] > surfaceY) {
+        surfaceY = bbox[3];
+        support = object;
+      }
+    }
+
+    if (support == null) {
+      return false;
+    }
+
+    const raisedY = surfaceY + this.#COLLISION_EPSILON;
+
+    if (this.hasCollision(this.x, this.y, this.width, raisedY - this.y + this.height) ||
+      this.hasCollision(left, raisedY, right - left, this.height)) {
+      return false;
+    }
+
+    this.y = raisedY;
+    support.visit(this);
+    return true;
   }
 
   #moveY(delta: number): number {
-    if (delta === 0) {
-      return this.y;
+    const target = this.y + delta;
+
+    const bottom = Math.min(this.y, target);
+    const top = Math.max(this.y, target) + this.height;
+
+    if (!this.hasCollision(this.x, bottom, this.width, top - bottom)) {
+      return target;
     }
 
-    const newY = this.y + delta;
+    const collisions = this.findCollisions(this.x, bottom, this.width, top - bottom);
+    let resolved = target;
 
-    if (!this.hasCollision(this.x, newY)) {
-      return newY;
+    for (const { bbox } of collisions) {
+      resolved = delta > 0 ?
+        Math.min(resolved, bbox[1] - this.height) :
+        Math.max(resolved, bbox[3]);
     }
 
-    const step = Math.sign(delta);
+    if (resolved !== target) {
+      for (const { bbox, object } of collisions) {
+        const edge = delta > 0 ? bbox[1] - this.height : bbox[3];
 
-    let start = this.y;
-
-    while (Math.abs(start - this.y) < Math.abs(delta)) {
-      const next = start + step;
-
-      if (!this.hasCollision(this.x, next)) {
-        start = next;
-
-      } else {
-        break;
+        if (edge === resolved) {
+          object.visit(this);
+        }
       }
     }
 
-    return start;
+    return resolved;
   }
 }

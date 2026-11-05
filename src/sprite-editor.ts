@@ -7,6 +7,7 @@ import template from "#sprite-editor/template.html?raw";
 
 import { EditorHistory } from "#sprite-editor/history";
 import { ActionHandlers } from "#sprite-editor/actions";
+import { AnimationParametersForm } from "#sprite-editor/animation-parameters-form";
 
 export class SpriteEditor extends HTMLElement {
   history!: EditorHistory;
@@ -78,7 +79,7 @@ export class SpriteEditor extends HTMLElement {
       this.shadowRoot.innerHTML = `<style>${styles}</style>${template}`;
     }
 
-    this.#actionHandlers = new ActionHandlers(this);
+    this.#actionHandlers = new ActionHandlers(this, new AnimationParametersForm(this.settings));
     this.history = new EditorHistory(this);
   }
 }
