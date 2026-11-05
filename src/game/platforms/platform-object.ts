@@ -1,24 +1,35 @@
-import { DynamicObject, GameObject, ifAlive } from "#engine/game-objects";
+import type { Game } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
 
-import { loadAnimation } from "#engine/animation-loader";
+import { DynamicObject, ifAlive } from "#engine/game-objects";
+import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
 
-import { UsefulObject } from "#game/useful-object";
+import { ControlObject } from "#game/control-object";
 
-const wall = await loadAnimation(import("#/sprites/bricks.webp"), {
-  animation: import("#/sprites/bricks.animation.json")
-});
+export type PlatformOptions = GameObjectOptions<DefaultGameObjectOptions & {
+  maxStepHeight?: number;
+}>;
 
-export class PlatformObject extends DynamicObject {
-  static override readonly animations = { wall };
-  override readonly animations = PlatformObject.animations;
+export class PlatformObject<T extends PlatformOptions = PlatformOptions> extends DynamicObject<T> {
+  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+    const options = { ...opts } as T;
+    options.maxStepHeight ??= 8;
+    return super.create(game, poolPointer, options);
+  }
 
-  init() {
-    this.play(this.animations.wall);
+  override allows(go: GameObject, kind: "stepUp", height: number): boolean;
+  override allows(go: GameObject, kind: string, options?: unknown): boolean | null;
+  override allows(_go: GameObject, kind: string, options?: unknown): boolean | null {
+    if (kind !== "stepUp") {
+      return null;
+    }
+
+    return typeof options === "number" && options <= this.options.maxStepHeight!;
   }
 
   @ifAlive
   override visit(go: GameObject) {
-    if (go instanceof UsefulObject && go.nowPlaying === go.animations.trigger) {
+    if (go instanceof ControlObject) {
       this.status.togglePause();
     }
   }

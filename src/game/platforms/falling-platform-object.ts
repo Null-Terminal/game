@@ -1,24 +1,30 @@
-import { CollisionStatus, GameObject, MovableObject, ifAlive } from "#engine/game-objects";
+import type { LoadedAnimation } from "#engine/animation";
+import type { Game } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
 
-import { loadAnimation } from "#engine/animation-loader";
-
-import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects/types";
+import { CollisionStatus, MovableObject, ifAlive } from "#engine/game-objects";
+import type { GameObject } from "#engine/game-objects";
+import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects/game-object";
 
 import { PersonObject } from "#game/person-object";
 
-const wall = await loadAnimation(import("#/sprites/bricks.webp"), {
-  animation: import("#/sprites/bricks.animation.json")
-});
-
 export interface DefaultFallingPlatformObjectOptions extends DefaultGameObjectOptions {
+  show: LoadedAnimation;
+  showBroken: LoadedAnimation;
   fallAfterSeconds?: number;
+  maxStepHeight?: number;
 }
 
 export class FallingPlatformObject extends MovableObject<GameObjectOptions<DefaultFallingPlatformObjectOptions>> {
-  static override readonly animations = { wall };
-  override readonly animations = FallingPlatformObject.animations;
-
   #triggered = false;
+
+  override create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions<DefaultFallingPlatformObjectOptions>) {
+    return super.create(game, poolPointer, opts == null ? opts : {
+      fallAfterSeconds: 0,
+      maxStepHeight: 8,
+      ...opts
+    });
+  }
 
   override get redrawEvent() {
     return this.canvas.events.dynamic;
@@ -27,11 +33,20 @@ export class FallingPlatformObject extends MovableObject<GameObjectOptions<Defau
   init() {
     this.#triggered = false;
     this.motion.toKinematic();
-    this.play(this.animations.wall);
   }
 
   protected override bindFlush() {
     this.world.addToWorld(this, this.world.dynamics);
+  }
+
+  override allows(go: GameObject, kind: "stepUp", height: number): boolean;
+  override allows(go: GameObject, kind: string, options?: unknown): boolean | null;
+  override allows(_go: GameObject, kind: string, options?: unknown): boolean | null {
+    if (kind !== "stepUp") {
+      return null;
+    }
+
+    return typeof options === "number" && options <= this.options.maxStepHeight!;
   }
 
   @ifAlive
@@ -42,7 +57,7 @@ export class FallingPlatformObject extends MovableObject<GameObjectOptions<Defau
 
     this.#triggered = true;
 
-    const fallAfterSeconds = this.options.fallAfterSeconds ?? 0;
+    const fallAfterSeconds = this.options.fallAfterSeconds!;
 
     if (fallAfterSeconds <= 0) {
       this.#fall();
@@ -51,7 +66,7 @@ export class FallingPlatformObject extends MovableObject<GameObjectOptions<Defau
 
     let elapsed = 0;
 
-    const stop = this.onDestroy(this.canvas.emitter.on(this.redrawEvent, ({ delta }) => {
+    const stop = this.render.on(this.redrawEvent, ({ delta }) => {
       elapsed += delta;
 
       if (elapsed < fallAfterSeconds) {
@@ -60,10 +75,11 @@ export class FallingPlatformObject extends MovableObject<GameObjectOptions<Defau
 
       stop();
       this.#fall();
-    }));
+    });
   }
 
   #fall() {
+    this.play(this.options.showBroken);
     this.motion.toSolid();
     this.movement.follow({ path: [] });
     this.initPhysics();
