@@ -3,7 +3,7 @@ import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
 import type { BackgroundObject } from "#engine/game-objects/background-object";
 
-export interface StretchTileBounds {
+export interface RepeatCellBounds {
   x: number;
   y: number;
   left: number;
@@ -30,12 +30,12 @@ export class BackgroundObjectDebug extends GameObjectDebug<BackgroundObject> {
 
   drawStretchSeams(
     ctx: CanvasRenderingContext2D,
-    tile: StretchTileBounds,
+    cell: RepeatCellBounds,
     repeatX: boolean | undefined,
     repeatY: boolean | undefined
   ) {
-    const vertical = repeatX && tile.x >= tile.left && tile.x < tile.right;
-    const horizontal = repeatY && tile.y >= tile.top && tile.y < tile.bottom;
+    const vertical = repeatX && cell.x >= cell.left && cell.x < cell.right;
+    const horizontal = repeatY && cell.y >= cell.top && cell.y < cell.bottom;
 
     if (!vertical && !horizontal) {
       return;
@@ -45,11 +45,11 @@ export class BackgroundObjectDebug extends GameObjectDebug<BackgroundObject> {
     ctx.fillStyle = "#FF00FF";
 
     if (vertical) {
-      ctx.fillRect(Math.round(tile.x), tile.top, 2, tile.bottom - tile.top);
+      ctx.fillRect(Math.round(cell.x), cell.top, 2, cell.bottom - cell.top);
     }
 
     if (horizontal) {
-      ctx.fillRect(tile.left, Math.round(tile.y), tile.right - tile.left, 2);
+      ctx.fillRect(cell.left, Math.round(cell.y), cell.right - cell.left, 2);
     }
 
     ctx.restore();

@@ -1,6 +1,6 @@
 import type * as go from "#engine/game-objects/game-object";
 
-export type { StretchTileBounds } from "#engine/game-objects/background-object/debug";
+export type { RepeatCellBounds } from "#engine/game-objects/background-object/debug";
 export type { VisibleBounds } from "#engine/game-objects/background-object/render";
 
 type Axis = "w" | "h";

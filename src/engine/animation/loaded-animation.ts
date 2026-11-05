@@ -158,12 +158,12 @@ export class LoadedAnimation {
     }
 
     const image = this.getSpriteFrame(index, effects);
-    const tileWidth = this.#getPatternTileSize(region?.width, sprite.width, image.width);
-    const tileHeight = this.#getPatternTileSize(region?.height, sprite.height, image.height);
+    const cellWidth = this.#getRepeatCellSize(region?.width, sprite.width, image.width);
+    const cellHeight = this.#getRepeatCellSize(region?.height, sprite.height, image.height);
 
     if (axis != null) {
-      width = Math.max(tileWidth, Math.floor(width / tileWidth) * tileWidth);
-      height = Math.max(tileHeight, Math.floor(height / tileHeight) * tileHeight);
+      width = Math.max(cellWidth, Math.floor(width / cellWidth) * cellWidth);
+      height = Math.max(cellHeight, Math.floor(height / cellHeight) * cellHeight);
     }
 
     const canvas = new OffscreenCanvas(width, height);
@@ -172,7 +172,7 @@ export class LoadedAnimation {
     let source: CanvasImageSource = image;
 
     if (region != null) {
-      const fragment = new OffscreenCanvas(tileWidth, tileHeight);
+      const fragment = new OffscreenCanvas(cellWidth, cellHeight);
       const fragmentCtx = fragment.getContext("2d")!;
 
       fragmentCtx.drawImage(
@@ -181,7 +181,7 @@ export class LoadedAnimation {
         region.y * image.height / sprite.height,
         region.width * image.width / sprite.width,
         region.height * image.height / sprite.height,
-        0, 0, tileWidth, tileHeight
+        0, 0, cellWidth, cellHeight
       );
 
       source = fragment;
@@ -223,7 +223,7 @@ export class LoadedAnimation {
     return size;
   }
 
-  #getPatternTileSize(regionSize: number | undefined, frameSize: number, imageSize: number) {
+  #getRepeatCellSize(regionSize: number | undefined, frameSize: number, imageSize: number) {
     return regionSize == null ? imageSize : Math.max(1, Math.round(regionSize * imageSize / frameSize));
   }
 
