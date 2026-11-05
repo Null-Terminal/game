@@ -1,5 +1,3 @@
-import type { BakedFrame } from "#engine/animation/types";
-
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 
 import type * as go from "#engine/game-objects/game-object";
@@ -82,7 +80,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
 
   drawPattern(
     payload: go.ObjectRenderPayload,
-    pattern: BakedFrame,
+    pattern: ImageBitmap,
     bounds?: Readonly<VisibleBounds>
   ) {
     const { go } = this;
@@ -221,7 +219,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
 
   #fillPattern(
     ctx: CanvasRenderingContext2D,
-    pattern: BakedFrame,
+    pattern: ImageBitmap,
     bounds: Readonly<VisibleBounds>,
     originX: number,
     originY: number,

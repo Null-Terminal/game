@@ -1,7 +1,7 @@
 import { cache } from "#decorators/cache";
 
 import type { AnimationDefinition } from "#/animation-definition";
-import type { BakedFrame, FrameEffects } from "#engine/animation/types";
+import type { FrameEffects } from "#engine/animation/types";
 
 const MAX_REPEAT_PATTERN_SIZE = 1024;
 
@@ -69,14 +69,14 @@ export class LoadedAnimation {
     return maxHeight;
   }
 
-  readonly #images: Record<string, ImageBitmap | OffscreenCanvas> = {};
+  readonly #images: Record<string, ImageBitmap> = {};
 
   constructor(image: ImageBitmap, animation: AnimationDefinition) {
     this.image = image;
     this.animation = animation;
   }
 
-  getSpriteFrame(index: number, effects: FrameEffects = {}): BakedFrame {
+  getSpriteFrame(index: number, effects: FrameEffects = {}): ImageBitmap {
     const cacheKey = this.#getKey(index, effects);
     const fromCache = this.#images[cacheKey];
 
@@ -118,24 +118,20 @@ export class LoadedAnimation {
       spriteHeight * flipY
     );
 
-    this.#images[cacheKey] = canvas;
-
-    createImageBitmap(canvas).then((image) => {
-      this.#images[cacheKey] = image;
-    });
-
-    return canvas;
+    const image = canvas.transferToImageBitmap();
+    this.#images[cacheKey] = image;
+    return image;
   }
 
-  getPatternFrame(index: number, width: number, height: number, effects?: FrameEffects): BakedFrame;
-  getPatternFrame(index: number, width: number, height: number, axis: "width" | "height", effects?: FrameEffects): BakedFrame;
+  getPatternFrame(index: number, width: number, height: number, effects?: FrameEffects): ImageBitmap;
+  getPatternFrame(index: number, width: number, height: number, axis: "width" | "height", effects?: FrameEffects): ImageBitmap;
   getPatternFrame(
     index: number,
     width: number,
     height: number,
     axisOrEffects: "width" | "height" | FrameEffects = {},
     effects: FrameEffects = {}
-  ): BakedFrame {
+  ): ImageBitmap {
     const axis = typeof axisOrEffects === "string" ? axisOrEffects : null;
     effects = typeof axisOrEffects === "string" ? effects : axisOrEffects;
 
@@ -173,7 +169,7 @@ export class LoadedAnimation {
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d")!;
 
-    let source: BakedFrame = image;
+    let source: CanvasImageSource = image;
 
     if (region != null) {
       const fragment = new OffscreenCanvas(tileWidth, tileHeight);
@@ -194,13 +190,9 @@ export class LoadedAnimation {
     ctx.fillStyle = ctx.createPattern(source, "repeat")!;
     ctx.fillRect(0, 0, width, height);
 
-    this.#images[cacheKey] = canvas;
-
-    createImageBitmap(canvas).then((image) => {
-      this.#images[cacheKey] = image;
-    });
-
-    return canvas;
+    const pattern = canvas.transferToImageBitmap();
+    this.#images[cacheKey] = pattern;
+    return pattern;
   }
 
   #resolveSize(size: number): number {
