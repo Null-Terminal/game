@@ -2,7 +2,7 @@
   "params": {
     "maxHeight": 1100,
     "maxWidth": 1024,
-    "opacity": 0.9
+    "opacity": 1
   },
   "sprites": [
     {

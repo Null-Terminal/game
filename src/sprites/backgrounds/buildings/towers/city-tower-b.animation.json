@@ -1,8 +1,8 @@
 {
   "params": {
     "maxHeight": 1636,
-    "opacity": 0.9,
-    "randomOrder": true
+    "opacity": 1,
+    "order": "random"
   },
   "sprites": [
     {

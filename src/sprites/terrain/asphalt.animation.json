@@ -1,7 +1,10 @@
 {
   "params": {
     "speed": 1,
-    "maxHeight": 225
+    "maxHeight": 225,
+    "repeat": {
+      "height": { "x": 0, "y": 360, "width": 2060, "height": 244 }
+    }
   },
 
   "sprites": [
