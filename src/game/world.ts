@@ -49,7 +49,7 @@ const fogTexture = { density: 22, seed: 0x4e2d9a71 } as const;
 export function createDemoWorld(showSeams = false): WorldObjects {
   const backdropDebug: BackgroundObjectDebugOptions = { stretchSeams: showSeams };
   const objects: WorldObjects = World.of([
-    // Небо: звёзды, редкие молнии, облака и дальние ступенчатые полосы.
+    // Небо: звёзды, редкие молнии, облака и дальние ступенчатые полосы
     [SkyObject, {
       show: "sky",
       celestialScrollFactor: 0,
@@ -59,25 +59,25 @@ export function createDemoWorld(showSeams = false): WorldObjects {
       clouds: { ...duskSky.clouds, clusters: 10, density: 6, opacity: 0.75 }
     }],
 
-    // Самая дальняя панорама города и слабая дымка перед следующим слоем.
+    // Самая дальняя панорама города и слабая дымка перед следующим слоем
     [BackgroundFlowObject, { sprites: distantCity, y: 145, stretch: "w", debug: backdropDebug, scrollFactor: [0.06, 0.18], effects: { scale: 0.7 } }],
     [FogObject, {
       show: "fog", bbox: [-Infinity, 266, Infinity, 353], texture: fogTexture,
       opacity: 0.25, speed: 1, scrollFactor: [0.08, 0.18], sway: 1
     }],
 
-    // Высокие здания и лёгкий туман перед придорожной застройкой.
+    // Высокие здания и лёгкий туман перед придорожной застройкой
     [BackgroundFlowObject, { sprites: citySkyline, x: -295, y: 135, debug: backdropDebug, order: "shuffle", gap: [300, 700], seed: 32, scrollFactor: [0.16, 0.55], effects: { scale: 0.9 } }],
     [FogObject, {
       show: "fog", bbox: [-Infinity, 259, Infinity, 346], texture: fogTexture,
       opacity: 0.3, speed: 2, scrollFactor: [0.2, 0.55], sway: 1
     }],
 
-    // Дальние стены, постройки и отдельные объекты за насыпью.
+    // Дальние стены, постройки и отдельные объекты за насыпью
     [BackgroundFlowObject, { sprites: roadsideStructures, y: 245, stretch: "w", debug: backdropDebug, order: "shuffle", gap: [100, 310], seed: 41, scrollFactor: [0.25, 1], effects: { scale: 0.6 } }],
     [BackgroundFlowObject, { sprites: farRoadsideScenery, y: 245, debug: backdropDebug, gap: [700, 1400], seed: 73, scrollFactor: [0.25, 1], effects: { scale: 0.6 } }],
 
-    // Дымка проходит перед дальними постройками и скрывается за насыпью.
+    // Дымка проходит перед дальними постройками и скрывается за насыпью
     [FogObject, {
       show: "fog", bbox: [-Infinity, 225, Infinity, 430], texture: fogTexture,
       opacity: 0.75, speed: 3, scrollFactor: [0.25, 1], sway: 2, flow: true
@@ -167,7 +167,7 @@ export function createDemoWorld(showSeams = false): WorldObjects {
     [PickupObject, { kind: "fuel", x: 5350, y: 270 }],
     [PickupObject, { kind: "medkit", x: 7000, y: 270 }],
 
-    // Плотный туман лежит поверх покрытия дороги, но позади ближних предметов.
+    // Плотный туман лежит поверх покрытия дороги, но позади ближних предметов
     [FogObject, {
       show: "fog", bbox: [-Infinity, -180, Infinity, 266], texture: { ...fogTexture, density: 24 },
       opacity: 0.45, speed: 12, scrollFactor: [0.38, 1], sway: 3, flow: true
@@ -176,7 +176,7 @@ export function createDemoWorld(showSeams = false): WorldObjects {
     // Перекати-поле и редкая газета движутся порывами вдоль дороги
     [WindDebrisObject, { show: "road" }],
 
-    // Ближние предметы на насыпи и мусор вдоль её края.
+    // Ближние предметы на насыпи и мусор вдоль её края
     [BackgroundFlowObject, { sprites: nearRoadsideScenery, y: 275, debug: backdropDebug, order: "shuffle", gap: [175, 440], seed: 81, scrollFactor: [0.38, 1], effects: { scale: 0.6 } }],
     [BackgroundFlowObject, { sprites: moundEdgeDebris, y: 270, gap: [160, 400], seed: 97, scrollFactor: [0.38, 1] }],
     [BackgroundFlowObject, { sprites: curbDebris, y: 225, gap: [180, 360], seed: 193 }],
@@ -193,8 +193,6 @@ export function createDemoWorld(showSeams = false): WorldObjects {
       stops: [[0, 0], [0, 600], [0, 1200]],
       speed: 180
     }],
-
-    // [CityWindowObject, {}],
 
   ]) as WorldObjects;
 
@@ -218,6 +216,7 @@ export function createDemoWorld(showSeams = false): WorldObjects {
     }]);
   }
 
+  // Номера колонок с ломкими досками на каждом ярусе
   const fragileColumnsByTier = [[2, 4], [3, 5], [1, 4], [2, 5]];
 
   for (let tier = 0; tier < 4; tier++) {
@@ -242,7 +241,7 @@ export function createDemoWorld(showSeams = false): WorldObjects {
   }
 
   for (const [index, [left, right]] of floors.entries()) {
-    // Передний план: машины и деревья на дороге перекрывают ноги персонажа.
+    // Передний план: машины и деревья на дороге перекрывают ноги персонажа
     objects.push(...World.of([[BackgroundFlowObject, {
       sprites: nearRoadWrecks,
       bbox: [left, 75, right, 330],
@@ -264,7 +263,7 @@ export function createDemoWorld(showSeams = false): WorldObjects {
     }]]));
   }
 
-  // Низкая полоса скрывает основания машин и деревьев, сохраняя верх спрайтов чётким.
+  // Низкая полоса скрывает основания машин и деревьев, сохраняя верх спрайтов чётким
   objects.push(...World.of([[FogObject, {
     show: "fog",
     bbox: [-Infinity, -100, Infinity, 200],
