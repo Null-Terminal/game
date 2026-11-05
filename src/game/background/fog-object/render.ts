@@ -32,12 +32,12 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
     const { ctx, elapsed } = frame;
     const { width: viewWidth, height: viewHeight } = this.go.canvas;
 
-    const tileWidth = Math.max(2048, viewWidth);
+    const stripWidth = Math.max(2048, viewWidth);
     const bandHeight = this.go.height;
 
-    if (this.#texture?.image.width !== tileWidth || this.#texture.sourceHeight !== bandHeight) {
+    if (this.#texture?.image.width !== stripWidth || this.#texture.sourceHeight !== bandHeight) {
       this.#texture?.image.close();
-      this.#texture = this.#builder!.build(tileWidth, bandHeight);
+      this.#texture = this.#builder!.build(stripWidth, bandHeight);
     }
 
     const texture = this.#texture;
@@ -79,14 +79,14 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
         cameraX + elapsed / 1000 * speed * 0.55 + texture.image.width / 3 - originX
       );
 
-      this.#drawTiles(ctx, texture, slowerScroll, screenTop, viewWidth);
+      this.#drawRepeatedStrip(ctx, texture, slowerScroll, screenTop, viewWidth);
     }
 
-    this.#drawTiles(ctx, texture, scroll, screenTop, viewWidth);
+    this.#drawRepeatedStrip(ctx, texture, scroll, screenTop, viewWidth);
     ctx.restore();
   }
 
-  #drawTiles(ctx: CanvasRenderingContext2D, texture: FogStrip, scroll: number, y: number, width: number) {
+  #drawRepeatedStrip(ctx: CanvasRenderingContext2D, texture: FogStrip, scroll: number, y: number, width: number) {
     const image = texture.image;
     const offset = ((scroll % image.width) + image.width) % image.width;
 

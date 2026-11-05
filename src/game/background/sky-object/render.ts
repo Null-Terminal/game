@@ -100,7 +100,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     );
 
     if (this.#stars) {
-      this.#drawTiles(ctx, this.#stars, celestialScrollX, width);
+      this.#drawRepeatedStrip(ctx, this.#stars, celestialScrollX, width);
     }
 
     if (this.#moon) {
@@ -110,7 +110,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
 
     if (this.#clouds && this.#scene?.clouds) {
       const cloudScrollX = frame.getScrollOffsetX(0.025) + elapsed / 1000 * this.#scene.clouds.speed;
-      this.#drawTiles(ctx, this.#clouds.image, Math.round(cloudScrollX), width, this.#clouds.top);
+      this.#drawRepeatedStrip(ctx, this.#clouds.image, Math.round(cloudScrollX), width, this.#clouds.top);
     }
 
     this.#lightning?.draw(ctx, elapsed, width, height);
@@ -124,7 +124,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     }
   }
 
-  #drawTiles(ctx: CanvasRenderingContext2D, image: ImageBitmap, scroll: number, width: number, y = 0) {
+  #drawRepeatedStrip(ctx: CanvasRenderingContext2D, image: ImageBitmap, scroll: number, width: number, y = 0) {
     // Нормализуем сдвиг в пределах ширины текстуры, включая отрицательный скролл
     const offset = ((scroll % image.width) + image.width) % image.width;
 
