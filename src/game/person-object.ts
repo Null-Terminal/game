@@ -86,6 +86,15 @@ export class PersonObject extends MovableObject {
     );
   }
 
+  consumeUse() {
+    if (!this.#usePressed) {
+      return false;
+    }
+
+    this.#usePressed = false;
+    return true;
+  }
+
   #initPhysics = ({ delta }: RenderPayload) => {
     const { stats, actions } = this;
 
@@ -209,15 +218,6 @@ export class PersonObject extends MovableObject {
         }
       }
     }, { signal: this.abortSignal });
-  }
-
-  consumeUse() {
-    if (!this.#usePressed) {
-      return false;
-    }
-
-    this.#usePressed = false;
-    return true;
   }
 
   #renderStats(ctx: CanvasRenderingContext2D) {
