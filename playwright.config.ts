@@ -1,3 +1,7 @@
+/// <reference types="node" />
+
+import { env } from "node:process";
+
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
@@ -16,7 +20,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev:game -- --host 127.0.0.1 --port 5173 --strictPort",
     url: "http://127.0.0.1:5173/tests/fixture.html",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !env["CI"],
     timeout: 120_000
   }
 });
