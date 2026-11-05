@@ -265,6 +265,14 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     return 0;
   }
 
+  protected createRefOptions(childOptions?: go.WithEntry[1]): go.DefaultGameObjectOptions & {
+    x: number;
+    y: number;
+    bbox?: BBoxTuple;
+  } {
+    return { ...this.options, x: 0, y: 0, ...childOptions, acceptor: this };
+  }
+
   protected onMove(_status: number) {
     // Ничего не делает по умолчанию
   }
@@ -337,7 +345,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
     for (const [name, entry] of Object.entries(withMap)) {
       const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
-      const resolvedOptions = { ...this.options, x: 0, y: 0, ...childOptions, acceptor: this };
+      const resolvedOptions = this.createRefOptions(childOptions);
 
       if (childOptions != null) {
         // Бесконечный край не сдвигает детей: -Infinity + x остаётся -Infinity
