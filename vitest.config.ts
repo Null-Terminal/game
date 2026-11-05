@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import ts from "typescript";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { vitePluginTypescriptTransform } from "vite-plugin-typescript-transform";
@@ -12,5 +12,8 @@ export default defineConfig({
       tsconfig: { override: { target: ts.ScriptTarget.ES2024 } }
     })
   ],
-  test: { environment: "node" }
+  test: {
+    environment: "node",
+    exclude: [...configDefaults.exclude, "**/*.pw.spec.ts"]
+  }
 });
