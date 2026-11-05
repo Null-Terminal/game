@@ -12,9 +12,10 @@ export type PlatformOptions = GameObjectOptions<DefaultGameObjectOptions & {
 
 export class PlatformObject<T extends PlatformOptions = PlatformOptions> extends DynamicObject<T> {
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
-    const options = { ...opts } as T;
-    options.maxStepHeight ??= 8;
-    return super.create(game, poolPointer, options);
+    return super.create(game, poolPointer, {
+      maxStepHeight: 8,
+      ...opts
+    } as T);
   }
 
   override allows(go: GameObject, kind: "stepUp", height: number): boolean;

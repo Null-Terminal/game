@@ -15,10 +15,12 @@ export interface DefaultFallingPlatformObjectOptions extends DefaultGameObjectOp
   maxStepHeight?: number;
 }
 
-export class FallingPlatformObject extends MovableObject<GameObjectOptions<DefaultFallingPlatformObjectOptions>> {
+export type FallingPlatformOptions = GameObjectOptions<DefaultFallingPlatformObjectOptions>;
+
+export class FallingPlatformObject extends MovableObject<FallingPlatformOptions> {
   #triggered = false;
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: GameObjectOptions<DefaultFallingPlatformObjectOptions>) {
+  override create(game: Game, poolPointer: PoolPointer, opts?: FallingPlatformOptions) {
     return super.create(game, poolPointer, opts == null ? opts : {
       fallAfterSeconds: 0,
       maxStepHeight: 8,
