@@ -23,7 +23,6 @@ export interface ObjectRenderPayload extends RenderPayload {
 }
 
 export interface BitmapRenderPayload extends ObjectRenderPayload {
-  pattern: boolean;
   frameIndex: number;
   animation: LoadedAnimation;
 }

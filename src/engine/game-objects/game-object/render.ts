@@ -58,8 +58,8 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   }
 
   drawBitmap(payload: t.BitmapRenderPayload) {
-    const { width, height, effects } = this.go;
-    const { ctx, pattern, frameIndex, animation, x, y, toCanvasTop } = payload;
+    const { bbox, width, height, effects } = this.go;
+    const { ctx, frameIndex, animation, x, y, toCanvasTop } = payload;
 
     const top = toCanvasTop(y);
 
@@ -71,7 +71,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       return;
     }
 
-    if (pattern) {
+    if (bbox != null) {
       const image = animation.getPatternFrame(frameIndex, width, height, effects);
       ctx.drawImage(image, 0, 0, width, height, x, top, width, height);
 

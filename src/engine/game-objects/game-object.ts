@@ -325,7 +325,6 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       draw: (frame) => {
         const bitmapFrame = frame as BitmapRenderPayload;
 
-        bitmapFrame.pattern = bbox != null;
         bitmapFrame.frameIndex = playback.frameIndex;
         bitmapFrame.animation = animation;
 
