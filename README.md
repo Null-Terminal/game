@@ -4,6 +4,7 @@
 
 [Лор игры](LORE.md)
 [Заметки разработки](BLOG.md)
+[Играть в браузере](https://null-terminal.github.io/game/)
 
 ## Как собрать?
 
