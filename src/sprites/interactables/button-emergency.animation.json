@@ -1,14 +1,13 @@
 {
   "params": {
-    "maxHeight": 70
+    "maxHeight": 48
   },
-
   "sprites": [
     {
       "x": 0,
       "y": 0,
-      "width": 573,
-      "height": 803,
+      "width": 1128,
+      "height": 1007,
       "duration": 100,
       "spriteId": ""
     }

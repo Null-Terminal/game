@@ -1,0 +1,32 @@
+{
+  "params": {
+    "maxHeight": 72,
+    "loopFrom": 2
+  },
+  "sprites": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 985,
+      "height": 1312,
+      "duration": 90,
+      "spriteId": ""
+    },
+    {
+      "x": 985,
+      "y": 0,
+      "width": 985,
+      "height": 1312,
+      "duration": 90,
+      "spriteId": ""
+    },
+    {
+      "x": 1970,
+      "y": 0,
+      "width": 985,
+      "height": 1312,
+      "duration": 100,
+      "spriteId": ""
+    }
+  ]
+}
