@@ -1,13 +1,13 @@
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
 import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
+import { GameObjectRender } from "#engine/game-objects/game-object/render";
 
-import type { CanvasStrip } from "#game/background/canvas-strip";
 import type { FogObject } from "#game/background/fog-object";
-import { FogTexture } from "#game/background/fog-object/texture";
 import type { FogAppearanceOptions } from "#game/background/fog-object/types";
 
+import { FogTexture, type FogStrip } from "#game/background/fog-object/texture";
+
 export class FogObjectRender extends GameObjectRender<FogObject> {
-  #texture: CanvasStrip | null = null;
+  #texture: FogStrip | null = null;
   #builder: FogTexture | null = null;
   #appearance: FogAppearanceOptions | null = null;
 
@@ -22,6 +22,7 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
   }
 
   #clearTexture() {
+    this.#texture?.image.close();
     this.#texture = null;
     this.#builder = null;
     this.#appearance = null;
@@ -34,7 +35,8 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
     const tileWidth = Math.max(2048, viewWidth);
     const bandHeight = this.go.height;
 
-    if (this.#texture?.canvas.width !== tileWidth || this.#texture.sourceHeight !== bandHeight) {
+    if (this.#texture?.image.width !== tileWidth || this.#texture.sourceHeight !== bandHeight) {
+      this.#texture?.image.close();
       this.#texture = this.#builder!.build(tileWidth, bandHeight);
     }
 
@@ -74,7 +76,7 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
 
     if (flow) {
       const slowerScroll = Math.round(
-        cameraX + elapsed / 1000 * speed * 0.55 + texture.canvas.width / 3 - originX
+        cameraX + elapsed / 1000 * speed * 0.55 + texture.image.width / 3 - originX
       );
 
       this.#drawTiles(ctx, texture, slowerScroll, screenTop, viewWidth);
@@ -84,8 +86,8 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
     ctx.restore();
   }
 
-  #drawTiles(ctx: CanvasRenderingContext2D, texture: CanvasStrip, scroll: number, y: number, width: number) {
-    const image = texture.canvas;
+  #drawTiles(ctx: CanvasRenderingContext2D, texture: FogStrip, scroll: number, y: number, width: number) {
+    const image = texture.image;
     const offset = ((scroll % image.width) + image.width) % image.width;
 
     for (let x = -offset; x < width; x += image.width) {

@@ -1,6 +1,11 @@
-import { isInRange } from "#/utils/validators";
 import { SeededRandom } from "#/utils/seeded-random";
-import type { CanvasStrip } from "#game/background/canvas-strip";
+import { isInRange } from "#/utils/validators";
+
+export interface FogStrip {
+  image: ImageBitmap;
+  top: number;
+  sourceHeight: number;
+}
 
 export interface FogTextureOptions {
   // Число клубов на повторяющемся участке
@@ -42,7 +47,7 @@ export class FogTexture {
     this.options = options;
   }
 
-  build(width: number, height: number): CanvasStrip {
+  build(width: number, height: number): FogStrip {
     const { density, seed, fade } = this.options;
 
     const centerY = height / 2;
@@ -103,6 +108,6 @@ export class FogTexture {
       ctx.fillRect(0, top, width, bottom - top);
     }
 
-    return { canvas, top, sourceHeight: height };
+    return { image: canvas.transferToImageBitmap(), top, sourceHeight: height };
   }
 }
