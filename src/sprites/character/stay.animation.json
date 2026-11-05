@@ -1,7 +1,7 @@
 {
   "params": {
     "maxHeight": 130,
-    "loopReverse": true
+    "order": "ping-pong"
   },
   "sprites": [
     {
