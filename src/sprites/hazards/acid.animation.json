@@ -1,0 +1,71 @@
+{
+    "params":  {
+                   "maxWidth":  210
+               },
+    "sprites":  [
+                    {
+                        "x":  0,
+                        "y":  0,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  140,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  648,
+                        "y":  0,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  125,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  1296,
+                        "y":  0,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  155,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  1944,
+                        "y":  0,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  130,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  0,
+                        "y":  230,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  160,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  648,
+                        "y":  230,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  135,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  1296,
+                        "y":  230,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  145,
+                        "spriteId":  ""
+                    },
+                    {
+                        "x":  1944,
+                        "y":  230,
+                        "width":  648,
+                        "height":  230,
+                        "duration":  120,
+                        "spriteId":  ""
+                    }
+                ]
+}
