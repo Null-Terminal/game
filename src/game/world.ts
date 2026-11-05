@@ -9,6 +9,7 @@ import {
 
 import { FogObject } from "#game/background/fog-object";
 import { SkyObject, duskSky } from "#game/background/sky-object";
+import { WindDebrisObject } from "#game/background/wind-debris-object";
 
 import { distantCity } from "#game/background/presets/distant-city";
 import { citySkyline } from "#game/background/presets/city-skyline";
@@ -171,6 +172,9 @@ export function createDemoWorld(showSeams = false): WorldObjects {
       show: "fog", bbox: [-Infinity, -180, Infinity, 266], texture: { ...fogTexture, density: 24 },
       opacity: 0.45, speed: 12, scrollFactor: [0.38, 1], sway: 3, flow: true
     }],
+
+    // Перекати-поле и редкая газета движутся порывами вдоль дороги
+    [WindDebrisObject, { show: "road" }],
 
     // Ближние предметы на насыпи и мусор вдоль её края.
     [BackgroundFlowObject, { sprites: nearRoadsideScenery, y: 275, debug: backdropDebug, order: "shuffle", gap: [175, 440], seed: 81, scrollFactor: [0.38, 1], effects: { scale: 0.6 } }],
