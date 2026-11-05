@@ -1,4 +1,4 @@
-import type { Collision, Game, RenderPayload } from "#engine/game";
+import type { Collision, CollisionScore, Game, RenderPayload } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
 import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
@@ -164,8 +164,19 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return this.world.hasCollision(x, y, x + width, y + height);
   }
 
-  protected findDynamicCollision(x = this.x, y = this.y): Collision | null {
+  protected findDynamicCollision(
+    x = this.x,
+    y = this.y
+  ): Collision | null {
     return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
+  }
+
+  protected findBestDynamicCollision(
+    x: number,
+    y: number,
+    score: CollisionScore
+  ): Collision | null {
+    return this.world.findBestDynamicCollision(x, y, x + this.width, y + this.height, score);
   }
 
   protected findInteractCollisions(x = this.x, y = this.y): readonly Collision[] {
@@ -208,8 +219,25 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
       Math.ceil(Math.abs(lastRiding.x - lastRiding.prevX)) :
       RIDING_TOLERANCE;
 
-    // Проверяем, не стоим ли мы на двигающейся платформе
-    const collision = this.findDynamicCollision(this.x, this.y - ridingYTolerance);
+    const lastShiftY = lastRiding == null ? 0 : lastRiding.y - lastRiding.prevY;
+    const predictedTop = this.#ridingTop + lastShiftY;
+
+    // Выбираем поверхность у ног, сохраняя прежнюю опору при близких результатах
+    const collision = this.findBestDynamicCollision(this.x, this.y - ridingYTolerance, (bbox, object) => {
+      const top = bbox[3];
+      const distance = Math.abs(this.y - top);
+      const overlap = Math.min(this.x + this.width, bbox[2]) - Math.max(this.x, bbox[0]);
+
+      if (distance > ridingYTolerance || overlap <= ridingXTolerance) {
+        return Infinity;
+      }
+
+      const sameSurface = object === lastRiding && Math.abs(top - predictedTop) <= 1;
+
+      // Небольшой приоритет прежней опоры, чтобы не переключаться между близкими поверхностями
+      return distance - (sameSurface ? 0.25 : 0);
+    });
+
     const riding = collision != null ? collision.object : lastRiding;
 
     const shiftX = riding == null ? 0 : riding.x - riding.prevX;

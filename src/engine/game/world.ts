@@ -106,11 +106,30 @@ export class World extends Disposable {
     const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
     const collision = this.dynamics.searchFirst(x1, y1, x2, y2, pred);
 
-    if (collision != null) {
-      return { bbox: collision.bbox, object: this.objects.get(collision.pointer[0], collision.pointer[1])! };
-    }
+    return collision == null ? null : this.#collisionMapper(collision);
+  }
 
-    return collision;
+  findBestDynamicCollision(
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    score: t.CollisionScore
+  ): t.Collision | null {
+    const x1 = minX - 1, x2 = maxX + 1;
+    const y1 = minY - 1, y2 = maxY + 1;
+
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const collision = this.dynamics.searchBest(x1, y1, x2, y2, (node) => {
+      if (!pred(node)) {
+        return Infinity;
+      }
+
+      const object = this.objects.get(node.pointer[0], node.pointer[1])!;
+      return score(node.bbox, object);
+    });
+
+    return collision == null ? null : this.#collisionMapper(collision);
   }
 
   findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
