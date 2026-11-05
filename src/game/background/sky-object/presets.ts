@@ -11,11 +11,13 @@ export const duskSky = {
       [0.96, "#5C4266"],
       [1, "#1A2033"]
     ],
+
     bands: [
       { top: 0.10, bottom: 0.29, step: 36, color: "#30224E", phase: 4 },
       { top: 0.42, bottom: 0.57, step: 28, color: "#594374", phase: 11 },
       { top: 0.66, bottom: 0.73, step: 20, color: "#A36A88", phase: 19 }
     ],
+
     bandsOpacity: 1,
     overlay: "#091B3130"
   },
@@ -66,6 +68,7 @@ export const stormSky = {
     bandsOpacity: 1,
     overlay: "#091B3130"
   },
+
   clouds: {
     seed: 0x6ac14923,
     clusters: 14,
@@ -73,6 +76,7 @@ export const stormSky = {
     opacity: 0.92,
     speed: 7
   },
+
   lightning: {
     seed: 0x731a4e29,
     initialDelay: 1200,
@@ -92,6 +96,7 @@ export const overcastSky = {
     bandsOpacity: 1,
     overlay: "#091B3130"
   },
+
   clouds: {
     seed: 0x6ac14923,
     clusters: 16,

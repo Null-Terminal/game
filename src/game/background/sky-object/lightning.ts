@@ -35,6 +35,7 @@ export class Lightning {
 
   readonly #random: SeededRandom;
   #canvas: OffscreenCanvas | null = null;
+  #image: ImageBitmap | null = null;
 
   constructor(opts: LightningOptions) {
     const invalidTiming =
@@ -79,10 +80,15 @@ export class Lightning {
 
   clear() {
     this.#canvas = null;
+    this.#image?.close();
+    this.#image = null;
     this.reset();
   }
 
   resize(width: number, height: number) {
+    this.#image?.close();
+    this.#image = null;
+    this.#strikeStartedAt = -Infinity;
     this.#canvas = new OffscreenCanvas(width, height);
   }
 
@@ -99,7 +105,7 @@ export class Lightning {
 
     ctx.save();
     ctx.globalAlpha = this.#flashOpacity(age) * this.#strength;
-    ctx.drawImage(this.#canvas!, 0, 0);
+    ctx.drawImage(this.#image!, 0, 0);
     ctx.restore();
   }
 
@@ -188,6 +194,9 @@ export class Lightning {
 
     this.#drawBranches(ctx, segments);
     ctx.restore();
+
+    this.#image?.close();
+    this.#image = this.#canvas!.transferToImageBitmap();
   }
 
   #drawGlow(ctx: OffscreenCanvasRenderingContext2D, width: number, height: number, x: number, y: number) {

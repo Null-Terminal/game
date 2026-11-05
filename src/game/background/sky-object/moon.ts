@@ -19,7 +19,7 @@ export interface MoonOptions {
 }
 
 export interface MoonTexture {
-  canvas: OffscreenCanvas;
+  image: ImageBitmap;
   left: number;
   top: number;
 }
@@ -102,7 +102,7 @@ export class Moon {
     ctx.restore();
 
     return {
-      canvas,
+      image: canvas.transferToImageBitmap(),
       left: Math.round(viewWidth * position[0] - center),
       top: Math.round(viewHeight * position[1] - center)
     };

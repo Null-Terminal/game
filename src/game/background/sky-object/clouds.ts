@@ -1,6 +1,10 @@
-import { isInRange } from "#/utils/validators";
 import { SeededRandom } from "#/utils/seeded-random";
-import type { CanvasStrip } from "#game/background/canvas-strip";
+import { isInRange } from "#/utils/validators";
+
+export interface CloudStrip {
+  image: ImageBitmap;
+  top: number;
+}
 
 export interface CloudsOptions {
   // Число групп и силуэтов внутри каждой группы
@@ -31,7 +35,7 @@ export class Clouds {
     this.options = { ...opts };
   }
 
-  build(width: number, height: number): CanvasStrip {
+  build(width: number, height: number): CloudStrip {
     const { seed, clusters, density, opacity } = this.options;
 
     // Запас вокруг полосы учитывает высоту силуэтов и их случайный сдвиг
@@ -85,6 +89,6 @@ export class Clouds {
       }
     }
 
-    return { canvas, top: stripTop, sourceHeight: height };
+    return { image: canvas.transferToImageBitmap(), top: stripTop };
   }
 }

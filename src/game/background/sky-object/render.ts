@@ -1,22 +1,23 @@
+import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 
-import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
-import type { CanvasStrip } from "#game/background/canvas-strip";
 import type { SkyObject } from "#game/background/sky-object";
-import { Clouds } from "#game/background/sky-object/clouds";
+import type { SkySceneOptions } from "#game/background/sky-object/types";
+
+import { Clouds, type CloudStrip } from "#game/background/sky-object/clouds";
 import { Dusk } from "#game/background/sky-object/dusk";
 import { Lightning } from "#game/background/sky-object/lightning";
 import { Moon, type MoonTexture } from "#game/background/sky-object/moon";
 import { Stars } from "#game/background/sky-object/stars";
-import type { SkySceneOptions } from "#game/background/sky-object/types";
 
 export class SkyObjectRender extends GameObjectRender<SkyObject> {
   #builtWidth = -1;
   #builtHeight = -1;
 
-  #sky: OffscreenCanvas | null = null;
-  #stars: OffscreenCanvas | null = null;
-  #clouds: CanvasStrip | null = null;
+  #sky: ImageBitmap | null = null;
+  #stars: ImageBitmap | null = null;
+  #clouds: CloudStrip | null = null;
+
   #moon: MoonTexture | null = null;
   #scene: SkySceneOptions | null = null;
 
@@ -49,10 +50,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
   #clearTextures() {
     this.#builtWidth = -1;
     this.#builtHeight = -1;
-    this.#sky = null;
-    this.#stars = null;
-    this.#clouds = null;
-    this.#moon = null;
+    this.#closeImages();
     this.#scene = null;
     this.#duskBuilder = null;
     this.#starsBuilder = null;
@@ -62,12 +60,25 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     this.#lightning = null;
   }
 
+  #closeImages() {
+    this.#sky?.close();
+    this.#stars?.close();
+    this.#clouds?.image.close();
+    this.#moon?.image.close();
+
+    this.#sky = null;
+    this.#stars = null;
+    this.#clouds = null;
+    this.#moon = null;
+  }
+
   #drawSky(frame: ObjectRenderPayload) {
     const { ctx, elapsed } = frame;
     const { width, height } = this.go.canvas;
 
     if (this.#builtWidth !== width || this.#builtHeight !== height) {
       this.go.syncSize();
+      this.#closeImages();
 
       // Широкая полоса реже повторяет звёзды и облака
       const stripWidth = Math.max(2048, width);
@@ -93,13 +104,13 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     }
 
     if (this.#moon) {
-      const { canvas, left, top } = this.#moon;
-      ctx.drawImage(canvas, left - celestialScrollX, top);
+      const { image, left, top } = this.#moon;
+      ctx.drawImage(image, left - celestialScrollX, top);
     }
 
     if (this.#clouds && this.#scene?.clouds) {
       const cloudScrollX = frame.getScrollOffsetX(0.025) + elapsed / 1000 * this.#scene.clouds.speed;
-      this.#drawTiles(ctx, this.#clouds.canvas, Math.round(cloudScrollX), width, this.#clouds.top);
+      this.#drawTiles(ctx, this.#clouds.image, Math.round(cloudScrollX), width, this.#clouds.top);
     }
 
     this.#lightning?.draw(ctx, elapsed, width, height);
@@ -113,7 +124,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     }
   }
 
-  #drawTiles(ctx: CanvasRenderingContext2D, image: OffscreenCanvas, scroll: number, width: number, y = 0) {
+  #drawTiles(ctx: CanvasRenderingContext2D, image: ImageBitmap, scroll: number, width: number, y = 0) {
     // Нормализуем сдвиг в пределах ширины текстуры, включая отрицательный скролл
     const offset = ((scroll % image.width) + image.width) % image.width;
 

@@ -34,7 +34,7 @@ export class Stars {
     this.options = { ...opts };
   }
 
-  build(width: number, height: number): OffscreenCanvas {
+  build(width: number, height: number): ImageBitmap {
     const { seed, density, coverage, minOpacity, maxOpacity } = this.options;
 
     const canvas = new OffscreenCanvas(width, height);
@@ -53,6 +53,6 @@ export class Stars {
       ctx.fillRect(x, y, brightness > 0.995 ? 2 : 1, 1);
     }
 
-    return canvas;
+    return canvas.transferToImageBitmap();
   }
 }

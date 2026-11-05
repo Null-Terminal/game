@@ -54,7 +54,7 @@ export class Dusk {
     };
   }
 
-  build(width: number, height: number): OffscreenCanvas {
+  build(width: number, height: number): ImageBitmap {
     const { gradient, bands, bandsOpacity, overlay } = this.options;
     const sky = new OffscreenCanvas(width, height);
 
@@ -80,7 +80,7 @@ export class Dusk {
     ctx.fillStyle = overlay;
     ctx.fillRect(0, 0, width, height);
 
-    return sky;
+    return sky.transferToImageBitmap();
   }
 
   #drawBand(ctx: OffscreenCanvasRenderingContext2D, width: number, height: number, band: DuskBand) {
