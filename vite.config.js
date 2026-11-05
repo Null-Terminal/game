@@ -8,11 +8,14 @@ import { vitePluginTypescriptTransform } from "vite-plugin-typescript-transform"
 
 export default defineConfig({
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         main: resolve(import.meta.dirname, process.env.ENTRY),
       },
-    },
+      output: {
+        keepNames: true
+      }
+    }
   },
 
   plugins: [
