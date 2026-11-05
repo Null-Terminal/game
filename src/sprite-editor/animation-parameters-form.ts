@@ -30,15 +30,14 @@ export class AnimationParametersForm {
       return null;
     }
 
-    const width = this.#readRegion("Width");
-    const height = this.#readRegion("Height");
+    const collisionBounds = this.#readRegion("collisionBounds", "области коллизии");
+    const width = this.#readRegion("repeatWidth", "области повтора");
+    const height = this.#readRegion("repeatHeight", "области повтора");
 
-    if (width === null || height === null) {
+    if (collisionBounds === null || width === null || height === null) {
       return null;
     }
 
-    const offsetX = this.#optionalNumber("offsetX");
-    const offsetY = this.#optionalNumber("offsetY");
     const order = form.elements.namedItem("order") as HTMLSelectElement;
 
     const params: RawAnimationParameters = {
@@ -64,16 +63,8 @@ export class AnimationParametersForm {
       params.frameDurationRange = [durationMin.valueAsNumber, durationMax.valueAsNumber];
     }
 
-    if (offsetX !== undefined || offsetY !== undefined) {
-      params.visualOffset = {};
-
-      if (offsetX !== undefined) {
-        params.visualOffset.x = offsetX;
-      }
-
-      if (offsetY !== undefined) {
-        params.visualOffset.y = offsetY;
-      }
+    if (collisionBounds !== undefined) {
+      params.collisionBounds = collisionBounds;
     }
 
     if (width !== undefined || height !== undefined) {
@@ -104,15 +95,14 @@ export class AnimationParametersForm {
     this.#setNumber("maxHeight", params.maxHeight);
     this.#setNumber("durationMin", params.frameDurationRange?.[0]);
     this.#setNumber("durationMax", params.frameDurationRange?.[1]);
-    this.#setNumber("offsetX", params.visualOffset?.x);
-    this.#setNumber("offsetY", params.visualOffset?.y);
+    this.#setRegion("collisionBounds", params.collisionBounds);
 
-    this.#setRegion("Width", params.repeat?.width);
-    this.#setRegion("Height", params.repeat?.height);
+    this.#setRegion("repeatWidth", params.repeat?.width);
+    this.#setRegion("repeatHeight", params.repeat?.height);
 
     const hasAdvancedSettings = params.opacity !== 1 || params.loopFrom !== 0 ||
       params.maxWidth != null || params.maxHeight != null || params.frameDurationRange != null ||
-      params.visualOffset != null || params.repeat != null;
+      params.collisionBounds != null || params.repeat != null;
 
     form.querySelector("details")!.open = hasAdvancedSettings;
   }
@@ -132,8 +122,8 @@ export class AnimationParametersForm {
     return element.value === "" ? undefined : element.valueAsNumber;
   }
 
-  #readRegion(axis: "Width" | "Height") {
-    const names = ["X", "Y", "Width", "Height"].map((name) => `repeat${axis}${name}`);
+  #readRegion(prefix: string, label: string) {
+    const names = ["X", "Y", "Width", "Height"].map((name) => `${prefix}${name}`);
     const fields = names.map((name) => this.#input(name));
     const filled = fields.filter((field) => field.value !== "");
 
@@ -147,7 +137,7 @@ export class AnimationParametersForm {
 
     if (filled.length !== fields.length) {
       const missing = fields.find((field) => field.value === "")!;
-      missing.setCustomValidity("Заполните все четыре координаты области повтора");
+      missing.setCustomValidity(`Заполните все четыре координаты ${label}`);
       missing.closest("details")!.open = true;
       missing.reportValidity();
       return null;
@@ -167,10 +157,10 @@ export class AnimationParametersForm {
     field.setCustomValidity("");
   }
 
-  #setRegion(axis: "Width" | "Height", region?: SpriteRegion) {
-    this.#setNumber(`repeat${axis}X`, region?.x);
-    this.#setNumber(`repeat${axis}Y`, region?.y);
-    this.#setNumber(`repeat${axis}Width`, region?.width);
-    this.#setNumber(`repeat${axis}Height`, region?.height);
+  #setRegion(prefix: string, region?: SpriteRegion) {
+    this.#setNumber(`${prefix}X`, region?.x);
+    this.#setNumber(`${prefix}Y`, region?.y);
+    this.#setNumber(`${prefix}Width`, region?.width);
+    this.#setNumber(`${prefix}Height`, region?.height);
   }
 }

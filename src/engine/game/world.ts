@@ -1,4 +1,5 @@
 import { cast } from "#/tstools";
+import { LoadedAnimation } from "#engine/animation";
 import { Disposable } from "#engine/disposable";
 
 import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
@@ -72,18 +73,52 @@ export class World extends Disposable {
     return this.objects.add(go, this.game, opts);
   }
 
-  addToWorld(
-    go: GameObject,
-    world: RTree,
-    onAdd?: (...ptr: RTreeEntry) => void
-  ) {
+  addToWorld(go: GameObject, world: RTree): void;
+  addToWorld(go: GameObject, world: RTree, previous: RTreeEntry | null): RTreeEntry;
+  addToWorld(go: GameObject, world: RTree, previous?: RTreeEntry | null): RTreeEntry | void {
     const ptr = go.poolPointer;
+    const animation = go.nowPlaying;
 
-    const width = go.x + go.width || Infinity;
-    const height = go.y + go.height || Infinity;
+    let minX = go.x;
+    let minY = go.y;
+    let maxX = go.x + go.width || Infinity;
+    let maxY = go.y + go.height || Infinity;
 
-    world.insert(ptr[0], ptr[1], go.x, go.y, width, height);
-    onAdd?.(ptr[0], ptr[1], go.x, go.y, width, height);
+    if (animation instanceof LoadedAnimation && animation.collisionBounds != null) {
+      const bounds = animation.collisionBounds;
+      const scale = animation.scale * go.effects.scale;
+
+      const width = animation.maxWidth * go.effects.scale;
+      const height = animation.maxHeight * go.effects.scale;
+
+      const leftInset = bounds.x * scale;
+      const rightInset = width - (bounds.x + bounds.width) * scale;
+
+      const topInset = bounds.y * scale;
+      const bottomInset = height - (bounds.y + bounds.height) * scale;
+
+      minX += leftInset;
+      maxX -= rightInset;
+      minY += bottomInset;
+      maxY -= topInset;
+    }
+
+    if (previous != null) {
+      if (
+        previous[2] === minX && previous[3] === minY &&
+        previous[4] === maxX && previous[5] === maxY
+      ) {
+        return previous;
+      }
+
+      world.remove(...previous);
+    }
+
+    world.insert(ptr[0], ptr[1], minX, minY, maxX, maxY);
+
+    if (previous !== undefined) {
+      return [ptr[0], ptr[1], minX, minY, maxX, maxY];
+    }
   }
 
   hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {

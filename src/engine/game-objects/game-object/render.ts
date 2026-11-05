@@ -140,16 +140,16 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       payload.delta = frame.delta;
       payload.elapsed = elapsed;
 
-      const bitmap = this.#playing instanceof LoadedAnimation ? this.#playing : null;
-      const scale = go.effects.scale ?? 1;
+      const bitmap = this.#playing instanceof LoadedAnimation;
 
-      this.#originX = go.x + (bitmap?.visualOffsetX ?? 0) * scale;
-      this.#originY = go.y - this.#visualOffsetY + (bitmap?.visualOffsetY ?? 0) * scale;
+      this.#originX = go.x;
+      this.#originY = go.y - this.#visualOffsetY;
+
       this.#cameraX = go.game.camera.x;
       this.#cameraY = go.game.camera.y;
 
-      payload.x = bitmap == null ? payload.getScreenX() : Math.round(payload.getScreenX());
-      payload.y = bitmap == null ? payload.getScreenY() : Math.round(payload.getScreenY());
+      payload.x = bitmap ? Math.round(payload.getScreenX()) : payload.getScreenX();
+      payload.y = bitmap ? Math.round(payload.getScreenY()) : payload.getScreenY();
 
       draw(payload);
     });

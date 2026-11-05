@@ -1,5 +1,5 @@
 import type { TexturePacker } from "#/animation-definition/types";
-import type { Animation, AnimationParameters, SpriteDescriptor } from "#/animation-definition/types";
+import type { Animation, AnimationParameters, SpriteDescriptor, SpriteRegion } from "#/animation-definition/types";
 import { isInRange } from "#/utils/validators";
 
 export type * from "#/animation-definition/types";
@@ -74,21 +74,28 @@ export class AnimationDefinition {
       order
     };
 
+    this.#validateRegion(this.params.collisionBounds, "collisionBounds");
+
     for (const axis of ["width", "height"] as const) {
-      const region = this.params.repeat?.[axis];
+      this.#validateRegion(this.params.repeat?.[axis], `repeat.${axis}`);
+    }
+  }
 
-      if (region == null) {
-        continue;
-      }
+  #validateRegion(region: SpriteRegion | undefined, name: string) {
+    if (region == null) {
+      return;
+    }
 
-      const { x, y, width, height } = region;
-      const validSize = isInRange(x, 0, Infinity) && isInRange(y, 0, Infinity) &&
-        isInRange(width, 0, Infinity) && isInRange(height, 0, Infinity) &&
-        width > 0 && height > 0;
+    const { x, y, width, height } = region;
 
-      if (!validSize || this.#sprites.some((sprite) => x + width > sprite.width || y + height > sprite.height)) {
-        throw new RangeError(`repeat.${axis} must fit within every sprite frame`);
-      }
+    const validSize =
+      isInRange(x, 0, Infinity) &&
+      isInRange(y, 0, Infinity) &&
+      Number.isFinite(width) && width > 0 &&
+      Number.isFinite(height) && height > 0;
+
+    if (!validSize || this.#sprites.some((sprite) => x + width > sprite.width || y + height > sprite.height)) {
+      throw new RangeError(`${name} must fit within every sprite frame`);
     }
   }
 

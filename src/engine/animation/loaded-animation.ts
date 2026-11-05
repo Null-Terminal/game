@@ -21,12 +21,8 @@ export class LoadedAnimation {
     return this.#maxHeight * this.scale;
   }
 
-  get visualOffsetX(): number {
-    return (this.animation.params.visualOffset?.x ?? 0) * this.scale;
-  }
-
-  get visualOffsetY(): number {
-    return (this.animation.params.visualOffset?.y ?? 0) * this.scale;
+  get collisionBounds() {
+    return this.animation.params.collisionBounds;
   }
 
   @cache

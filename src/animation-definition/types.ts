@@ -23,8 +23,9 @@ export interface OptionalAnimationParameters {
   // Диапазон случайной длительности кадра в миллисекундах
   frameDurationRange?: readonly [min: number, max: number];
 
-  // Смещение изображения по координатам мира в пикселях исходного кадра
-  visualOffset?: { x?: number; y?: number };
+  // Область коллизии относительно левого верхнего угла кадра, в пикселях исходника
+  // Отступы от краёв применяются и к итоговому bbox при повторении паттерна
+  collisionBounds?: SpriteRegion;
 
   // Области повтора относительно левого верхнего угла кадра, в пикселях исходника
   repeat?: { width?: SpriteRegion; height?: SpriteRegion };
