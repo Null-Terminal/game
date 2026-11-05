@@ -7,6 +7,7 @@ import type { WindParticleParams } from "#game/background/wind-debris-object/typ
 export abstract class WindParticle {
   readonly options: Omit<WindParticleParams, "random" | "cameraX" | "viewWidth">;
   readonly #playback: AnimationPlayback;
+  readonly #random: SeededRandom;
 
   // Запас для проверки выхода за экран с учётом поворота спрайта
   readonly radius: number;
@@ -21,6 +22,7 @@ export abstract class WindParticle {
 
   protected constructor({ random, cameraX, viewWidth, ...options }: WindParticleParams) {
     this.options = options;
+    this.#random = random;
 
     const { animation, scale, motion } = options;
     this.#playback = new AnimationPlayback(animation);
@@ -37,12 +39,12 @@ export abstract class WindParticle {
     elapsed: number,
     delta: number,
     gust: number,
-    random: SeededRandom,
     cameraX: number,
     viewWidth: number
   ) {
     const { phase, radius, options } = this;
     const { speed, wind, motion } = options;
+    const random = this.#random;
 
     const turbulence = Math.sin(elapsed / wind.turbulencePeriod + phase) * wind.turbulence;
     const distance = (speed * (wind.calm + gust * wind.gust) + turbulence) * delta;

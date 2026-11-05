@@ -40,11 +40,11 @@ describe("wind particles", () => {
     const particle = new TestParticle(random);
 
     particle.x = -particle.radius + 1;
-    particle.advance(0, 0, 0, random, 0, 900);
+    particle.advance(0, 0, 0, 0, 900);
     expect(particle.x).toBe(-particle.radius + 1);
 
     particle.x = -particle.radius - 1;
-    particle.advance(0, 0, 0, random, 0, 900);
+    particle.advance(0, 0, 0, 0, 900);
     expect(particle.x).toBeGreaterThan(900 + particle.radius);
   });
 

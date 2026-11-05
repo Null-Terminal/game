@@ -101,7 +101,7 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     ctx.imageSmoothingEnabled = false;
 
     for (const particle of this.#particles) {
-      particle.advance(elapsed, delta, gust, random, cameraX, width);
+      particle.advance(elapsed, delta, gust, cameraX, width);
       particle.draw(ctx, elapsed, gust, cameraX, cameraY, width, height);
     }
 
