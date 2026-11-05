@@ -2,9 +2,9 @@ import { alias, tuple, usize2 } from "#/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
 import { nanToInfinity } from "#engine/rtree/utils";
-import type { RTreeEntry, RTreePublicNode, RTreePredicate, RTreeView, Ptr32 } from "#engine/rtree/types";
+import type { BestSearchState, RTreeEntry, RTreePublicNode, RTreePredicate, RTreeScore, RTreeView, Ptr32 } from "#engine/rtree/types";
 
-export type { RTreeEntry, RTreePublicNode, RTreePredicate };
+export type { RTreeEntry, RTreePublicNode, RTreePredicate, RTreeScore };
 export type { BBoxTuple } from "#engine/rtree/bbox";
 
 export const header = tuple("header", [
@@ -50,6 +50,8 @@ export class RTree {
 
   #size;
   #rootPtr: Ptr32 = 0;
+
+  readonly #bestSearchPool: BestSearchState[] = [{ node: null, score: Infinity }];
 
   get #root(): Ptr32 {
     return this.#rootPtr;
@@ -144,6 +146,38 @@ export class RTree {
     }
 
     return this.#searchFirstNode(this.#root, minX, minY, maxX, maxY, pred);
+  }
+
+  searchBest(
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    score: RTreeScore
+  ): RTreePublicNode | null {
+    if (minX > maxX) {
+      const swap = minX;
+      minX = maxX;
+      maxX = swap;
+    }
+
+    if (minY > maxY) {
+      const swap = minY;
+      minY = maxY;
+      maxY = swap;
+    }
+
+    const best = this.#bestSearchPool.pop() ?? { node: null, score: Infinity };
+
+    try {
+      this.#searchBestNode(this.#root, minX, minY, maxX, maxY, score, best);
+      return best.node;
+
+    } finally {
+      best.node = null;
+      best.score = Infinity;
+      this.#bestSearchPool.push(best);
+    }
   }
 
   insert(
@@ -354,6 +388,43 @@ export class RTree {
     }
 
     return node.firstChildResult(ptr, (childPtr) => this.#searchFirstNode(childPtr, minX, minY, maxX, maxY, pred));
+  }
+
+  #searchBestNode(
+    ptr: Ptr32,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    score: RTreeScore,
+    best: BestSearchState
+  ) {
+    const node = this.#node;
+
+    if (!node.hasIntersection(ptr, minX, minY, maxX, maxY)) {
+      return;
+    }
+
+    if (node.isLeaf(ptr)) {
+      node.forEachChild(ptr, (childPtr) => {
+        if (!node.hasIntersection(childPtr, minX, minY, maxX, maxY)) {
+          return;
+        }
+
+        const candidate = { bbox: node.getBBox(childPtr), pointer: node.getData(childPtr) };
+        const value = score(candidate);
+
+        if (value < best.score) {
+          best.node = candidate;
+          best.score = value;
+        }
+      });
+
+    } else {
+      node.forEachChild(ptr, (childPtr) => {
+        this.#searchBestNode(childPtr, minX, minY, maxX, maxY, score, best);
+      });
+    }
   }
 
   #chooseLeaf(ptr: Ptr32, minX: number, minY: number, maxX: number, maxY: number): number {
