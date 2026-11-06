@@ -5,13 +5,11 @@
 изменений запускайте обе версии кода на одном компьютере, с той же версией Chromium,
 режимом питания и частотой экрана. На время замера закройте тяжёлые приложения.
 
-```powershell
-$env:BENCH_LABEL = "before"
-npm run bench:browser
+```bash
+BENCH_LABEL=before npm run bench:browser
 
 # После перехода на версию кода с изменениями
-$env:BENCH_LABEL = "after"
-npm run bench:browser
+BENCH_LABEL=after npm run bench:browser
 
 node benchmarks/compare.ts before after
 ```
