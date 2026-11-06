@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import type * as scene from "../src/benchmarks/scene";
 import { median, saveReport } from "./report";
@@ -32,8 +32,10 @@ test("render the loaded demo stress scene", async ({ page }, testInfo) => {
   }));
   const browser = page.context().browser()!.version();
 
-  // Прогреваем импортированные текстуры, кэши кадров и JIT до измерения
-  await page.waitForTimeout(2000);
+  // Прогреваем текстуры и кэши полным проходом по тому же маршруту
+  await fixture.evaluate(async ({ runScan }) => {
+    await runScan();
+  });
 
   const session = await page.context().newCDPSession(page);
   await session.send("Profiler.enable");
@@ -42,37 +44,16 @@ test("render the loaded demo stress scene", async ({ page }, testInfo) => {
   const runs: FrameRun[] = [];
 
   for (let index = 0; index < 3; index++) {
-    await fixture.evaluate(({ beginSample }) => beginSample());
-
-    const frameTimes = await page.evaluate(() => new Promise<number[]>((resolve) => {
-      const times: number[] = [];
-      let started = 0;
-      let previous = 0;
-
-      function sample(now: number) {
-        if (started === 0) {
-          started = now;
-        }
-
-        if (previous !== 0) {
-          times.push(now - previous);
-        }
-
-        previous = now;
-
-        if (now - started < 3000) {
-          requestAnimationFrame(sample);
-
-        } else {
-          resolve(times);
-        }
-      }
-
-      requestAnimationFrame(sample);
-    }));
-
-    const renderTimes = await fixture.evaluate(({ endSample }) => endSample());
+    const { frameTimes, renderTimes, coverage } = await fixture.evaluate(({ runScan }) => runScan());
     const total = frameTimes.reduce((sum, value) => sum + value, 0);
+
+    expect(coverage).toEqual({
+      roadEnd: true,
+      middleLeft: true,
+      middleRight: true,
+      upperLeft: true,
+      upperRight: true
+    });
 
     runs.push({
       frameCount: frameTimes.length,
