@@ -19,6 +19,8 @@
     "test:watch": "vitest",
     "test:browser": "playwright test",
     "bench:browser": "playwright test --config playwright.bench.config.ts",
+    "bench:render": "playwright test --config playwright.bench.config.ts render.pw.bench.ts",
+    "bench:rtree": "playwright test --config playwright.bench.config.ts rtree.pw.bench.ts",
     "bench:typecheck": "tsc --noEmit --project tsconfig.bench.json",
     "dev:editor": "cross-env ENTRY=sprite-editor.html vite",
     "build:editor": "tsc && cross-env ENTRY=sprite-editor.html vite build",

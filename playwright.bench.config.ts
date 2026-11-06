@@ -4,7 +4,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./benchmarks",
-  testMatch: "*.bench.ts",
+  testMatch: "*.pw.bench.ts",
   workers: 1,
   retries: 0,
   reporter: "list",

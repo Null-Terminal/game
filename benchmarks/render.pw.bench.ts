@@ -14,6 +14,7 @@ interface FrameRun {
   missedFramePercent: number;
 }
 
+// Запуск: npm run bench:render
 test("render the loaded demo stress scene", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
 

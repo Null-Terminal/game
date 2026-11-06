@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import type * as rtreeScene from "../src/benchmarks/rtree-scene";
 import { saveReport } from "./report";
 
+// Запуск: npm run bench:rtree
 test("insert, search, and remove R-tree entries", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
 
