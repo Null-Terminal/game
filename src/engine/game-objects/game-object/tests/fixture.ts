@@ -57,6 +57,10 @@ export async function createLifecycleScene() {
     createFailingProbe() {
       return pool.add(FailingProbe, game, {});
     },
+    tick(delta: number, now: number) {
+      const ctx = element.getContext("2d")!;
+      canvas.emitter.emit(canvas.events.beforeRender, { ctx, delta, now });
+    },
     destroy() {
       game.destroy();
     }
