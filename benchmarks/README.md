@@ -1,30 +1,35 @@
-# Benchmarks
+# Бенчмарки
 
-These benchmarks run separately from CI tests. They use a fixed Chromium viewport
-and scenario, warm up before measuring, and save every raw run plus a CPU profile.
-Run both revisions on the same machine, browser version, power mode, and display
-refresh rate. Close other heavy applications while measuring.
+Бенчмарки запускаются отдельно от тестов CI. Они прогревают сцену перед замером,
+повторяют измерения и сохраняют каждый прогон вместе с профилем CPU. Для сравнения
+изменений запускайте обе версии кода на одном компьютере, с той же версией Chromium,
+режимом питания и частотой экрана. На время замера закройте тяжёлые приложения.
 
 ```powershell
 $env:BENCH_LABEL = "before"
 npm run bench:browser
 
-# Switch to the changed revision, then run again.
+# После перехода на версию кода с изменениями
 $env:BENCH_LABEL = "after"
 npm run bench:browser
 
-node benchmarks/compare.mjs before after
+node benchmarks/compare.ts before after
 ```
 
-Results are written to `benchmarks/results/<label>/` and ignored by Git. The
-`*.json` files contain each run, medians, revision, browser and CPU, and whether
-the working tree was dirty. Open the `*.cpuprofile` files in Chromium DevTools to
-inspect hot functions. The comparison rejects different scene, browser, or CPU versions.
+Результаты сохраняются в `benchmarks/results/<label>/` и игнорируются Git. В файлах
+`*.json` лежат отдельные замеры, медианы, коммит, версия браузера, модель процессора
+и отметка о незакоммиченных изменениях. Файлы `*.cpuprofile` можно открыть в
+Chromium DevTools, чтобы найти самые дорогие функции. Сравнение отклоняет результаты,
+если различаются сценарий, версия браузера или компьютер.
 
-`render` runs the demo world plus 140 extra platforms and samples both frame
-intervals and the time spent in the engine's render events. Render time is useful
-when FPS is capped by the display refresh rate.
-`rtree` measures insertion, first/best lookup, and removal with 4,000 fixed
-rectangles and 20,000 fixed queries per batch. Each reported run contains four
-batches to reduce timer noise. Neither benchmark imposes a pass/fail performance
-threshold; overlapping run ranges are flagged in the comparison.
+Бенчмарк `render` запускает демосцену и добавляет 140 платформ. Он измеряет интервалы
+между кадрами и время работы событий рендера. Второй показатель полезен, когда FPS
+ограничен частотой экрана.
+
+Бенчмарк `rtree` измеряет вставку, поиск первого и лучшего совпадения, а также
+удаление. В каждом пакете фиксированы 4 000 прямоугольников и 20 000 запросов;
+один замер объединяет четыре пакета, чтобы снизить влияние погрешности таймера.
+
+Бенчмарки не используют порог «прошёл/не прошёл». Команда сравнения отмечает
+пересечение диапазонов повторных замеров: небольшую разницу в таком случае нельзя
+уверенно приписать изменению кода.
