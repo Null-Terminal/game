@@ -18,6 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "playwright test",
+    "bench:browser": "playwright test --config playwright.bench.config.ts",
+    "bench:typecheck": "tsc --noEmit --project tsconfig.bench.json",
     "dev:editor": "cross-env ENTRY=sprite-editor.html vite",
     "build:editor": "tsc && cross-env ENTRY=sprite-editor.html vite build",
     "preview:editor": "cross-env ENTRY=sprite-editor.html vite preview",
