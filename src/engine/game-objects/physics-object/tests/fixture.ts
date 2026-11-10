@@ -1,23 +1,30 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { MovableObject } from "#engine/game-objects/movable-object";
-import { StaticObject } from "#engine/game-objects/static-object";
+import { PhysicsObject } from "#engine/game-objects/physics-object";
+import { ColliderObject } from "#engine/game-objects/collider-object";
 import type { BBoxTuple } from "#engine/rtree";
 
-class Probe extends MovableObject {
+class Probe extends PhysicsObject {
   override init() {
     this.width = 1;
     this.height = 1;
   }
 }
 
-class FractionalProbe extends MovableObject {
+class FractionalProbe extends PhysicsObject {
   override init() {
     this.width = 0.2;
     this.height = 1;
   }
 }
 
-class Obstacle extends StaticObject {
+class TallProbe extends PhysicsObject {
+  override init() {
+    this.width = 1;
+    this.height = 10;
+  }
+}
+
+class Obstacle extends ColliderObject {
   visits = 0;
 
   override visit() {
@@ -62,6 +69,17 @@ export async function createMovementScene(bounds: readonly BBoxTuple[]) {
 
       if (!(object instanceof FractionalProbe)) {
         throw new Error("Expected a fractional probe in the object pool");
+      }
+
+      return object;
+    },
+
+    createTallProbe(options: Parameters<TallProbe["create"]>[2] = {}) {
+      const pointer = world.createObject(TallProbe, options);
+      const object = world.objects.get(...pointer);
+
+      if (!(object instanceof TallProbe)) {
+        throw new Error("Expected a tall probe in the object pool");
       }
 
       return object;

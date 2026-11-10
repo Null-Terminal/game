@@ -5,9 +5,9 @@ import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
 import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
-import { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
+import { PhysicsObjectMotion } from "#engine/game-objects/physics-object/motion";
 
-export { MovableObjectMotion } from "#engine/game-objects/movable-object/motion";
+export { PhysicsObjectMotion } from "#engine/game-objects/physics-object/motion";
 
 export enum CollisionStatus {
   NoCollision     = 0b00000,
@@ -20,7 +20,7 @@ export enum CollisionStatus {
 
 const ridingTolerance: Record<number, number> = {};
 
-export abstract class MovableObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
+export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOptions> extends GameObject<T> {
   static readonly stats = {
     vx: 0,
     vy: 0,
@@ -32,13 +32,13 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return this.#stats;
   }
 
-  readonly motion = new MovableObjectMotion(this);
+  readonly motion = new PhysicsObjectMotion(this);
 
   override get redrawEvent() {
     return this.canvas.events.main;
   }
 
-  #stats = MovableObject.stats;
+  #stats = PhysicsObject.stats;
   #riding: GameObject | null = null;
 
   // Опора может быть отдельной частью объекта, например крышей лифта
@@ -58,7 +58,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
 
   @ifDead
   override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
-    this.#stats = { ...(this.constructor as typeof MovableObject).stats };
+    this.#stats = { ...(this.constructor as typeof PhysicsObject).stats };
     this.motion.reset();
     return super.create(game, poolPointer, opts);
   }
@@ -74,7 +74,7 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     return status;
   }
 
-  updateStats(patch: (stats: typeof MovableObject.stats) => Partial<typeof MovableObject.stats>) {
+  updateStats(patch: (stats: typeof PhysicsObject.stats) => Partial<typeof PhysicsObject.stats>) {
     Object.assign(this.stats, patch(this.stats));
   }
 
@@ -161,30 +161,23 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
   }
 
   protected hasCollision(x = this.x, y = this.y, width = this.width, height = this.height): boolean {
-    return this.world.hasCollision(x, y, x + width, y + height);
+    return this.world.hasCollision(x, y, x + width, y + height, this);
   }
 
-  protected findDynamicCollision(
-    x = this.x,
-    y = this.y
-  ): Collision | null {
-    return this.world.findDynamicCollision(x, y, x + this.width, y + this.height);
-  }
-
-  protected findBestDynamicCollision(
+  protected findBestCollision(
     x: number,
     y: number,
     score: CollisionScore
   ): Collision | null {
-    return this.world.findBestDynamicCollision(x, y, x + this.width, y + this.height, score);
+    return this.world.findBestCollision(x, y, x + this.width, y + this.height, score, this);
   }
 
   protected findInteractCollisions(x = this.x, y = this.y): readonly Collision[] {
-    return this.world.findInteractCollisions(x, y, x + this.width, y + this.height);
+    return this.world.findInteractCollisions(x, y, x + this.width, y + this.height, this);
   }
 
   protected findCollisions(x = this.x, y = this.y, width = this.width, height = this.height): readonly Collision[] {
-    return this.world.findCollisions(x, y, x + width, y + height);
+    return this.world.findCollisions(x, y, x + width, y + height, this);
   }
 
   #updateRiding(dy: number) {
@@ -209,24 +202,31 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     // Платформа, на которой стоял игрок в прошлый раз
     const lastRiding = this.#riding;
 
+    const lastShiftX = lastRiding == null ? 0 : this.#shift(lastRiding.x, lastRiding.prevX);
+    const lastShiftY = lastRiding == null ? 0 : this.#shift(lastRiding.y, lastRiding.prevY);
+
     // Из-за динамической природы платформ и ошибок округления, нужно закладывать некоторую погрешность.
     // В базовом случае берется просто примерное подходящее число, а в дальнейшем учитываем скорость платформы.
     const ridingYTolerance = lastRiding != null ?
-      Math.max(1, Math.ceil(Math.abs(lastRiding.y - lastRiding.prevY))) :
+      Math.max(1, Math.ceil(Math.abs(lastShiftY))) :
       RIDING_TOLERANCE;
 
     const ridingXTolerance = lastRiding != null ?
-      Math.ceil(Math.abs(lastRiding.x - lastRiding.prevX)) :
+      Math.ceil(Math.abs(lastShiftX)) :
       RIDING_TOLERANCE;
 
-    const lastShiftY = lastRiding == null ? 0 : lastRiding.y - lastRiding.prevY;
     const predictedTop = this.#ridingTop + lastShiftY;
 
     // Выбираем поверхность у ног, сохраняя прежнюю опору при близких результатах
-    const collision = this.findBestDynamicCollision(this.x, this.y - ridingYTolerance, (bbox, object) => {
+    const collision = this.findBestCollision(this.x, this.y - ridingYTolerance, (bbox, object) => {
       const top = bbox[3];
       const distance = Math.abs(this.y - top);
       const overlap = Math.min(this.x + this.width, bbox[2]) - Math.max(this.x, bbox[0]);
+
+      // Неподвижная поверхность не может подхватить объект снизу из-за погрешности поиска
+      if (object.x === object.prevX && object.y === object.prevY && this.y < top - 1) {
+        return Infinity;
+      }
 
       if (distance > ridingYTolerance || overlap <= ridingXTolerance) {
         return Infinity;
@@ -240,8 +240,11 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
 
     const riding = collision != null ? collision.object : lastRiding;
 
-    const shiftX = riding == null ? 0 : riding.x - riding.prevX;
-    const shiftY = riding == null ? 0 : riding.y - riding.prevY;
+    const shiftX = riding == null ? 0 :
+      riding === lastRiding ? lastShiftX : this.#shift(riding.x, riding.prevX);
+
+    const shiftY = riding == null ? 0 :
+      riding === lastRiding ? lastShiftY : this.#shift(riding.y, riding.prevY);
 
     const left = collision?.bbox[0] ?? this.#ridingLeft + shiftX;
     const right = collision?.bbox[2] ?? this.#ridingRight + shiftX;
@@ -448,5 +451,9 @@ export abstract class MovableObject<T extends GameObjectOptions = GameObjectOpti
     }
 
     return resolved;
+  }
+
+  #shift(current: number, previous: number): number {
+    return current === previous ? 0 : current - previous;
   }
 }

@@ -1,7 +1,7 @@
 import { expect, test, type JSHandle, type Page } from "@playwright/test";
 
-import { CollisionStatus } from "#engine/game-objects/movable-object";
-import type * as fixture from "#engine/game-objects/movable-object/tests/fixture";
+import { CollisionStatus } from "#engine/game-objects/physics-object";
+import type * as fixture from "#engine/game-objects/physics-object/tests/fixture";
 import type { BBoxTuple } from "#engine/rtree";
 
 test("a large step stops at the nearest obstacle", async ({ page }) => {
@@ -64,6 +64,26 @@ test("a partial downward move reports landing", async ({ page }) => {
   expect(result.status & CollisionStatus.BottomCollision).toBeTruthy();
 });
 
+test("an infinite floor keeps the rider's horizontal coordinate finite", async ({ page }) => {
+  const scene = await createScene(page, [[-Infinity, 0, Infinity, 1]]);
+
+  const result = await scene.evaluate(({ createTallProbe, destroy }) => {
+    const go = createTallProbe({ x: 50, y: 1 });
+    const first = go.move(0, -0.5);
+    const second = go.move(0, -0.5);
+
+    const result = { x: go.x, y: go.y, first, second };
+
+    destroy();
+    return result;
+  });
+
+  expect(result.x).toBe(50);
+  expect(result.y).toBeCloseTo(1, 2);
+  expect(result.first & CollisionStatus.BottomCollision).toBeTruthy();
+  expect(result.second & CollisionStatus.BottomCollision).toBeTruthy();
+});
+
 test("movement stops at left and upper obstacle edges", async ({ page }) => {
   const scene = await createScene(page, [
     [-5, 0, -4, 10],
@@ -101,7 +121,7 @@ test("movement stops at left and upper obstacle edges", async ({ page }) => {
   expect(result.visits).toEqual([1, 1]);
 });
 
-const fixtureUrl = "/src/engine/game-objects/movable-object/tests/fixture.ts";
+const fixtureUrl = "/src/engine/game-objects/physics-object/tests/fixture.ts";
 
 async function createScene(page: Page, bounds: BBoxTuple[]): Promise<JSHandle<fixture.MovementScene>> {
   await page.goto("/tests/fixture.html");

@@ -10,9 +10,7 @@ export type * from "#engine/game-objects/background-object";
 export { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
 export type * from "#engine/game-objects/background-flow-object";
 
-export { StaticObject } from "#engine/game-objects/static-object";
-export { DynamicObject } from "#engine/game-objects/dynamic-object";
-export { MovableObject, CollisionStatus, MovableObjectMotion } from "#engine/game-objects/movable-object";
+export { ColliderObject, CollisionBody } from "#engine/game-objects/collider-object";
+export { PhysicsObject, CollisionStatus, PhysicsObjectMotion } from "#engine/game-objects/physics-object";
 
-export { StaticInteractObject } from "#engine/game-objects/static-interact-object";
-export { DynamicInteractObject } from "#engine/game-objects/dynamic-interact-object";
+export { InteractObject } from "#engine/game-objects/interact-object";

@@ -1,7 +1,7 @@
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
 
-import type { MovableObject } from "#engine/game-objects/movable-object";
+import type { PhysicsObject } from "#engine/game-objects/physics-object";
 
 enum State {
   // Объект не взаимодействует со внешним миром, движение без коллизий
@@ -11,12 +11,12 @@ enum State {
   Solid,
 }
 
-export class MovableObjectMotion extends ServantObject<MovableObject> {
+export class PhysicsObjectMotion extends ServantObject<PhysicsObject> {
   static readonly State = State;
 
   #state = State.Solid;
 
-  constructor(go: MovableObject) {
+  constructor(go: PhysicsObject) {
     super(go);
   }
 

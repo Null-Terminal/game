@@ -121,11 +121,11 @@ export class World extends Disposable {
     }
   }
 
-  hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
+  hasCollision(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): boolean {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
 
     if (this.dynamics.searchFirst(x1, y1, x2, y2, pred) == null) {
       return this.statics.searchFirst(x1, y1, x2, y2, pred) != null;
@@ -134,44 +134,49 @@ export class World extends Disposable {
     return true;
   }
 
-  findDynamicCollision(minX: number, minY: number, maxX: number, maxY: number): t.Collision | null {
-    const x1 = minX - 1, x2 = maxX + 1;
-    const y1 = minY - 1, y2 = maxY + 1;
-
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
-    const collision = this.dynamics.searchFirst(x1, y1, x2, y2, pred);
-
-    return collision == null ? null : this.#collisionMapper(collision);
-  }
-
-  findBestDynamicCollision(
+  findBestCollision(
     minX: number,
     minY: number,
     maxX: number,
     maxY: number,
-    score: t.CollisionScore
+    score: t.CollisionScore,
+    exclude?: GameObject
   ): t.Collision | null {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
-    const collision = this.dynamics.searchBest(x1, y1, x2, y2, (node) => {
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
+
+    const rank = (node: RTreePublicNode) => {
       if (!pred(node)) {
         return Infinity;
       }
 
       const object = this.objects.get(node.pointer[0], node.pointer[1])!;
       return score(node.bbox, object);
-    });
+    };
+
+    const dynamic = this.dynamics.searchBest(x1, y1, x2, y2, rank);
+    const stationary = this.statics.searchBest(x1, y1, x2, y2, rank);
+
+    let collision = dynamic;
+
+    if (stationary != null) {
+      const stationaryIsBetter = collision == null || rank(stationary) < rank(collision);
+
+      if (stationaryIsBetter) {
+        collision = stationary;
+      }
+    }
 
     return collision == null ? null : this.#collisionMapper(collision);
   }
 
-  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
+  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): readonly t.Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
 
     const dynamicCollisions = this.dynamicInteracts.search(x1, y1, x2, y2, pred);
     const staticCollisions = this.staticInteracts.search(x1, y1, x2, y2, pred);
@@ -183,11 +188,11 @@ export class World extends Disposable {
     return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): readonly t.Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
 
     const dynamicCollisions = this.dynamics.search(x1, y1, x2, y2, pred);
     const staticCollisions = this.statics.search(x1, y1, x2, y2, pred);
@@ -199,13 +204,14 @@ export class World extends Disposable {
     return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
-  #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number): RTreePredicate {
+  #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): RTreePredicate {
     return ({ bbox, pointer: [kind, i] }) => {
       if (!(maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3])) {
         return false;
       }
 
-      return this.objects.get(kind, i)?.destroyed === false;
+      const object = this.objects.get(kind, i);
+      return object !== exclude && object?.destroyed === false;
     };
   }
 

@@ -1,7 +1,7 @@
 import { Disposable } from "#engine/disposable";
 
 import type { Game } from "#engine/game";
-import type { MovableObject } from "#engine/game-objects";
+import type { PhysicsObject } from "#engine/game-objects";
 
 import type { CameraDeadZone, CameraOptions } from "#engine/game/camera/types";
 
@@ -24,7 +24,7 @@ export class Camera extends Disposable {
   x = 0;
   y = 0;
 
-  #target: MovableObject | null = null;
+  #target: PhysicsObject | null = null;
   #mounted = false;
 
   constructor(options: CameraOptions = {}) {
@@ -54,7 +54,7 @@ export class Camera extends Disposable {
     );
   }
 
-  bindTo(target: MovableObject): Destructor {
+  bindTo(target: PhysicsObject): Destructor {
     this.#target = target;
 
     return () => {

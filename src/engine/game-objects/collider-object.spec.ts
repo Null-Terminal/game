@@ -6,11 +6,15 @@ import { EventEmitter, handler } from "#/event-emitter";
 import { LoadedAnimation } from "#engine/animation";
 import type { Game } from "#engine/game";
 import { World } from "#engine/game/world";
-import { StaticObject } from "#engine/game-objects/static-object";
+import { ColliderObject, CollisionBody } from "#engine/game-objects/collider-object";
+import { InteractObject } from "#engine/game-objects/interact-object";
 
 function createGame() {
   const world = new World({ objects: [] });
-  const events = { static: handler() };
+  const events = {
+    scene: handler({ withFlush: true }),
+    interact: handler({ withFlush: true })
+  };
   const emitter = new EventEmitter(events);
 
   const game = {
@@ -28,10 +32,49 @@ function createAnimation(collisionY: number) {
   }));
 }
 
-describe("StaticObject collision", () => {
+describe("ColliderObject collision", () => {
+  it("moves its geometry between solid and interaction trees", () => {
+    const { game, world } = createGame();
+    const object = new ColliderObject();
+
+    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
+    expect(world.statics.search(-1, -1, 101, 21)).toHaveLength(1);
+
+    object.collision.toInteract();
+    expect(object.collision.kind).toBe(CollisionBody.Kind.Interact);
+    expect(world.statics.search(-1, -1, 101, 21)).toHaveLength(0);
+    expect(world.staticInteracts.search(-1, -1, 101, 21)).toHaveLength(1);
+
+    object.collision.toSolid();
+    expect(world.staticInteracts.search(-1, -1, 101, 21)).toHaveLength(0);
+    expect(world.statics.search(-1, -1, 101, 21)).toHaveLength(1);
+
+    object.destroy();
+  });
+
+  it("restores the default kind when a pooled object is created again", () => {
+    const { game, world } = createGame();
+    const object = new InteractObject();
+
+    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
+    expect(object.collision.kind).toBe(CollisionBody.Kind.Interact);
+
+    object.collision.toSolid();
+    object.destroy();
+    expect(() => object.collision.toInteract()).toThrow(/destroyed object/);
+
+    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
+
+    expect(object.collision.kind).toBe(CollisionBody.Kind.Interact);
+    expect(world.statics.search(-1, -1, 101, 21)).toHaveLength(0);
+    expect(world.staticInteracts.search(-1, -1, 101, 21)).toHaveLength(1);
+
+    object.destroy();
+  });
+
   it("requires geometry before registering a static collision", () => {
     const { game, world } = createGame();
-    const object = new StaticObject();
+    const object = new ColliderObject();
 
     expect(() => object.create(game, [1, 0], {})).toThrow(/needs width and height/);
     expect(world.statics.search(-100, -100, 100, 100)).toEqual([]);
@@ -39,7 +82,7 @@ describe("StaticObject collision", () => {
 
   it("keeps an explicit bbox without a sprite", () => {
     const { game, world } = createGame();
-    const object = new StaticObject();
+    const object = new ColliderObject();
 
     object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
 
@@ -49,7 +92,7 @@ describe("StaticObject collision", () => {
 
   it("updates only when an animation changes the collision rectangle", () => {
     const { game, world } = createGame();
-    const object = new StaticObject();
+    const object = new ColliderObject();
     const first = createAnimation(0);
     const second = createAnimation(25);
 
