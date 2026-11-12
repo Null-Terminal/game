@@ -11,9 +11,9 @@ export { duskSky } from "#game/background/sky-object/presets";
 
 export class SkyObject extends GameObject<SkyOptions> {
   static override readonly animations = {
-    sky: (object: GameObject) => SkyObject.#createPlayback(object),
-    storm: (object: GameObject) => SkyObject.#createPlayback(object, stormSky),
-    overcast: (object: GameObject) => SkyObject.#createPlayback(object, overcastSky)
+    sky: (go: GameObject) => SkyObject.#createPlayback(go),
+    storm: (go: GameObject) => SkyObject.#createPlayback(go, stormSky),
+    overcast: (go: GameObject) => SkyObject.#createPlayback(go, overcastSky)
   };
 
   override readonly animations = SkyObject.animations;
@@ -51,11 +51,11 @@ export class SkyObject extends GameObject<SkyOptions> {
     this.height = this.canvas.height;
   }
 
-  static #createPlayback(object: GameObject, scene?: SkySceneOptions) {
-    if (!(object instanceof SkyObject)) {
+  static #createPlayback(go: GameObject, scene?: SkySceneOptions) {
+    if (!(go instanceof SkyObject)) {
       throw new TypeError("Sky animation requires a SkyObject");
     }
 
-    return object.render.createPlayback(scene ?? object.options);
+    return go.render.createPlayback(scene ?? go.options);
   }
 }

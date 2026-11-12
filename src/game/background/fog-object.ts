@@ -23,9 +23,9 @@ export class FogObject extends GameObject<FogObjectOptions> {
   };
 
   static override readonly animations = {
-    fog: (object: GameObject) => FogObject.#createPlayback(object),
-    haze: (object: GameObject) => FogObject.#createPlayback(object, FogObject.#haze),
-    dense: (object: GameObject) => FogObject.#createPlayback(object, FogObject.#dense)
+    fog: (go: GameObject) => FogObject.#createPlayback(go),
+    haze: (go: GameObject) => FogObject.#createPlayback(go, FogObject.#haze),
+    dense: (go: GameObject) => FogObject.#createPlayback(go, FogObject.#dense)
   };
 
   override readonly animations = FogObject.animations;
@@ -49,12 +49,12 @@ export class FogObject extends GameObject<FogObjectOptions> {
     }
   }
 
-  static #createPlayback(object: GameObject, appearance?: FogAppearanceOptions): AnimationInstance {
-    if (!(object instanceof FogObject)) {
+  static #createPlayback(go: GameObject, appearance?: FogAppearanceOptions): AnimationInstance {
+    if (!(go instanceof FogObject)) {
       throw new TypeError("Fog animation requires a FogObject");
     }
 
-    const { texture, opacity, speed, flow, sway } = appearance ?? object.options;
+    const { texture, opacity, speed, flow, sway } = appearance ?? go.options;
 
     if (
       texture == null || opacity == null || speed == null ||
@@ -74,6 +74,6 @@ export class FogObject extends GameObject<FogObjectOptions> {
       opts.sway = sway;
     }
 
-    return object.render.createPlayback(opts);
+    return go.render.createPlayback(opts);
   }
 }
