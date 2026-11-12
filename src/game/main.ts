@@ -8,7 +8,7 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
   width: window.innerWidth,
   height: window.innerHeight,
   backgroundColor: "#080E1F",
-  showFPS: true,
+  showFPS: true
 });
 
 window.addEventListener("resize", () => {
@@ -46,7 +46,7 @@ game.onLevelLoad(
 await game.loadLevel(async () => {
   const { createDemoWorld } = await import("#game/world");
 
-  const objects = createDemoWorld(query.get("seams") === "1");
+  const objects = await createDemoWorld(query.get("seams") === "1");
 
   const { PersonObject } = await person;
   const player = World.of([[PersonObject, { y: 230, x: 100 }]]);
