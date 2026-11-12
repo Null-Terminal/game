@@ -315,7 +315,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     const playback = new AnimationPlayback(animation);
     const { bbox, effects } = this;
 
-    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту.
+    // Для объекта без bbox фиксируем ширину и высоту по самому широкому спрайту
     if (bbox == null) {
       this.width = animation.maxWidth * effects.scale;
       this.height = animation.maxHeight * effects.scale;
