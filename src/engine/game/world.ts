@@ -211,7 +211,7 @@ export class World extends Disposable {
       }
 
       const object = this.objects.get(kind, i);
-      return object !== exclude && object?.destroyed === false;
+      return object !== exclude && object?.destroyed === false && !object.status.sleeping;
     };
   }
 

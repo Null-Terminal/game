@@ -19,7 +19,8 @@ function createGame() {
 
   const game = {
     world,
-    canvas: { events, emitter, canvas: { height: 600 } }
+    canvas: { events, emitter, canvas: { height: 600 } },
+    sleep: { prepare() {} }
   } as unknown as Game;
 
   return { game, world };

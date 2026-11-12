@@ -1,7 +1,7 @@
 import type { Collision, CollisionScore, Game, RenderPayload } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
+import { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 import { GameObject } from "#engine/game-objects/game-object";
 import type { GameObjectOptions } from "#engine/game-objects/game-object";
 
@@ -64,7 +64,7 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
   }
 
   @ifAlive
-  @ifShadowed(0)
+  @ifSleeping(0)
   override move(dx: number, dy: number): number {
     const status = this.motion.kinematic ?
       this.kinematicMove(dx, dy) :

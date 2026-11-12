@@ -1,4 +1,5 @@
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { getBackgroundScrollFactor } from "#engine/game-objects/background-object/scroll-factor";
 
 import type * as go from "#engine/game-objects/game-object";
 import type { BackgroundObject } from "#engine/game-objects/background-object";
@@ -121,15 +122,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   }
 
   protected getScrollFactor(axis: Axis): number {
-    if (this.go.options.static?.includes(axis)) {
-      return 0;
-    }
-
-    const { scrollFactor } = this.go.options;
-
-    return axis === "w" ?
-      scrollFactor?.[0] ?? 1 :
-      scrollFactor?.[1] ?? scrollFactor?.[0] ?? 1;
+    return getBackgroundScrollFactor(this.go.options, axis);
   }
 
   #drawRepeatRegions(

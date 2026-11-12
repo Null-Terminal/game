@@ -38,6 +38,10 @@ export class WindDebrisObject extends GameObject<WindDebrisOptions> {
     return this.canvas.events.background;
   }
 
+  override get sleepable() {
+    return false;
+  }
+
   init() {
     if (this.options.show == null) {
       this.play(this.animations.wind);

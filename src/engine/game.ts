@@ -3,10 +3,14 @@ import { EventEmitter, handler } from "#/event-emitter";
 
 import { Disposable } from "#engine/disposable";
 import { GameStatus } from "#engine/game/game-status";
+import { GameSleep } from "#engine/game/sleep";
 
 import type { Camera } from "#engine/game/camera";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 import type { World } from "#engine/game/world";
+import type { GameOptions } from "#engine/game/sleep/types";
+
+export type * from "#engine/game/sleep/types";
 
 export { Camera } from "#engine/game/camera";
 export type * from "#engine/game/camera";
@@ -20,13 +24,14 @@ export type * from "#engine/game/render-canvas";
 export class Game extends Disposable {
   static camera(camera: Camera) {
     return {
-      create: (canvas: RenderCanvas) => new Game(canvas, camera)
+      create: (canvas: RenderCanvas, options: GameOptions = {}) => new Game(canvas, camera, options)
     };
   }
 
   readonly camera: Camera;
   readonly canvas: RenderCanvas;
   readonly status = new GameStatus(this);
+  readonly sleep: GameSleep;
 
   readonly emitter = new EventEmitter({
     levelLoading: handler<null>(),
@@ -37,6 +42,10 @@ export class Game extends Disposable {
   @cache
   get events() {
     return this.emitter.events;
+  }
+
+  get hasWorld() {
+    return this.#world != null;
   }
 
   get world(): World {
@@ -50,12 +59,14 @@ export class Game extends Disposable {
   #world: World | null = null;
   #levelLoader: (() => Promise<World>) | null = null;
 
-  protected constructor(canvas: RenderCanvas, camera: Camera) {
+  protected constructor(canvas: RenderCanvas, camera: Camera, options: GameOptions) {
     super();
 
     this.camera = camera;
     this.canvas = canvas;
+
     camera.mount(this);
+    this.sleep = new GameSleep(this, options.sleep);
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Escape") {
@@ -67,8 +78,10 @@ export class Game extends Disposable {
 
   override destroy() {
     super.destroy();
+    this.sleep.destroy();
     this.#levelLoader = null;
     this.#world?.destroy();
+    this.#world = null;
     this.camera.destroy();
     this.canvas.destroy();
     this.emitter.off();

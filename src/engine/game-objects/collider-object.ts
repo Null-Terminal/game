@@ -10,6 +10,13 @@ export { CollisionBody } from "#engine/game-objects/collider-object/body";
 export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> extends PhysicsObject<T> {
   readonly collision = new CollisionBody(this);
 
+  constructor() {
+    super();
+
+    const { emitter, events } = this.status;
+    emitter.on(events.sleepChange, (sleeping) => this.collision.setSleeping(sleeping));
+  }
+
   init() {}
 
   protected addCollisionShape(shape: CollisionShape) {

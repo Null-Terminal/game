@@ -23,6 +23,7 @@ export interface DefaultGameObjectOptions {
 
   show?: string | PlayableAnimation;
   movement?: MovementOptions;
+  sleep?: boolean;
 
   accept?: WithMap | null;
   acceptor?: GameObject | null;
@@ -32,8 +33,8 @@ export interface DefaultGameObjectOptions {
 }
 
 export type GameObjectOptions<T = DefaultGameObjectOptions> =
-  { x?: number; y?: number } & T |
-  { bbox?: BBoxTuple } & T;
+  | { x?: number; y?: number } & T
+  | { bbox?: BBoxTuple } & T;
 
 export interface AnimationInstance {
   draw(frame: ObjectRenderPayload): void;

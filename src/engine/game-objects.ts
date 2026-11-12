@@ -1,4 +1,4 @@
-export { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
+export { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 
 export { GameObject } from "#engine/game-objects/game-object";
 export { ServantObject } from "#engine/game-objects/servant-object";

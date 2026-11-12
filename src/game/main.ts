@@ -21,7 +21,7 @@ const game = Game.camera(new Camera({
   smoothness: 0.3,
   deadZone: { left: 40, right: 40, top: 25, bottom: 25 },
   limit: { y: 0 }
-})).create(canvas);
+})).create(canvas, { sleep: { distanceScreens: 3 } });
 
 const loading = document.getElementById("loading")!;
 const loadingMessage = document.getElementById("loading-message")!;

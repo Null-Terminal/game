@@ -6,7 +6,7 @@ import type { Game, WorldObject } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
-import { ifAlive, ifDead, ifShadowed } from "#engine/game-objects/decorators";
+import { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
@@ -94,6 +94,10 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     return this.game.canvas.events.main;
   }
 
+  get sleepable() {
+    return true;
+  }
+
   get world() {
     return this.game.world;
   }
@@ -176,6 +180,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
         this.movement.follow(options.movement);
       }
 
+      game.sleep.prepare(this);
       this.mountFlush();
       return options;
 
@@ -197,7 +202,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   }
 
   @ifAlive
-  @ifShadowed(0)
+  @ifSleeping(0)
   move(dx: number, dy: number): number {
     const status = this.kinematicMove(dx, dy);
     this.onMove(status);
@@ -230,6 +235,25 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     }, animation, () => playback.destroy?.());
   }
 
+  isFarFromViewport(distanceScreens: number): boolean {
+    if (
+      !Number.isFinite(this.x) ||
+      !Number.isFinite(this.y) ||
+      !Number.isFinite(this.width) ||
+      !Number.isFinite(this.height)
+    ) {
+      return false;
+    }
+
+    const { camera, canvas } = this.game;
+    const { width, height } = canvas;
+
+    const gapX = Math.max(camera.x - (this.x + this.width), this.x - (camera.x + width), 0);
+    const gapY = Math.max(camera.y - (this.y + this.height), this.y - (camera.y + height), 0);
+
+    return gapX > distanceScreens * width || gapY > distanceScreens * height;
+  }
+
   protected bindFlush() {}
 
   protected mountFlush() {
@@ -244,7 +268,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     }
 
     this.render.on(flush, () => {
-      if (this.destroyed || this.status.shadowed) {
+      if (this.destroyed || this.status.sleeping) {
         return;
       }
 

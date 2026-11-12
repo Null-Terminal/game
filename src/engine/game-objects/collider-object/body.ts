@@ -39,6 +39,7 @@ export class CollisionBody extends ServantObject<ColliderObject> {
   #idleSeconds = 0;
   #moved = false;
   #mounted = false;
+  #sleeping = false;
 
   constructor(go: ColliderObject) {
     super(go);
@@ -61,7 +62,7 @@ export class CollisionBody extends ServantObject<ColliderObject> {
     this.#shapes.push(shape);
     this.#entries.push(null);
 
-    if (this.#mounted && this.#mode === Mode.Static) {
+    if (this.#mounted && this.#mode === Mode.Static && !this.#sleeping) {
       this.#syncStatic();
     }
   }
@@ -79,7 +80,9 @@ export class CollisionBody extends ServantObject<ColliderObject> {
     this.#entries.unshift(null);
     this.#mounted = true;
 
-    this.#syncStatic();
+    if (!this.#sleeping) {
+      this.#syncStatic();
+    }
   }
 
   moved() {
@@ -105,13 +108,29 @@ export class CollisionBody extends ServantObject<ColliderObject> {
   }
 
   geometryChanged() {
-    if (this.#mounted && this.#mode === Mode.Static) {
+    if (this.#mounted && this.#mode === Mode.Static && !this.#sleeping) {
       this.#syncStatic();
     }
   }
 
+  setSleeping(sleeping: boolean) {
+    if (this.#sleeping === sleeping) {
+      return;
+    }
+
+    this.#sleeping = sleeping;
+
+    if (this.#mounted && this.#mode === Mode.Static) {
+      if (sleeping) {
+        this.#removeStatic();
+      } else {
+        this.#syncStatic();
+      }
+    }
+  }
+
   flush(delta: number) {
-    if (!this.#mounted || this.#mode === Mode.Static) {
+    if (!this.#mounted || this.#mode === Mode.Static || this.#sleeping) {
       return;
     }
 
@@ -161,6 +180,7 @@ export class CollisionBody extends ServantObject<ColliderObject> {
     this.#idleSeconds = 0;
     this.#moved = false;
     this.#mounted = false;
+    this.#sleeping = false;
   }
 
   get #staticTree(): RTree {
@@ -177,13 +197,13 @@ export class CollisionBody extends ServantObject<ColliderObject> {
       return;
     }
 
-    if (this.#mounted && this.#mode === Mode.Static) {
+    if (this.#mounted && this.#mode === Mode.Static && !this.#sleeping) {
       this.#removeStatic();
     }
 
     this.#kind = kind;
 
-    if (this.#mounted && this.#mode === Mode.Static) {
+    if (this.#mounted && this.#mode === Mode.Static && !this.#sleeping) {
       this.#syncStatic();
     }
   }

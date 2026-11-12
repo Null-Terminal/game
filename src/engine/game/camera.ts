@@ -25,6 +25,10 @@ export class Camera extends Disposable {
   x = 0;
   y = 0;
 
+  get target(): PhysicsObject | null {
+    return this.#target;
+  }
+
   #target: PhysicsObject | null = null;
   #mounted = false;
 

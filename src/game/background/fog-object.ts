@@ -39,6 +39,10 @@ export class FogObject extends GameObject<FogObjectOptions> {
     return this.options.overlay ? this.canvas.events.overlay : this.canvas.events.background;
   }
 
+  override get sleepable() {
+    return false;
+  }
+
   init() {
     if (!Number.isFinite(this.y) || !Number.isFinite(this.height) || this.height <= 0) {
       throw new RangeError("Fog bbox must have finite vertical bounds and positive height");

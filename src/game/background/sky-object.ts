@@ -27,6 +27,10 @@ export class SkyObject extends GameObject<SkyOptions> {
     return this.canvas.events.background;
   }
 
+  override get sleepable() {
+    return false;
+  }
+
   init() {
     const scrollFactor = this.options.celestialScrollFactor ?? 0;
     const cloudSpeed = this.options.clouds?.speed;

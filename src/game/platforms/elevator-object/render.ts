@@ -42,7 +42,7 @@ export class ElevatorObjectRender extends GameObjectRender<ElevatorObject> {
     }
 
     this.on(events.scene, ({ ctx }, elapsed) => {
-      if (go.status.shadowed) {
+      if (go.status.sleeping) {
         return;
       }
 
@@ -60,7 +60,7 @@ export class ElevatorObjectRender extends GameObjectRender<ElevatorObject> {
     });
 
     this.on(events.overlay, ({ ctx }) => {
-      if (go.status.shadowed) {
+      if (go.status.sleeping) {
         return;
       }
 

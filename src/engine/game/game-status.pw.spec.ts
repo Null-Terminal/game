@@ -20,6 +20,7 @@ test("level loading pauses the canvas and reports its lifecycle", async ({ page 
     const loading = game.loadLevel(() => pendingWorld);
     const duringLoad = {
       loading: game.status.loadingLevel,
+      hasWorld: game.hasWorld,
       paused: canvas.paused,
       events: [...events]
     };
@@ -29,6 +30,7 @@ test("level loading pauses the canvas and reports its lifecycle", async ({ page 
 
     const afterLoad = {
       activeWorld: game.world === world,
+      hasWorld: game.hasWorld,
       loading: game.status.loadingLevel,
       paused: canvas.paused,
       events: [...events]
@@ -42,12 +44,14 @@ test("level loading pauses the canvas and reports its lifecycle", async ({ page 
 
   expect(result.duringLoad).toEqual({
     loading: true,
+    hasWorld: false,
     paused: true,
     events: ["loading"]
   });
 
   expect(result.afterLoad).toEqual({
     activeWorld: true,
+    hasWorld: true,
     loading: false,
     paused: false,
     events: ["loading", "loaded"]

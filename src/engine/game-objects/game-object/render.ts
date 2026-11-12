@@ -100,18 +100,38 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     let elapsed = 0;
     let lastNow = 0;
 
-    const unsubscribe = go.canvas.emitter.on(event, (frame) => {
-      if (lastNow !== 0 && !go.status.paused && !go.status.shadowed) {
+    const handle = (frame: E["PayloadType"]) => {
+      if (lastNow !== 0 && !go.status.paused && !go.status.sleeping) {
         elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
       }
 
       lastNow = frame.now;
       listener(frame, elapsed);
-    });
+    };
+
+    let unsubscribe: Destructor | null = null;
+
+    const syncSubscription = (sleeping: boolean) => {
+      if (sleeping) {
+        unsubscribe?.();
+        unsubscribe = null;
+        return;
+      }
+
+      if (unsubscribe == null) {
+        lastNow = 0;
+        unsubscribe = go.canvas.emitter.on(event, handle);
+      }
+    };
+
+    const { emitter, events } = go.status;
+    const offStatus = emitter.on(events.sleepChange, syncSubscription);
+    syncSubscription(go.status.sleeping);
 
     const stop = () => {
       if (this.#listeners.delete(stop)) {
-        unsubscribe();
+        offStatus();
+        unsubscribe?.();
       }
     };
 
@@ -132,10 +152,6 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
 
     const payload = this.#payload;
     const unsubscribe = this.on(go.redrawEvent, (frame, elapsed) => {
-      if (go.status.shadowed) {
-        return;
-      }
-
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
