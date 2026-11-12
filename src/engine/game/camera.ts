@@ -1,4 +1,5 @@
 import { Disposable } from "#engine/disposable";
+import { isInRange } from "#/utils/validators";
 
 import type { Game } from "#engine/game";
 import type { PhysicsObject } from "#engine/game-objects";
@@ -11,10 +12,10 @@ export class Camera extends Disposable {
   static readonly DEFAULT_SMOOTHNESS = 0.3;
 
   static readonly DEFAULT_DEAD_ZONE: CameraDeadZone = {
-    left: 350,
-    right: 350,
-    top: 250,
-    bottom: 250,
+    left: 25,
+    right: 25,
+    top: 25,
+    bottom: 25,
   };
 
   game!: Game;
@@ -35,6 +36,15 @@ export class Camera extends Disposable {
       deadZone: { ...Camera.DEFAULT_DEAD_ZONE, ...options.deadZone },
       limit: options.limit ?? {},
     };
+
+    const { left, right, top, bottom } = this.options.deadZone;
+
+    const invalidDeadZone = ![left, right, top, bottom].every((value) =>
+      isInRange(value, 0, 100)) || left + right > 100 || top + bottom > 100;
+
+    if (invalidDeadZone) {
+      throw new RangeError(`${this.constructor.name}: deadZone percentages must be between 0 and 100, with opposing sides totaling at most 100`);
+    }
   }
 
   mount(game: Game) {
@@ -74,27 +84,31 @@ export class Camera extends Disposable {
     const targetY = target.y + target.height / 2;
 
     const { deadZone, smoothness, limit } = this.options;
+    const left = canvas.width * deadZone.left / 100;
+    const right = canvas.width * deadZone.right / 100;
+    const top = canvas.height * deadZone.top / 100;
+    const bottom = canvas.height * deadZone.bottom / 100;
 
-    const leftDeadZone = this.x + deadZone.left;
-    const rightDeadZone = this.x + canvas.width - deadZone.right;
-    const topDeadZone = this.y + canvas.height - deadZone.top;
-    const bottomDeadZone = this.y + deadZone.bottom;
+    const leftDeadZone = this.x + left;
+    const rightDeadZone = this.x + canvas.width - right;
+    const topDeadZone = this.y + canvas.height - top;
+    const bottomDeadZone = this.y + bottom;
 
     let newX = this.x;
     let newY = this.y;
 
     if (targetX < leftDeadZone) {
-      newX = targetX - deadZone.left;
+      newX = targetX - left;
 
     } else if (targetX > rightDeadZone) {
-      newX = targetX - (canvas.width - deadZone.right);
+      newX = targetX - (canvas.width - right);
     }
 
     if (targetY > topDeadZone) {
-      newY = targetY - (canvas.height - deadZone.top);
+      newY = targetY - (canvas.height - top);
 
     } else if (targetY < bottomDeadZone) {
-      newY = targetY - deadZone.bottom;
+      newY = targetY - bottom;
     }
 
     const x = this.x + (newX - this.x) * smoothness;

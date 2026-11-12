@@ -60,10 +60,10 @@ export async function createBenchmarkScene(
   const game = Game.camera(new Camera({
     smoothness: 1,
     deadZone: {
-      left: renderViewport.width / 2,
-      right: renderViewport.width / 2,
-      top: renderViewport.height / 2,
-      bottom: renderViewport.height / 2
+      left: 50,
+      right: 50,
+      top: 50,
+      bottom: 50
     }
   })).create(canvas);
   const objects: WorldObjects = [...await createDemoWorld()];

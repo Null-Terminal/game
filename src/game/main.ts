@@ -19,7 +19,7 @@ window.addEventListener("resize", () => {
 
 const game = Game.camera(new Camera({
   smoothness: 0.3,
-  deadZone: { left: 350, right: 350, top: 250, bottom: 250 },
+  deadZone: { left: 40, right: 40, top: 25, bottom: 25 },
   limit: { y: 0 }
 })).create(canvas);
 
