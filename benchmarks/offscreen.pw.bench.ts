@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test";
+import type { JSHandle } from "@playwright/test";
 
 import type * as scene from "../src/benchmarks/offscreen-scene";
 import { cpuRate, median, saveReport } from "./report";
 
+type OffscreenScene = Awaited<ReturnType<typeof scene.createOffscreenScene>>;
+
 interface OffscreenRun {
   objectCount: number;
+  awakeCount: number;
   frameCount: number;
   fps: number;
   p50FrameMs: number;
@@ -18,9 +22,11 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
   await page.goto("/tests/fixture.html");
 
   const requestedMode = process.env["BENCH_OFFSCREEN_MODE"];
-  const mode: scene.OffscreenMode = requestedMode === "paused" || requestedMode === "shadowed" ||
+  const mode: scene.OffscreenMode = requestedMode === "paused" || requestedMode === "sleep" ||
     requestedMode === "culled" || requestedMode === "absent" ?
     requestedMode : "active";
+  const kind: scene.OffscreenObjectKind = process.env["BENCH_OBJECT_KIND"] === "collider" ? "collider" : "plain";
+  const layout: scene.OffscreenLayout = process.env["BENCH_OFFSCREEN_LAYOUT"] === "spread" ? "spread" : "far";
   const count = Number(process.env["BENCH_OFFSCREEN_COUNT"] ?? 500);
   const warmups = Number(process.env["BENCH_WARMUPS"] ?? 2);
   const viewport = page.viewportSize()!;
@@ -33,10 +39,10 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
     throw new RangeError("BENCH_WARMUPS must be a positive integer");
   }
 
-  const fixture = await page.evaluateHandle(async ({ url, viewport, mode, count }) => {
+  const fixture: JSHandle<OffscreenScene> = await page.evaluateHandle(async ({ url, viewport, mode, count, kind, layout }) => {
     const module = await import(url) as typeof scene;
-    return module.createOffscreenScene(viewport, mode, count);
-  }, { url: "/src/benchmarks/offscreen-scene.ts", viewport, mode, count });
+    return module.createOffscreenScene(viewport, mode, count, kind, layout);
+  }, { url: "/src/benchmarks/offscreen-scene.ts", viewport, mode, count, kind, layout });
 
   const setup = await fixture.evaluate(({ version, objectCount }) => ({ version, objectCount }));
   expect(setup.objectCount).toBe(mode === "absent" ? 0 : count);
@@ -62,11 +68,16 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
   const runs: OffscreenRun[] = [];
 
   for (let index = 0; index < 3; index++) {
-    const { frameTimes, renderTimes } = await fixture.evaluate(({ runSample }) => runSample());
+    const { frameTimes, renderTimes, awakeCount, targetX } = await fixture.evaluate(({ runSample }) => runSample());
     const total = frameTimes.reduce((sum, value) => sum + value, 0);
+
+    if (layout === "spread") {
+      expect(targetX).toBeGreaterThan(viewport.width * 9);
+    }
 
     runs.push({
       objectCount: setup.objectCount,
+      awakeCount,
       frameCount: frameTimes.length,
       fps: frameTimes.length * 1000 / total,
       p50FrameMs: median(frameTimes),
@@ -83,7 +94,7 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
   const report = await saveReport("offscreen", version, environment, runs, profile);
   await fixture.evaluate(({ destroy }) => destroy());
 
-  console.log(`${mode}: ${report.median.fps.toFixed(1)} FPS, render p50 ${report.median.p50RenderMs.toFixed(2)} ms`);
+  console.log(`${kind} ${layout} ${mode}: ${report.median.fps.toFixed(1)} FPS, ${report.median.awakeCount} awake`);
   console.log(`Saved to benchmarks/results/${report.label}/offscreen.json`);
 });
 

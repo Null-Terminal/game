@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
+import type { JSHandle } from "@playwright/test";
 
 import type * as scene from "../src/benchmarks/scene";
 import { cpuRate, median, saveReport } from "./report";
+
+type BenchmarkScene = Awaited<ReturnType<typeof scene.createBenchmarkScene>>;
 
 interface FrameRun {
   frameCount: number;
@@ -40,7 +43,7 @@ test("render the loaded demo scene", async ({ page }, testInfo) => {
     throw new RangeError("BENCH_RENDER_SCALE must be greater than 0 and at most 1");
   }
 
-  const fixture = await page.evaluateHandle(async ({ url, viewport, stress, excluded, renderScale, backend }) => {
+  const fixture: JSHandle<BenchmarkScene> = await page.evaluateHandle(async ({ url, viewport, stress, excluded, renderScale, backend }) => {
     const module = await import(url) as typeof scene;
     return module.createBenchmarkScene(viewport, stress, excluded, renderScale, backend);
   }, { url: "/src/benchmarks/scene.ts", viewport, stress, excluded, renderScale, backend });

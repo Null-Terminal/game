@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
+import type { JSHandle } from "@playwright/test";
 
 import type * as scene from "../src/benchmarks/object-count-scene";
 import { cpuRate, median, saveReport } from "./report";
+
+type ObjectScene = Awaited<ReturnType<typeof scene.createObjectCountScene>>;
 
 interface ObjectRun {
   objectCount: number;
@@ -27,7 +30,7 @@ test("100 background objects versus one baked repeat", async ({ page }, testInfo
     throw new RangeError("BENCH_WARMUPS must be a positive integer");
   }
 
-  const fixture = await page.evaluateHandle(async ({ url, viewport, layout, backend }) => {
+  const fixture: JSHandle<ObjectScene> = await page.evaluateHandle(async ({ url, viewport, layout, backend }) => {
     const module = await import(url) as typeof scene;
     return module.createObjectCountScene(viewport, layout, backend);
   }, { url: "/src/benchmarks/object-count-scene.ts", viewport, layout, backend });

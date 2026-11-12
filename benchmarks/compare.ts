@@ -25,7 +25,7 @@ const metrics: Record<Scenario, readonly string[]> = {
   render: ["fps", "p95FrameMs", "p50RenderMs", "p95RenderMs", "missedFramePercent"],
   rtree: ["insertMs", "searchFirstMs", "searchBestMs", "removeMs"],
   objects: ["fps", "p50FrameMs", "p95FrameMs", "p50RenderMs", "p95RenderMs", "textureBytes"],
-  offscreen: ["fps", "p50FrameMs", "p95FrameMs", "p50RenderMs", "p95RenderMs"],
+  offscreen: ["awakeCount", "fps", "p50FrameMs", "p95FrameMs", "p50RenderMs", "p95RenderMs"],
   "collision-index": ["staticSetupMs", "transitionMs", "rebuildAllMs", "queryAllMs", "rebuildSplitMs", "querySplitMs"],
   "collider-api": ["setupBaselineMs", "setupSwitchingMs", "updateBaselineMs", "updateSwitchingMs", "queryBaselineMs", "querySwitchingMs"]
 };
