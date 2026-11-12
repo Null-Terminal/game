@@ -1,14 +1,17 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
 import type { WorldObjects } from "#engine/game";
+import { BackgroundFlowObject, BackgroundObject } from "#engine/game-objects";
 
 import { createDemoWorld } from "#game/world";
+import { FogObject } from "#game/background/fog-object";
+import { SkyObject } from "#game/background/sky-object";
 import { PersonObject } from "#game/person-object";
 import { PlatformObject } from "#game/platforms/platform-object";
 
 import { barrel } from "#/sprites/platforms/barrel";
 import { hoverDisc } from "#/sprites/platforms/hover-disc";
 
-export const SCENE_VERSION = "demo-stress-v3";
+export const SCENE_VERSION = "demo-stress-v4";
 export const SCENE_VIEWPORT = { width: 1280, height: 720 } as const;
 
 const SCAN_DURATION = 4;
@@ -31,45 +34,76 @@ interface ScanCoverage {
   upperRight: boolean;
 }
 
-export async function createBenchmarkScene() {
+export async function createBenchmarkScene(
+  viewport: { width: number; height: number } = SCENE_VIEWPORT,
+  stress = true,
+  excluded: readonly ("sky" | "fog" | "flow" | "background")[] = [],
+  renderScale = 1,
+  backend: "2d" | "webgl" = "2d"
+) {
   const element = document.getElementById("game") as HTMLCanvasElement;
+  const renderViewport = {
+    width: Math.max(1, Math.round(viewport.width * renderScale)),
+    height: Math.max(1, Math.round(viewport.height * renderScale))
+  };
+
+  element.style.width = `${viewport.width}px`;
+  element.style.height = `${viewport.height}px`;
+  element.style.imageRendering = "pixelated";
+
   const canvas = new RenderCanvas(element, {
-    ...SCENE_VIEWPORT,
-    backgroundColor: "#080E1F"
+    ...renderViewport,
+    backgroundColor: "#080E1F",
+    backend
   });
 
   const game = Game.camera(new Camera({
     smoothness: 1,
     deadZone: {
-      left: SCENE_VIEWPORT.width / 2,
-      right: SCENE_VIEWPORT.width / 2,
-      top: SCENE_VIEWPORT.height / 2,
-      bottom: SCENE_VIEWPORT.height / 2
+      left: renderViewport.width / 2,
+      right: renderViewport.width / 2,
+      top: renderViewport.height / 2,
+      bottom: renderViewport.height / 2
     }
   })).create(canvas);
-  const objects: WorldObjects = [...createDemoWorld()];
+  const objects: WorldObjects = [...await createDemoWorld()];
 
-  // Добавляем плотный участок платформ в начале маршрута
-  for (let row = 0; row < 8; row++) {
-    for (let column = 0; column < 10; column++) {
-      objects.push(...World.of([[PlatformObject, {
-        show: hoverDisc,
-        x: 300 + column * 95,
-        y: 280 + row * 45,
-        movement: {
-          sine: { axis: "x", amplitude: 8, length: 35, period: 3 + row * 0.2 }
-        }
-      }]]));
+  for (let index = objects.length - 1; index >= 0; index--) {
+    const objectClass = objects[index]![0];
+
+    if (
+      (excluded.includes("sky") && objectClass === SkyObject) ||
+      (excluded.includes("fog") && objectClass === FogObject) ||
+      (excluded.includes("flow") && objectClass === BackgroundFlowObject) ||
+      (excluded.includes("background") && objectClass === BackgroundObject)
+    ) {
+      objects.splice(index, 1);
     }
   }
 
-  for (let row = 0; row < 4; row++) {
-    for (let column = 0; column < 15; column++) {
-      objects.push(...World.of([[PlatformObject, {
-        show: barrel,
-        x: 140 + column * 83,
-        y: 180 + row * 105
-      }]]));
+  if (stress) {
+    // Добавляем плотный участок платформ в начале маршрута
+    for (let row = 0; row < 8; row++) {
+      for (let column = 0; column < 10; column++) {
+        objects.push(...World.of([[PlatformObject, {
+          show: hoverDisc,
+          x: 300 + column * 95,
+          y: 280 + row * 45,
+          movement: {
+            sine: { axis: "x", amplitude: 8, length: 35, period: 3 + row * 0.2 }
+          }
+        }]]));
+      }
+    }
+
+    for (let row = 0; row < 4; row++) {
+      for (let column = 0; column < 15; column++) {
+        objects.push(...World.of([[PlatformObject, {
+          show: barrel,
+          x: 140 + column * 83,
+          y: 180 + row * 105
+        }]]));
+      }
     }
   }
 
@@ -89,9 +123,18 @@ export async function createBenchmarkScene() {
 
   let measuring = false;
   let renderStart = 0;
+  let stageStart = 0;
   let scanElapsed = 0;
 
   const renderTimes: number[] = [];
+  const stageTimes = {
+    background: [] as number[],
+    scene: [] as number[],
+    interact: [] as number[],
+    main: [] as number[],
+    overlay: [] as number[],
+    ui: [] as number[]
+  };
   const coverage: ScanCoverage = {
     roadEnd: false,
     middleLeft: false,
@@ -103,8 +146,19 @@ export async function createBenchmarkScene() {
   canvas.emitter.on(canvas.events.beforeRender, () => {
     if (measuring) {
       renderStart = performance.now();
+      stageStart = renderStart;
     }
   });
+
+  for (const stage of Object.keys(stageTimes) as (keyof typeof stageTimes)[]) {
+    canvas.emitter.on(canvas.events[stage], () => {
+      if (measuring) {
+        const now = performance.now();
+        stageTimes[stage].push(now - stageStart);
+        stageStart = now;
+      }
+    });
+  }
 
   canvas.emitter.on(canvas.events.ui, () => {
     if (measuring) {
@@ -120,8 +174,8 @@ export async function createBenchmarkScene() {
   });
 
   function startScan() {
-    const centerX = SCENE_VIEWPORT.width / 2 - player.width / 2;
-    const centerY = SCENE_VIEWPORT.height / 2 - player.height / 2;
+    const centerX = renderViewport.width / 2 - player.width / 2;
+    const centerY = renderViewport.height / 2 - player.height / 2;
 
     player.move(centerX - player.x, centerY - player.y);
     game.camera.update();
@@ -139,11 +193,16 @@ export async function createBenchmarkScene() {
 
   return {
     game,
-    version: SCENE_VERSION,
-    viewport: SCENE_VIEWPORT,
+    version: `${SCENE_VERSION}:${stress ? "stress" : "demo"}:${excluded.join("-") || "all"}:scale-${renderScale}:${backend}`,
+    viewport: renderViewport,
     objectCount: objects.length + 1,
     async runScan() {
       renderTimes.length = 0;
+
+      for (const times of Object.values(stageTimes)) {
+        times.length = 0;
+      }
+
       coverage.roadEnd = false;
       coverage.middleLeft = false;
       coverage.middleRight = false;
@@ -180,7 +239,9 @@ export async function createBenchmarkScene() {
       return {
         frameTimes,
         renderTimes: [...renderTimes],
-        coverage: { ...coverage }
+        stageTimes: structuredClone(stageTimes),
+        coverage: { ...coverage },
+        textureStats: canvas.textureStats
       };
     },
     destroy: () => game.destroy()

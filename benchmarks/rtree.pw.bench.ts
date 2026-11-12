@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import type * as rtreeScene from "../src/benchmarks/rtree-scene";
-import { saveReport } from "./report";
+import { cpuRate, saveReport } from "./report";
 
 // Запуск: npm run bench:rtree
 test("insert, search, and remove R-tree entries", async ({ page }, testInfo) => {
@@ -13,10 +13,20 @@ test("insert, search, and remove R-tree entries", async ({ page }, testInfo) => 
     import(url) as Promise<typeof rtreeScene>,
   "/src/benchmarks/rtree-scene.ts");
 
+  const session = await page.context().newCDPSession(page);
+  const environment = {
+    browser: page.context().browser()!.version(),
+    mode: testInfo.project.use.headless === false ? "headed" : "headless",
+    cpuRate: cpuRate(),
+    warmups: 1,
+    viewport: page.viewportSize()!
+  } as const;
+
+  await session.send("Emulation.setCPUThrottlingRate", { rate: environment.cpuRate });
+
   // Первый проход прогревает JIT и исключается из отчёта
   await module.evaluate(({ runRTreeBatch }) => runRTreeBatch());
 
-  const session = await page.context().newCDPSession(page);
   await session.send("Profiler.enable");
   await session.send("Profiler.start");
 
@@ -32,8 +42,7 @@ test("insert, search, and remove R-tree entries", async ({ page }, testInfo) => 
   expect(new Set(runs.map(({ checksum }) => checksum)).size).toBe(1);
 
   const version = await module.evaluate(({ RTREE_VERSION }) => RTREE_VERSION);
-  const browser = page.context().browser()!.version();
-  const report = await saveReport("rtree", version, browser, runs, profile);
+  const report = await saveReport("rtree", version, environment, runs, profile);
 
   console.log(`R-tree benchmark: searchBest median ${report.median.searchBestMs.toFixed(2)} ms for four batches`);
   console.log(`Saved to benchmarks/results/${report.label}/rtree.json`);

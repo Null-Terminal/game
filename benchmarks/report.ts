@@ -7,16 +7,30 @@ import { join } from "node:path";
 import { arch, env, platform } from "node:process";
 
 export interface BenchmarkReport<T> {
-  scenario: "render" | "rtree";
+  scenario: "render" | "rtree" | "objects" | "offscreen" | "collision-index" | "collider-api";
   version: string;
   label: string;
   revision: string;
   dirty: boolean;
   browser: string;
+  mode: "headed" | "headless";
+  cpuRate: number;
+  warmups: number;
+  viewport: { width: number; height: number };
   machine: string;
   createdAt: string;
   runs: T[];
   median: Omit<T, "checksum">;
+}
+
+export function cpuRate(): number {
+  const rate = Number(env["BENCH_CPU_RATE"] ?? 1);
+
+  if (!Number.isFinite(rate) || rate < 1) {
+    throw new RangeError("BENCH_CPU_RATE must be a finite number greater than or equal to 1");
+  }
+
+  return rate;
 }
 
 export function median(values: readonly number[]): number {
@@ -27,7 +41,7 @@ export function median(values: readonly number[]): number {
 export async function saveReport<T extends object>(
   scenario: BenchmarkReport<T>["scenario"],
   version: string,
-  browser: string,
+  environment: Pick<BenchmarkReport<T>, "browser" | "mode" | "cpuRate" | "warmups" | "viewport">,
   runs: T[],
   profile: unknown
 ): Promise<BenchmarkReport<T>> {
@@ -52,7 +66,7 @@ export async function saveReport<T extends object>(
     label,
     revision,
     dirty,
-    browser,
+    ...environment,
     machine: `${platform}-${arch}: ${cpus()[0]?.model ?? "unknown CPU"}`,
     createdAt: new Date().toISOString(),
     runs,
