@@ -7,6 +7,12 @@ export interface LoadSpriteOptions {
   tolerance?: number;
 }
 
+export interface SpriteLoadData {
+  headers: { contentType: string };
+  data: ArrayBuffer;
+  options: LoadSpriteOptions;
+}
+
 export interface LoadAnimationOptions {
   sprite?: LoadSpriteOptions;
   animation: Import<Animation>;
