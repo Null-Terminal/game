@@ -3,11 +3,15 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-type Scenario = "render" | "rtree";
+type Scenario = "render" | "rtree" | "objects" | "offscreen" | "collision-index" | "collider-api";
 
 interface Report {
   version: string;
   browser: string;
+  mode: "headed" | "headless";
+  cpuRate: number;
+  warmups: number;
+  viewport: { width: number; height: number };
   machine: string;
   label: string;
   revision: string;
@@ -16,32 +20,48 @@ interface Report {
   runs: Record<string, number>[];
 }
 
-const [baselineLabel, currentLabel] = process.argv.slice(2);
+const [baselineLabel, currentLabel, selectedScenario] = process.argv.slice(2);
 const metrics: Record<Scenario, readonly string[]> = {
   render: ["fps", "p95FrameMs", "p50RenderMs", "p95RenderMs", "missedFramePercent"],
-  rtree: ["insertMs", "searchFirstMs", "searchBestMs", "removeMs"]
+  rtree: ["insertMs", "searchFirstMs", "searchBestMs", "removeMs"],
+  objects: ["fps", "p50FrameMs", "p95FrameMs", "p50RenderMs", "p95RenderMs", "textureBytes"],
+  offscreen: ["fps", "p50FrameMs", "p95FrameMs", "p50RenderMs", "p95RenderMs"],
+  "collision-index": ["staticSetupMs", "transitionMs", "rebuildAllMs", "queryAllMs", "rebuildSplitMs", "querySplitMs"],
+  "collider-api": ["setupBaselineMs", "setupSwitchingMs", "updateBaselineMs", "updateSwitchingMs", "queryBaselineMs", "querySwitchingMs"]
 };
 
+if (selectedScenario != null && !(selectedScenario in metrics)) {
+  throw new Error(`Неизвестный сценарий: ${selectedScenario}`);
+}
+
 if (!baselineLabel || !currentLabel) {
-  console.error("Использование: node benchmarks/compare.ts <базовый-прогон> <новый-прогон>");
+  console.error("Использование: node benchmarks/compare.ts <базовый-прогон> <новый-прогон> [render|rtree|objects|offscreen|collision-index|collider-api]");
   process.exitCode = 1;
 
 } else {
-  for (const scenario of ["render", "rtree"] as const) {
+  const scenarios: readonly Scenario[] = selectedScenario == null ? ["render", "rtree"] : [selectedScenario as Scenario];
+
+  for (const scenario of scenarios) {
     const baseline = await readReport(baselineLabel, scenario);
     const current = await readReport(currentLabel, scenario);
 
     if (
       baseline.version !== current.version ||
       baseline.browser !== current.browser ||
-      baseline.machine !== current.machine
+      baseline.machine !== current.machine ||
+      baseline.mode == null || baseline.mode !== current.mode ||
+      baseline.cpuRate == null || baseline.cpuRate !== current.cpuRate ||
+      baseline.warmups == null || baseline.warmups !== current.warmups ||
+      baseline.viewport == null ||
+      baseline.viewport.width !== current.viewport?.width ||
+      baseline.viewport.height !== current.viewport?.height
     ) {
-      console.error(`${scenario}: различаются сценарий, браузер или компьютер — сравнивать результаты нельзя`);
+      console.error(`${scenario}: различаются сценарий, браузер, режим запуска, разрешение, CPU throttle или компьютер`);
       process.exitCode = 1;
       continue;
     }
 
-    console.log(`\n${scenario} (${baseline.version}, Chromium ${baseline.browser})`);
+    console.log(`\n${scenario} (${baseline.version}, Chromium ${baseline.browser}, ${baseline.mode}, CPU x${baseline.cpuRate})`);
     console.log(`  ${baseline.label}: ${baseline.revision.slice(0, 8)}${baseline.dirty ? " (есть незакоммиченные изменения)" : ""}`);
     console.log(`  ${current.label}: ${current.revision.slice(0, 8)}${current.dirty ? " (есть незакоммиченные изменения)" : ""}`);
 
