@@ -19,7 +19,8 @@ export async function createElevatorScene(options: ElevatorSceneOptions): Promis
   const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasElement, {
     width: 900,
     height: 650,
-    backgroundColor: "#080E1F"
+    backgroundColor: "#080E1F",
+    backend: "2d"
   });
 
   const game = Game.camera(new Camera({ limit: { y: 0 } })).create(canvas);

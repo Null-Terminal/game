@@ -12,7 +12,7 @@ export interface SkyScene {
 
 export async function createSkyScene(): Promise<SkyScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 320, height: 240 });
+  const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);

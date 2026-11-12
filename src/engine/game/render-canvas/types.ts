@@ -1,7 +1,9 @@
+import type { RenderContext } from "#engine/rendering";
+
 export interface RenderPayload {
   now: number;
   delta: number;
-  ctx: CanvasRenderingContext2D;
+  ctx: RenderContext;
 }
 
 export interface RenderCanvasOptions {
@@ -9,4 +11,5 @@ export interface RenderCanvasOptions {
   width?: number;
   height?: number;
   showFPS?: boolean;
+  backend?: "2d" | "webgl";
 }

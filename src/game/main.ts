@@ -8,7 +8,8 @@ const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasEle
   width: window.innerWidth,
   height: window.innerHeight,
   backgroundColor: "#080E1F",
-  showFPS: true
+  showFPS: true,
+  backend: query.get("renderer") === "2d" ? "2d" : "webgl"
 });
 
 window.addEventListener("resize", () => {

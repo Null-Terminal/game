@@ -17,7 +17,7 @@ export interface InteractionScene {
 
 export async function createInteractionScene(): Promise<InteractionScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 640, height: 480 });
+  const canvas = new RenderCanvas(element, { width: 640, height: 480, backend: "2d" });
   const game = Game.camera(new Camera()).create(canvas);
 
   const world = await game.loadLevel(async () => new World({

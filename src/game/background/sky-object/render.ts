@@ -1,5 +1,6 @@
 import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import type { RenderContext } from "#engine/rendering";
 
 import type { SkyObject } from "#game/background/sky-object";
 import type { SkySceneOptions } from "#game/background/sky-object/types";
@@ -124,7 +125,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     }
   }
 
-  #drawRepeatedStrip(ctx: CanvasRenderingContext2D, image: ImageBitmap, scroll: number, width: number, y = 0) {
+  #drawRepeatedStrip(ctx: RenderContext, image: ImageBitmap, scroll: number, width: number, y = 0) {
     // Нормализуем сдвиг в пределах ширины текстуры, включая отрицательный скролл
     const offset = ((scroll % image.width) + image.width) % image.width;
 

@@ -2,6 +2,7 @@ import { AnimationPlayback } from "#engine/animation/animation-playback";
 
 import type { LoadedAnimation } from "#engine/animation/loaded-animation";
 import type { FrameEffects, SpriteAnchorX, SpriteAnchorY } from "#engine/animation/types";
+import type { RenderContext } from "#engine/rendering";
 import type { BBoxTuple } from "#engine/rtree";
 
 export class AnimationLayer {
@@ -55,7 +56,7 @@ export class AnimationLayer {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  draw(ctx: RenderContext, x: number, y: number) {
     const { animation, frameIndex } = this.#playback;
 
     const image = animation.getSpriteFrame(frameIndex, this.#effects);

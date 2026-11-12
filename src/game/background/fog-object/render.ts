@@ -1,5 +1,6 @@
 import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import type { RenderContext } from "#engine/rendering";
 
 import type { FogObject } from "#game/background/fog-object";
 import type { FogAppearanceOptions } from "#game/background/fog-object/types";
@@ -86,7 +87,7 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
     ctx.restore();
   }
 
-  #drawRepeatedStrip(ctx: CanvasRenderingContext2D, texture: FogStrip, scroll: number, y: number, width: number) {
+  #drawRepeatedStrip(ctx: RenderContext, texture: FogStrip, scroll: number, y: number, width: number) {
     const image = texture.image;
     const offset = ((scroll % image.width) + image.width) % image.width;
 

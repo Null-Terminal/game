@@ -24,7 +24,7 @@ export async function createMovingPlatformScene({
   jetpack = true
 }: MovingPlatformOptions): Promise<MovingPlatformScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 640, height: 480 });
+  const canvas = new RenderCanvas(element, { width: 640, height: 480, backend: "2d" });
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);

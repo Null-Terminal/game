@@ -22,7 +22,8 @@ export async function createBackgroundScene(options: BackgroundSceneOptions): Pr
   const canvas = new RenderCanvas(element, {
     width: 100,
     height: 100,
-    backgroundColor: "#000000"
+    backgroundColor: "#000000",
+    backend: "2d"
   });
 
   canvas.stop();

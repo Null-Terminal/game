@@ -15,7 +15,12 @@ export interface FlowScene {
 
 export async function createFlowScene(): Promise<FlowScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 100, height: 100, backgroundColor: "#FFFFFF" });
+  const canvas = new RenderCanvas(element, {
+    width: 100,
+    height: 100,
+    backgroundColor: "#FFFFFF",
+    backend: "2d"
+  });
   canvas.stop();
 
   const first = createAnimation(["#FF0000", "#00FF00"], 50);

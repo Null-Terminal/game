@@ -2,6 +2,7 @@ import { BackgroundObjectRender } from "#engine/game-objects/background-object/r
 
 import type { AnimationPlayback } from "#engine/animation";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
+import type { RenderContext } from "#engine/rendering";
 
 import type { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
 import type { FlowLayout, FlowPosition } from "#engine/game-objects/background-flow-object/layout";
@@ -99,7 +100,7 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
   }
 
   #drawTile(
-    ctx: CanvasRenderingContext2D,
+    ctx: RenderContext,
     state: BackgroundFlowRenderState,
     originX: number,
     originBottom: number,

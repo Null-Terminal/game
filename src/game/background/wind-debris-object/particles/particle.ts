@@ -1,4 +1,5 @@
 import { AnimationPlayback } from "#engine/animation";
+import type { RenderContext } from "#engine/rendering";
 import type { SeededRandom } from "#/utils/seeded-random";
 
 import { sampleWindRange } from "#game/background/wind-debris-object/utils";
@@ -63,7 +64,7 @@ export abstract class WindParticle {
   }
 
   draw(
-    ctx: CanvasRenderingContext2D,
+    ctx: RenderContext,
     elapsed: number,
     gust: number,
     cameraX: number,

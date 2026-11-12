@@ -2,6 +2,9 @@ import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import { Disposable } from "#engine/disposable";
+import { Canvas2DStrategy, WebGLStrategy, WebGLUnavailableError } from "#engine/rendering";
+
+import type { RenderContext, RenderStrategy } from "#engine/rendering";
 import type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas/types";
 
 export type * from "#engine/game/render-canvas/types";
@@ -37,6 +40,10 @@ export class RenderCanvas extends Disposable {
     return this.#delta;
   }
 
+  get textureStats() {
+    return this.#strategy.textureStats;
+  }
+
   get width() {
     return this.canvas.width;
   }
@@ -53,10 +60,8 @@ export class RenderCanvas extends Disposable {
     this.canvas.height = value;
   }
 
-  @cache
-  get #ctx() {
-    return this.canvas.getContext("2d")!;
-  }
+  readonly #ctx: RenderContext;
+  readonly #strategy: RenderStrategy;
 
   #redrawId = 0;
   #paused = false;
@@ -73,11 +78,28 @@ export class RenderCanvas extends Disposable {
       width: 1024,
       height: 768,
       showFPS: false,
+      backend: "webgl",
       ...opts
     };
 
     this.canvas.width = this.options.width;
     this.canvas.height = this.options.height;
+
+    let strategy: RenderStrategy | null = null;
+
+    if (this.options.backend === "webgl") {
+      try {
+        strategy = new WebGLStrategy(this.canvas);
+
+      } catch (err) {
+        if (!(err instanceof WebGLUnavailableError)) {
+          throw err;
+        }
+      }
+    }
+
+    this.#strategy = strategy ?? new Canvas2DStrategy(this.canvas);
+    this.#ctx = this.#strategy.context;
 
     this.start();
   }
@@ -86,6 +108,7 @@ export class RenderCanvas extends Disposable {
     super.destroy();
     this.stop();
     this.emitter.off();
+    this.#strategy.destroy();
   }
 
   pause() {

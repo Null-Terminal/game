@@ -9,7 +9,7 @@ export interface LevelScene {
 
 export function createLevelScene(): LevelScene {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 320, height: 240 });
+  const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
   const game = Game.camera(new Camera()).create(canvas);
 
   canvas.stop();

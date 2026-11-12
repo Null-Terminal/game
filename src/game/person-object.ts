@@ -1,5 +1,6 @@
 import type { RenderPayload } from "#engine/game";
 import { CollisionStatus, MovableObject } from "#engine/game-objects";
+import type { RenderContext } from "#engine/rendering";
 
 import { fly, flyEnd } from "#/sprites/character/fly";
 import { run, jump } from "#/sprites/character/run";
@@ -220,7 +221,7 @@ export class PersonObject extends MovableObject {
     }, { signal: this.abortSignal });
   }
 
-  #renderStats(ctx: CanvasRenderingContext2D) {
+  #renderStats(ctx: RenderContext) {
     const padding = 10;
     const { hp, hpMax, fuel, fuelMax } = this.stats;
     const lines = [

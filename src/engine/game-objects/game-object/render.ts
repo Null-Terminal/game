@@ -9,6 +9,7 @@ import type { RenderPayload } from "#engine/game";
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
 import type * as t from "#engine/game-objects/game-object/render/types";
+import type { RenderContext } from "#engine/rendering";
 
 export type * from "#engine/game-objects/game-object/render/types";
 
@@ -29,7 +30,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     super(go);
 
     this.#payload = {
-      ctx: null as CanvasRenderingContext2D | null,
+      ctx: null as RenderContext | null,
       now: 0,
 
       delta: 0,

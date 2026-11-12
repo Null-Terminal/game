@@ -34,7 +34,7 @@ class Obstacle extends ColliderObject {
 
 export async function createMovementScene(bounds: readonly BBoxTuple[]) {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 100, height: 100 });
+  const canvas = new RenderCanvas(element, { width: 100, height: 100, backend: "2d" });
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);

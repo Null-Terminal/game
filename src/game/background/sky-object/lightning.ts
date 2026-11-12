@@ -1,6 +1,8 @@
 import { isInRange } from "#/utils/validators";
 import { SeededRandom } from "#/utils/seeded-random";
 
+import type { RenderContext } from "#engine/rendering";
+
 export interface LightningOptions {
   // Задержка до первого разряда, интервал и длительность вспышки в миллисекундах
   initialDelay: number;
@@ -92,7 +94,7 @@ export class Lightning {
     this.#canvas = new OffscreenCanvas(width, height);
   }
 
-  draw(ctx: CanvasRenderingContext2D, elapsed: number, width: number, height: number) {
+  draw(ctx: RenderContext, elapsed: number, width: number, height: number) {
     if (elapsed >= this.#nextStrike) {
       this.#startStrike(elapsed, width, height);
     }

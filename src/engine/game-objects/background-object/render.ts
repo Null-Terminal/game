@@ -2,6 +2,7 @@ import { GameObjectRender } from "#engine/game-objects/game-object/render";
 
 import type * as go from "#engine/game-objects/game-object";
 import type { BackgroundObject } from "#engine/game-objects/background-object";
+import type { RenderContext } from "#engine/rendering";
 
 type Axis = "w" | "h";
 
@@ -218,7 +219,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   }
 
   #fillPattern(
-    ctx: CanvasRenderingContext2D,
+    ctx: RenderContext,
     pattern: ImageBitmap,
     bounds: Readonly<VisibleBounds>,
     originX: number,

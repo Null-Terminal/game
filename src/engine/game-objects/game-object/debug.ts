@@ -2,6 +2,7 @@ import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object/render";
+import type { RenderContext } from "#engine/rendering";
 
 export interface GameObjectDebugOptions {
   // Визуализация рамки вокруг отрисованного объекта (можно явно задать цвет)
@@ -45,7 +46,7 @@ export class GameObjectDebug<T extends GameObject = GameObject> extends ServantO
   }
 
   #drawOutline(
-    ctx: CanvasRenderingContext2D,
+    ctx: RenderContext,
     outline: string | true,
     left: number,
     top: number,
