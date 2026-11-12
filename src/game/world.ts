@@ -84,7 +84,7 @@ export async function createDemoWorld(showSeams = false): Promise<WorldObjects> 
       opacity: 0.75, speed: 3, scrollFactor: [0.25, 1], sway: 2, flow: true
     }],
 
-    // Насыпь перекрывает основания дальних объектов. Дорога и тротуар лежат перед ней.
+    // Насыпь перекрывает основания дальних объектов. Дорога и тротуар лежат перед ней
     [_.BackgroundObject, { show: _.roadsideGround, bbox: [-Infinity, 180, Infinity, 295], scrollFactor: [0.38, 1] }],
 
     [_.BackgroundObject, { show: _.asphalt, bbox: [-Infinity, -Infinity, Infinity, 245], stretch: "wh", debug: backdropDebug }],
@@ -197,25 +197,22 @@ export async function createDemoWorld(showSeams = false): Promise<WorldObjects> 
 
   ]) as WorldObjects;
 
-  // Каркас лесов под четырьмя настилами, от земли до верхней остановки лифта
+  // Каркас лесов под четырьмя настилами, от земли до верхней остановки лифта.
+  // Конечный bbox запекает повтор кадра по всей ширине ряда.
   for (let tier = 0; tier < 4; tier++) {
-    for (let column = 0; column < 11; column++) {
-      objects.push([_.BackgroundObject, {
-        show: _.scaffoldFrame,
-        x: 2730 + column * 165,
-        y: 225 + tier * 300
-      }]);
-    }
+    const bottom = 225 + tier * 300;
+
+    objects.push([_.BackgroundObject, {
+      show: _.scaffoldFrame,
+      bbox: [2730, bottom, 2730 + 11 * _.scaffoldFrame.maxWidth, bottom + _.scaffoldFrame.maxHeight]
+    }]);
   }
 
   // Шахта закрывает каркас лесов за кабинкой на всей высоте её хода
-  for (let segment = 0; segment < 5; segment++) {
-    objects.push([_.BackgroundObject, {
-      show: _.elevatorShaft,
-      x: 2815,
-      y: 225 + segment * 330
-    }]);
-  }
+  objects.push([_.BackgroundObject, {
+    show: _.elevatorShaft,
+    bbox: [2815, 225, 2815 + _.elevatorShaft.maxWidth, 225 + 5 * _.elevatorShaft.maxHeight]
+  }]);
 
   // Номера колонок с ломкими досками на каждом ярусе
   const fragileColumnsByTier = [[2, 4], [3, 5], [1, 4], [2, 5]];
