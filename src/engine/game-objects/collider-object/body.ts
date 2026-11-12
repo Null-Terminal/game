@@ -123,6 +123,7 @@ export class CollisionBody extends ServantObject<ColliderObject> {
     if (this.#mounted && this.#mode === Mode.Static) {
       if (sleeping) {
         this.#removeStatic();
+
       } else {
         this.#syncStatic();
       }
