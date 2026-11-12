@@ -43,6 +43,8 @@ export class ElevatorObject extends PlatformObject<ElevatorOptions> {
   }
 
   override init() {
+    super.init();
+
     const { stops, speed } = this.options;
 
     const startsAtOrigin = stops[0]?.[0] === 0 && stops[0]?.[1] === 0;
@@ -61,6 +63,7 @@ export class ElevatorObject extends PlatformObject<ElevatorOptions> {
     this.#targetStop = 0;
 
     this.render.mountCabin(this.options.cabin);
+    this.addCollisionShape(() => this.render.ceilingBounds);
   }
 
   @ifAlive
@@ -81,18 +84,6 @@ export class ElevatorObject extends PlatformObject<ElevatorOptions> {
   @ifAlive
   nextStop() {
     this.goToStop((this.#targetStop + 1) % this.options.stops.length);
-  }
-
-  protected override bindFlush() {
-    super.bindFlush();
-
-    const bounds = this.render.ceilingBounds;
-
-    if (bounds == null) {
-      return;
-    }
-
-    this.world.dynamics.insert(...this.poolPointer, ...bounds);
   }
 
   protected override createRefOptions(childOptions?: WithEntry[1]) {

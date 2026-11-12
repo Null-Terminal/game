@@ -88,7 +88,7 @@ export async function createDemoWorld(showSeams = false): Promise<WorldObjects> 
     [_.BackgroundObject, { show: _.roadsideGround, bbox: [-Infinity, 180, Infinity, 295], scrollFactor: [0.38, 1] }],
 
     [_.BackgroundObject, { show: _.asphalt, bbox: [-Infinity, -Infinity, Infinity, 245], stretch: "wh", debug: backdropDebug }],
-    [_.StaticObject, { bbox: [-Infinity, 180, Infinity, 245] }],
+    [_.ColliderObject, { bbox: [-Infinity, 180, Infinity, 245] }],
     [_.BackgroundObject, { show: _.sidewalk, bbox: [-Infinity, 210, Infinity, 275] }],
 
     // Вода с нефтяной плёнкой и разлив кислоты на дороге

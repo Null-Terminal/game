@@ -1,6 +1,6 @@
 import type { LoadedAnimation } from "#engine/animation";
 
-import { DynamicInteractObject, ifAlive } from "#engine/game-objects";
+import { InteractObject, ifAlive } from "#engine/game-objects";
 import type { GameObject, GameObjectOptions } from "#engine/game-objects";
 
 import { PersonObject } from "#game/person-object";
@@ -11,13 +11,14 @@ export type ElevatorPanelOptions = GameObjectOptions<{
   showActive: LoadedAnimation;
 }>;
 
-export class ElevatorPanelObject extends DynamicInteractObject<ElevatorPanelOptions> {
+export class ElevatorPanelObject extends InteractObject<ElevatorPanelOptions> {
   declare acceptor: ElevatorObject | null;
 
   override init() {
     super.init();
+    this.initPhysics();
 
-    this.render.on(this.canvas.events.dynamic, () => {
+    this.render.on(this.canvas.events.scene, () => {
       this.ensurePlaying(this.acceptor?.isMoving ? this.options.showActive : this.options.show);
     });
   }

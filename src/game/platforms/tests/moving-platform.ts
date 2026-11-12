@@ -54,8 +54,7 @@ export async function createMovingPlatformScene({
 
       canvas.emitter.emit(canvas.events.beforeRender, frame);
       canvas.emitter.emit(canvas.events.background, frame);
-      canvas.emitter.emit(canvas.events.static, frame);
-      canvas.emitter.emit(canvas.events.dynamic, frame);
+      canvas.emitter.emit(canvas.events.scene, frame);
       canvas.emitter.emit(canvas.events.interact, frame);
       canvas.emitter.emit(canvas.events.main, frame);
       canvas.emitter.emit(canvas.events.overlay, frame);

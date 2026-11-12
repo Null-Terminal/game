@@ -2,7 +2,7 @@ import type { LoadedAnimation } from "#engine/animation";
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { StaticInteractObject, ifAlive } from "#engine/game-objects";
+import { InteractObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
 
 import { controlKinds } from "#game/control-object/kinds";
@@ -16,7 +16,7 @@ export type ControlOptions = GameObjectOptions<DefaultGameObjectOptions & {
   showDeactivate?: LoadedAnimation;
 }>;
 
-export class ControlObject extends StaticInteractObject<ControlOptions> {
+export class ControlObject extends InteractObject<ControlOptions> {
   static readonly kinds = controlKinds;
 
   #active = false;

@@ -1,7 +1,7 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { DynamicInteractObject, ifAlive } from "#engine/game-objects";
+import { InteractObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
 
 import { PersonObject } from "#game/person-object";
@@ -12,11 +12,16 @@ import { medkit } from "#/sprites/interactables/medkit";
 export type PickupKind = keyof typeof PickupObject.kinds;
 export type PickupOptions = GameObjectOptions<DefaultGameObjectOptions & { kind: PickupKind }>;
 
-export class PickupObject extends DynamicInteractObject<PickupOptions> {
+export class PickupObject extends InteractObject<PickupOptions> {
   static readonly kinds = {
     fuel: { show: fuelCanister, stat: "fuel", max: "fuelMax", gain: 20 },
     medkit: { show: medkit, stat: "hp", max: "hpMax", gain: 35 }
   } as const;
+
+  override init() {
+    super.init();
+    this.initPhysics();
+  }
 
   override create(game: Game, poolPointer: PoolPointer, opts?: PickupOptions) {
     if (opts == null) {

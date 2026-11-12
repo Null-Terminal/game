@@ -41,7 +41,7 @@ export class ElevatorObjectRender extends GameObjectRender<ElevatorObject> {
       return;
     }
 
-    this.on(events.dynamic, ({ ctx }, elapsed) => {
+    this.on(events.scene, ({ ctx }, elapsed) => {
       if (go.status.shadowed) {
         return;
       }

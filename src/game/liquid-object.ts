@@ -1,7 +1,7 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { StaticInteractObject, ifAlive } from "#engine/game-objects";
+import { InteractObject, ifAlive } from "#engine/game-objects";
 
 import type { DefaultGameObjectOptions, GameObject } from "#engine/game-objects";
 import type { BBoxTuple } from "#engine/rtree";
@@ -19,7 +19,7 @@ export type LiquidObjectOptions = DefaultGameObjectOptions & {
   damagePerSecond?: number;
 };
 
-export class LiquidObject extends StaticInteractObject<LiquidObjectOptions> {
+export class LiquidObject extends InteractObject<LiquidObjectOptions> {
   static readonly kinds = {
     water: { show: water, damagePerSecond: 0 },
     acid: { show: acid, damagePerSecond: 35 }

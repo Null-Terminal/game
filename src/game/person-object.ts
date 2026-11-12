@@ -1,17 +1,17 @@
 import type { RenderPayload } from "#engine/game";
-import { CollisionStatus, MovableObject } from "#engine/game-objects";
+import { CollisionStatus, PhysicsObject } from "#engine/game-objects";
 import type { RenderContext } from "#engine/rendering";
 
 import { fly, flyEnd } from "#/sprites/character/fly";
 import { run, jump } from "#/sprites/character/run";
 import { stay } from "#/sprites/character/stay";
 
-export class PersonObject extends MovableObject {
+export class PersonObject extends PhysicsObject {
   static override readonly animations = { stay, run, jump, fly, flyEnd };
   override readonly animations = PersonObject.animations;
 
   static override readonly stats = {
-    ...MovableObject.stats,
+    ...PhysicsObject.stats,
     speed: 300,
     jump: 2500,
     jetpack: 350,
