@@ -1,7 +1,11 @@
-import { carJunkyard } from "#/sprites/backgrounds/midground/car-junkyard";
-import { overflowingDumpsters } from "#/sprites/backgrounds/midground/overflowing-dumpsters";
+import { foldDeps } from "#/utils/fold-deps";
+
+const _ = await foldDeps({
+  carJunkyard: import("#/sprites/backgrounds/midground/car-junkyard"),
+  overflowingDumpsters: import("#/sprites/backgrounds/midground/overflowing-dumpsters")
+});
 
 export const nearRoadWrecks = [
-  carJunkyard,
-  overflowingDumpsters
+  _.carJunkyard,
+  _.overflowingDumpsters
 ] as const;

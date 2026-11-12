@@ -1,15 +1,19 @@
-import { repeatableBrickWall } from "#/sprites/backgrounds/midground/repeatable-brick-wall";
-import { barbedWireFence } from "#/sprites/backgrounds/midground/barbed-wire-fence";
-import { breachedPerimeterWall } from "#/sprites/backgrounds/midground/breached-perimeter-wall";
-import { physicsWall } from "#/sprites/backgrounds/midground/physics-wall";
-import { drainWall } from "#/sprites/backgrounds/midground/drain-wall";
+import { foldDeps } from "#/utils/fold-deps";
+
+const _ = await foldDeps({
+  brickWall: import("#/sprites/backgrounds/midground/repeatable-brick-wall"),
+  barbedWireFence: import("#/sprites/backgrounds/midground/barbed-wire-fence"),
+  breachedPerimeterWall: import("#/sprites/backgrounds/midground/breached-perimeter-wall"),
+  physicsWall: import("#/sprites/backgrounds/midground/physics-wall"),
+  drainWall: import("#/sprites/backgrounds/midground/drain-wall")
+});
 
 export const roadsideStructures = [
-  repeatableBrickWall,
-  barbedWireFence,
-  repeatableBrickWall,
-  breachedPerimeterWall,
-  physicsWall,
-  repeatableBrickWall,
-  drainWall
+  _.repeatableBrickWall,
+  _.barbedWireFence,
+  _.repeatableBrickWall,
+  _.breachedPerimeterWall,
+  _.physicsWall,
+  _.repeatableBrickWall,
+  _.drainWall
 ] as const;

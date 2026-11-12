@@ -1,23 +1,27 @@
-import { cityTowerA } from "#/sprites/backgrounds/buildings/towers/city-tower-a";
-import { cityTowerB } from "#/sprites/backgrounds/buildings/towers/city-tower-b";
-import { cityWatchtower } from "#/sprites/backgrounds/buildings/towers/city-watchtower";
-import { cityAiDataCitadel } from "#/sprites/backgrounds/buildings/towers/city-ai-data-citadel";
+import { foldDeps } from "#/utils/fold-deps";
 
-import { cityRuinedResidence } from "#/sprites/backgrounds/buildings/ruins/city-ruined-residence";
-import { cityRuinedHospital } from "#/sprites/backgrounds/buildings/ruins/city-ruined-hospital";
-import { cityRuinedObservatory } from "#/sprites/backgrounds/buildings/ruins/city-ruined-observatory";
+const _ = await foldDeps({
+  towersA: import("#/sprites/backgrounds/buildings/towers/city-tower-a"),
+  towersB: import("#/sprites/backgrounds/buildings/towers/city-tower-b"),
+  watchtower: import("#/sprites/backgrounds/buildings/towers/city-watchtower"),
+  citadel: import("#/sprites/backgrounds/buildings/towers/city-ai-data-citadel"),
 
-import { cityComplianceCenter } from "#/sprites/backgrounds/buildings/civic/city-compliance-center";
-import { cityAutomatedDepot } from "#/sprites/backgrounds/buildings/industrial/city-automated-depot";
+  residence: import("#/sprites/backgrounds/buildings/ruins/city-ruined-residence"),
+  hospital: import("#/sprites/backgrounds/buildings/ruins/city-ruined-hospital"),
+  observatory: import("#/sprites/backgrounds/buildings/ruins/city-ruined-observatory"),
+
+  complianceCenter: import("#/sprites/backgrounds/buildings/civic/city-compliance-center"),
+  depot: import("#/sprites/backgrounds/buildings/industrial/city-automated-depot")
+});
 
 export const citySkyline = [
-  cityTowerA,
-  cityTowerB,
-  cityWatchtower,
-  cityAiDataCitadel,
-  cityRuinedResidence,
-  cityRuinedHospital,
-  cityRuinedObservatory,
-  cityComplianceCenter,
-  cityAutomatedDepot
+  _.cityTowerA,
+  _.cityTowerB,
+  _.cityWatchtower,
+  _.cityAiDataCitadel,
+  _.cityRuinedResidence,
+  _.cityRuinedHospital,
+  _.cityRuinedObservatory,
+  _.cityComplianceCenter,
+  _.cityAutomatedDepot
 ] as const;

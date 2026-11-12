@@ -1,13 +1,17 @@
-import { resistanceWallBarrel } from "#/sprites/backgrounds/midground/resistance-wall-barrel";
-import { propagandaTerminal } from "#/sprites/backgrounds/midground/propaganda-terminal";
-import { abandonedGarages } from "#/sprites/backgrounds/midground/abandoned-garages";
-import { agentBillboard } from "#/sprites/backgrounds/midground/agent-billboard";
-import { thinkingBillboard } from "#/sprites/backgrounds/midground/thinking-billboard";
+import { foldDeps } from "#/utils/fold-deps";
+
+const _ = await foldDeps({
+  resistanceWallBarrel: import("#/sprites/backgrounds/midground/resistance-wall-barrel"),
+  propagandaTerminal: import("#/sprites/backgrounds/midground/propaganda-terminal"),
+  abandonedGarages: import("#/sprites/backgrounds/midground/abandoned-garages"),
+  agentBillboard: import("#/sprites/backgrounds/midground/agent-billboard"),
+  thinkingBillboard: import("#/sprites/backgrounds/midground/thinking-billboard")
+});
 
 export const nearRoadsideScenery = [
-  resistanceWallBarrel,
-  propagandaTerminal,
-  abandonedGarages,
-  agentBillboard,
-  thinkingBillboard
+  _.resistanceWallBarrel,
+  _.propagandaTerminal,
+  _.abandonedGarages,
+  _.agentBillboard,
+  _.thinkingBillboard
 ] as const;

@@ -1,31 +1,35 @@
-import { accessButton } from "#/sprites/interactables/button-access";
-import { emergencyButton } from "#/sprites/interactables/button-emergency";
-import { floorLever } from "#/sprites/interactables/lever-floor";
-import { wallLever } from "#/sprites/interactables/lever-wall";
-import { aiTerminal } from "#/sprites/interactables/terminal-ai";
-import { resistanceTerminal } from "#/sprites/interactables/terminal-resistance";
+import { foldDeps } from "#/utils/fold-deps";
+
+const _ = await foldDeps({
+  accessButton: import("#/sprites/interactables/button-access"),
+  emergencyButton: import("#/sprites/interactables/button-emergency"),
+  floorLever: import("#/sprites/interactables/lever-floor"),
+  wallLever: import("#/sprites/interactables/lever-wall"),
+  aiTerminal: import("#/sprites/interactables/terminal-ai"),
+  resistanceTerminal: import("#/sprites/interactables/terminal-resistance")
+});
 
 export const controlKinds = {
   floorLever: {
-    show: floorLever.idle,
-    showActivate: floorLever.activate,
-    showDeactivate: floorLever.deactivate
+    show: _.floorLever.idle,
+    showActivate: _.floorLever.activate,
+    showDeactivate: _.floorLever.deactivate
   },
   wallLever: {
-    show: wallLever.idle,
-    showActivate: wallLever.activate,
-    showDeactivate: wallLever.deactivate
+    show: _.wallLever.idle,
+    showActivate: _.wallLever.activate,
+    showDeactivate: _.wallLever.deactivate
   },
-  emergencyButton: { show: emergencyButton.idle, showActivate: emergencyButton.press },
-  accessButton: { show: accessButton.idle, showActivate: accessButton.press },
+  emergencyButton: { show: _.emergencyButton.idle, showActivate: _.emergencyButton.press },
+  accessButton: { show: _.accessButton.idle, showActivate: _.accessButton.press },
   aiTerminal: {
-    show: aiTerminal.idle,
-    showActivate: aiTerminal.activate,
-    showDeactivate: aiTerminal.deactivate
+    show: _.aiTerminal.idle,
+    showActivate: _.aiTerminal.activate,
+    showDeactivate: _.aiTerminal.deactivate
   },
   resistanceTerminal: {
-    show: resistanceTerminal.idle,
-    showActivate: resistanceTerminal.activate,
-    showDeactivate: resistanceTerminal.deactivate
+    show: _.resistanceTerminal.idle,
+    showActivate: _.resistanceTerminal.activate,
+    showDeactivate: _.resistanceTerminal.deactivate
   }
 } as const;

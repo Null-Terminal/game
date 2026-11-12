@@ -1,9 +1,13 @@
-import { curbRubble } from "#/sprites/terrain/curb-rubble";
-import { curbCan } from "#/sprites/terrain/curb-can";
-import { curbBottle } from "#/sprites/terrain/curb-bottle";
+import { foldDeps } from "#/utils/fold-deps";
+
+const _ = await foldDeps({
+  curbRubble: import("#/sprites/terrain/curb-rubble"),
+  curbCan: import("#/sprites/terrain/curb-can"),
+  curbBottle: import("#/sprites/terrain/curb-bottle")
+});
 
 export const curbDebris = [
-  curbRubble,
-  curbCan,
-  curbBottle
+  _.curbRubble,
+  _.curbCan,
+  _.curbBottle
 ] as const;
