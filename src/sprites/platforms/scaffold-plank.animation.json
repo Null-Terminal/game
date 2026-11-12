@@ -1,7 +1,7 @@
 {
   "params": {
     "maxHeight": 40,
-    "collisionBounds": { "x": 0, "y": 152, "width": 2152, "height": 170 }
+    "collisionBounds": { "x": 50, "y": 152, "width": 2052, "height": 170 }
   },
   "sprites": [
     {
