@@ -2,6 +2,7 @@ import { cache } from "#decorators/cache";
 import { isInRange } from "#/utils/validators";
 import { GameObject } from "#engine/game-objects";
 
+import { SkyObjectDebug } from "#game/background/sky-object/debug";
 import { overcastSky, stormSky } from "#game/background/sky-object/presets";
 import { SkyObjectRender } from "#game/background/sky-object/render";
 import type { SkyOptions, SkySceneOptions } from "#game/background/sky-object/types";
@@ -17,6 +18,11 @@ export class SkyObject extends GameObject<SkyOptions> {
   };
 
   override readonly animations = SkyObject.animations;
+
+  @cache
+  override get debug(): SkyObjectDebug {
+    return new SkyObjectDebug(this);
+  }
 
   @cache
   override get render(): SkyObjectRender {

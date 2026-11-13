@@ -46,11 +46,11 @@ test("the sky rebuilds at the new canvas size", async ({ page }) => {
 
 const fixtureUrl = "/src/game/background/sky-object/tests/fixture.ts";
 
-async function createScene(page: Page): Promise<JSHandle<fixture.SkyScene>> {
+async function createScene(page: Page, preset: "storm" | "dusk" = "storm"): Promise<JSHandle<fixture.SkyScene>> {
   await page.goto("/tests/fixture.html");
 
-  return page.evaluateHandle(async (url) => {
+  return page.evaluateHandle(async ({ url, preset }) => {
     const { createSkyScene } = await import(url) as typeof fixture;
-    return createSkyScene();
-  }, fixtureUrl);
+    return createSkyScene(preset);
+  }, { url: fixtureUrl, preset });
 }

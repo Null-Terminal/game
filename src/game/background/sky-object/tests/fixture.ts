@@ -1,6 +1,6 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
 
-import { SkyObject } from "#game/background/sky-object";
+import { SkyObject, duskSky } from "#game/background/sky-object";
 
 export interface SkyScene {
   sky: SkyObject;
@@ -10,14 +10,37 @@ export interface SkyScene {
   destroy(): void;
 }
 
-export async function createSkyScene(): Promise<SkyScene> {
+export interface WebGLSkyScene {
+  sky: SkyObject;
+  canvas: RenderCanvas;
+  destroy(): void;
+}
+
+export async function createWebGLSkyScene(): Promise<WebGLSkyScene> {
+  const element = document.getElementById("game") as HTMLCanvasElement;
+  const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "webgl" });
+  const game = Game.camera(new Camera()).create(canvas);
+  const world = await game.loadLevel(async () => new World({
+    objects: World.of([[SkyObject, { show: "storm", debug: { bounds: true, inspect: true } }]])
+  }));
+
+  const sky = world.objects.get(SkyObject.kind, 0);
+
+  if (!(sky instanceof SkyObject)) {
+    throw new Error("WebGL sky fixture: sky was not created");
+  }
+
+  return { sky, canvas, destroy: () => game.destroy() };
+}
+
+export async function createSkyScene(preset: "storm" | "dusk" = "storm"): Promise<SkyScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[SkyObject, { show: "storm" }]])
+    objects: World.of([[SkyObject, preset === "dusk" ? { ...duskSky } : { show: "storm" }]])
   }));
 
   await Promise.resolve();

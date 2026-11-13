@@ -22,6 +22,13 @@ export interface LightningOptions {
   seed: number;
 }
 
+export interface LightningBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
 export class Lightning {
   readonly options: Readonly<LightningOptions>;
 
@@ -38,6 +45,7 @@ export class Lightning {
   readonly #random: SeededRandom;
   #canvas: OffscreenCanvas | null = null;
   #image: ImageBitmap | null = null;
+  #bounds: LightningBounds | null = null;
 
   constructor(opts: LightningOptions) {
     const invalidTiming =
@@ -78,6 +86,7 @@ export class Lightning {
     this.#nextStrike = this.options.initialDelay;
     this.#strikeStartedAt = -Infinity;
     this.#random.reset(this.options.seed);
+    this.#bounds = null;
   }
 
   clear() {
@@ -91,27 +100,30 @@ export class Lightning {
     this.#image?.close();
     this.#image = null;
     this.#strikeStartedAt = -Infinity;
+    this.#bounds = null;
     this.#canvas = new OffscreenCanvas(width, height);
   }
 
-  draw(ctx: RenderContext, elapsed: number, width: number, height: number) {
+  draw(ctx: RenderContext, elapsed: number, width: number, height: number, collectBounds = false): LightningBounds | null {
     if (elapsed >= this.#nextStrike) {
-      this.#startStrike(elapsed, width, height);
+      this.#startStrike(elapsed, width, height, collectBounds);
     }
 
     const age = elapsed - this.#strikeStartedAt;
 
     if (age < 0 || age >= this.#duration) {
-      return;
+      return null;
     }
 
     ctx.save();
     ctx.globalAlpha = this.#flashOpacity(age) * this.#strength;
     ctx.drawImage(this.#image!, 0, 0);
     ctx.restore();
+
+    return collectBounds ? this.#bounds : null;
   }
 
-  #startStrike(elapsed: number, width: number, height: number) {
+  #startStrike(elapsed: number, width: number, height: number, collectBounds: boolean) {
     const { interval, duration, strength, doubleFlashChance } = this.options;
 
     this.#strikeStartedAt = elapsed;
@@ -121,7 +133,7 @@ export class Lightning {
     this.#strength = strength[0] + this.#random.next() * (strength[1] - strength[0]);
     this.#doubleFlash = this.#random.next() < doubleFlashChance;
 
-    this.#buildStrike(width, height);
+    this.#buildStrike(width, height, collectBounds);
   }
 
   #flashOpacity(age: number) {
@@ -146,7 +158,7 @@ export class Lightning {
     return 0.45 * (this.#duration - age) / (this.#duration - 55);
   }
 
-  #buildStrike(width: number, height: number) {
+  #buildStrike(width: number, height: number, collectBounds: boolean) {
     const ctx = this.#canvas!.getContext("2d")!;
     ctx.clearRect(0, 0, width, height);
 
@@ -163,6 +175,7 @@ export class Lightning {
     this.#drawGlow(ctx, width, height, startX + lean * 0.5, (startY + endY) * 0.5);
 
     let x = startX;
+    const bounds: LightningBounds | null = collectBounds ? { left: x, top: startY, right: x, bottom: startY } : null;
 
     ctx.beginPath();
     ctx.moveTo(x, startY);
@@ -177,6 +190,9 @@ export class Lightning {
 
       this.#points[i * 2] = x;
       this.#points[i * 2 + 1] = y;
+      if (bounds != null) {
+        this.#includePoint(bounds, x, y);
+      }
 
       ctx.lineTo(x, y);
     }
@@ -194,9 +210,19 @@ export class Lightning {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    this.#drawBranches(ctx, segments);
+    this.#drawBranches(ctx, segments, bounds);
     ctx.restore();
 
+    if (bounds != null) {
+      const padding = 18;
+
+      bounds.left = Math.max(0, bounds.left - padding);
+      bounds.top = Math.max(0, bounds.top - padding);
+      bounds.right = Math.min(width, bounds.right + padding);
+      bounds.bottom = Math.min(height, bounds.bottom + padding);
+    }
+
+    this.#bounds = bounds;
     this.#image?.close();
     this.#image = this.#canvas!.transferToImageBitmap();
   }
@@ -222,7 +248,7 @@ export class Lightning {
     ctx.fillRect(0, 0, width, height);
   }
 
-  #drawBranches(ctx: OffscreenCanvasRenderingContext2D, segments: number) {
+  #drawBranches(ctx: OffscreenCanvasRenderingContext2D, segments: number, bounds: LightningBounds | null) {
     // Число ветвей выбирается из заданного диапазона; каждая выходит из случайного узла
     const [minBranches, maxBranches] = this.options.branches;
     const count = minBranches + Math.floor(this.#random.next() * (maxBranches - minBranches + 1));
@@ -241,10 +267,28 @@ export class Lightning {
 
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + direction * length * 0.45, y + length * 0.35);
-      ctx.lineTo(x + direction * length, y + length * 0.7);
+
+      const middleX = x + direction * length * 0.45;
+      const middleY = y + length * 0.35;
+      const endX = x + direction * length;
+      const endY = y + length * 0.7;
+
+      ctx.lineTo(middleX, middleY);
+      ctx.lineTo(endX, endY);
       ctx.stroke();
+
+      if (bounds != null) {
+        this.#includePoint(bounds, middleX, middleY);
+        this.#includePoint(bounds, endX, endY);
+      }
     }
+  }
+
+  #includePoint(bounds: LightningBounds, x: number, y: number) {
+    bounds.left = Math.min(bounds.left, x);
+    bounds.top = Math.min(bounds.top, y);
+    bounds.right = Math.max(bounds.right, x);
+    bounds.bottom = Math.max(bounds.bottom, y);
   }
 
   static #validRange(range: readonly [number, number], min: number, max: number) {

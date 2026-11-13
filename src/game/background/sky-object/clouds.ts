@@ -4,6 +4,14 @@ import { isInRange } from "#/utils/validators";
 export interface CloudStrip {
   image: ImageBitmap;
   top: number;
+  clusters: readonly CloudBounds[] | null;
+}
+
+export interface CloudBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
 }
 
 export interface CloudsOptions {
@@ -35,7 +43,7 @@ export class Clouds {
     this.options = { ...opts };
   }
 
-  build(width: number, height: number): CloudStrip {
+  build(width: number, height: number, collectBounds = false): CloudStrip {
     const { seed, clusters, density, opacity } = this.options;
 
     // Запас вокруг полосы учитывает высоту силуэтов и их случайный сдвиг
@@ -49,6 +57,7 @@ export class Clouds {
 
     const random = new SeededRandom(seed);
     const columnWidth = 8;
+    const bounds: CloudBounds[] | null = collectBounds ? [] : null;
 
     ctx.globalAlpha = opacity;
 
@@ -57,6 +66,12 @@ export class Clouds {
       const groupWidth = 240 + random.next() * 180;
       const groupX = random.next() * (width - groupWidth);
       const groupY = height * (0.09 + random.next() * 0.39);
+      const cluster: CloudBounds | null = bounds == null ? null : {
+        left: Infinity,
+        top: Infinity,
+        right: -Infinity,
+        bottom: -Infinity
+      };
 
       ctx.fillStyle = group % 3 === 0 ? "#8E63854D" : "#25244166";
 
@@ -79,16 +94,26 @@ export class Clouds {
           const shapeBottom = y + cloudHeight * (0.45 + middle * 0.4 + roughness);
 
           // Верх выравниваем по сетке 4 пикселя, а высоту не даём уменьшить ниже 4
-          ctx.fillRect(
-            x + column * columnWidth,
-            Math.round(shapeTop / 4) * 4,
-            columnWidth,
-            Math.max(4, shapeBottom - shapeTop)
-          );
+          const columnX = x + column * columnWidth;
+          const columnY = Math.round(shapeTop / 4) * 4;
+          const columnHeight = Math.max(4, shapeBottom - shapeTop);
+
+          ctx.fillRect(columnX, columnY, columnWidth, columnHeight);
+
+          if (cluster != null) {
+            cluster.left = Math.min(cluster.left, columnX);
+            cluster.top = Math.min(cluster.top, columnY);
+            cluster.right = Math.max(cluster.right, columnX + columnWidth);
+            cluster.bottom = Math.max(cluster.bottom, columnY + columnHeight);
+          }
         }
+      }
+
+      if (bounds != null && cluster != null && cluster.left < cluster.right) {
+        bounds.push(cluster);
       }
     }
 
-    return { image: canvas.transferToImageBitmap(), top: stripTop };
+    return { image: canvas.transferToImageBitmap(), top: stripTop, clusters: bounds };
   }
 }
