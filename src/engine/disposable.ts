@@ -49,8 +49,8 @@ export abstract class Disposable {
       try {
         destructors[i]!();
 
-      } catch (error) {
-        errors.push(error);
+      } catch (err) {
+        errors.push(err);
       }
     }
 

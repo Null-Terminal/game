@@ -65,8 +65,8 @@ export class WindDebrisObject extends GameObject<WindDebrisOptions> {
     if (
       seed == null || !Number.isFinite(seed) ||
       wind == null || motion == null || particles == null ||
-      Object.values(particles).some((options) =>
-        options != null && (!Number.isInteger(options.count) || options.count < 0 || options.count > 100)
+      Object.values(particles).some((opts) =>
+        opts != null && (!Number.isInteger(opts.count) || opts.count < 0 || opts.count > 100)
       )
     ) {
       throw new RangeError("Wind debris requires a scene with a finite seed and particle counts from 0 to 100");

@@ -68,7 +68,7 @@ test("a failed load preserves the current world and reports the error", async ({
     game.onLevelLoad(
       () => events.push("loading"),
       () => events.push("loaded"),
-      (error) => events.push(error instanceof Error ? error.message : String(error))
+      (err) => events.push(err instanceof Error ? err.message : String(err))
     );
 
     let message = "";

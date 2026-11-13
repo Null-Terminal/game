@@ -17,7 +17,7 @@ export interface BackgroundScene {
   destroy(): void;
 }
 
-export async function createBackgroundScene(options: BackgroundSceneOptions): Promise<BackgroundScene> {
+export async function createBackgroundScene(opts: BackgroundSceneOptions): Promise<BackgroundScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, {
     width: 100,
@@ -41,7 +41,7 @@ export async function createBackgroundScene(options: BackgroundSceneOptions): Pr
     sprites: [{ x: 0, y: 0, width: 10, height: 10, duration: 100, spriteId: "" }]
   }));
 
-  world.createObject(BackgroundObject, { ...options, show: animation });
+  world.createObject(BackgroundObject, { ...opts, show: animation });
 
   const ctx = element.getContext("2d")!;
 

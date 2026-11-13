@@ -32,13 +32,13 @@ export class Camera extends Disposable {
   #target: PhysicsObject | null = null;
   #mounted = false;
 
-  constructor(options: CameraOptions = {}) {
+  constructor(opts: CameraOptions = {}) {
     super();
 
     this.options = {
-      smoothness: options.smoothness ?? Camera.DEFAULT_SMOOTHNESS,
-      deadZone: { ...Camera.DEFAULT_DEAD_ZONE, ...options.deadZone },
-      limit: options.limit ?? {},
+      smoothness: opts.smoothness ?? Camera.DEFAULT_SMOOTHNESS,
+      deadZone: { ...Camera.DEFAULT_DEAD_ZONE, ...opts.deadZone },
+      limit: opts.limit ?? {},
     };
 
     const { left, right, top, bottom } = this.options.deadZone;

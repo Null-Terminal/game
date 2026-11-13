@@ -21,12 +21,12 @@ export class WorkerPool {
   #nextId = 0;
   #destroyed = false;
 
-  constructor(maxWorkers: number, options: WorkerPoolOptions = {}) {
+  constructor(maxWorkers: number, opts: WorkerPoolOptions = {}) {
     if (!Number.isInteger(maxWorkers) || maxWorkers < 1) {
       throw new RangeError("Worker count must be a positive integer");
     }
 
-    const idleTimeoutMs = options.idleTimeoutMs === undefined ? DEFAULT_IDLE_TIMEOUT_MS : options.idleTimeoutMs;
+    const idleTimeoutMs = opts.idleTimeoutMs === undefined ? DEFAULT_IDLE_TIMEOUT_MS : opts.idleTimeoutMs;
 
     if (idleTimeoutMs !== null && !isPositive(idleTimeoutMs)) {
       throw new RangeError("Worker idle timeout must be a positive finite number");

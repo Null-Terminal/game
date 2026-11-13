@@ -65,8 +65,8 @@ export async function createLifecycleScene() {
     game,
     pool,
     canvas,
-    createProbe(options: Parameters<Probe["create"]>[2] = {}) {
-      const pointer = pool.add(Probe, game, options);
+    createProbe(opts: Parameters<Probe["create"]>[2] = {}) {
+      const pointer = pool.add(Probe, game, opts);
       return { pointer, object: getObject(pointer, Probe) };
     },
     createAnimatedProbe() {

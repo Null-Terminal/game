@@ -204,7 +204,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   }
 
   allows(go: GameObject, kind: "stepUp", height: number): boolean | null;
-  allows(go: GameObject, kind: string, options?: unknown): boolean | null;
+  allows(go: GameObject, kind: string, opts?: unknown): boolean | null;
   allows(_go: GameObject, _kind: string, _options?: unknown): boolean | null {
     return null;
   }
@@ -309,7 +309,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     // Ничего не делает по умолчанию
   }
 
-  #initializeState(options: T) {
+  #initializeState(opts: T) {
     this.x = 0;
     this.y = 0;
 
@@ -317,9 +317,9 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     this.height = 0;
     this.bbox = null;
 
-    if ("bbox" in options && options.bbox != null) {
-      const [minX, minY, maxX, maxY] = options.bbox;
-      this.bbox = options.bbox;
+    if ("bbox" in opts && opts.bbox != null) {
+      const [minX, minY, maxX, maxY] = opts.bbox;
+      this.bbox = opts.bbox;
 
       this.x = minX;
       this.y = minY;
@@ -328,19 +328,19 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       this.height = Number.isFinite(minY) && Number.isFinite(maxY) ? maxY - minY : Infinity;
 
     } else {
-      if ("x" in options) {
-        this.x = options.x ?? 0;
+      if ("x" in opts) {
+        this.x = opts.x ?? 0;
       }
 
-      if ("y" in options) {
-        this.y = options.y ?? 0;
+      if ("y" in opts) {
+        this.y = opts.y ?? 0;
       }
     }
 
     this.prevX = this.x;
     this.prevY = this.y;
-    this.effects = { scale: 1, speed: 1, ...options.effects };
-    this.acceptor = options.acceptor ?? null;
+    this.effects = { scale: 1, speed: 1, ...opts.effects };
+    this.acceptor = opts.acceptor ?? null;
   }
 
   #createBitmapPlayback(animation: LoadedAnimation): go.AnimationInstance {
@@ -408,8 +408,8 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     }
   }
 
-  #createRef(name: string, go: WorldObject[0], options: WorldObject[1]) {
-    const instance = this.world.objects.get(...this.world.createObject(go, options))!;
+  #createRef(name: string, go: WorldObject[0], opts: WorldObject[1]) {
+    const instance = this.world.objects.get(...this.world.createObject(go, opts))!;
     this.refs[name] = instance;
 
     this.onDestroy(() => {

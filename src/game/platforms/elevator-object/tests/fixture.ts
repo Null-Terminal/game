@@ -15,7 +15,7 @@ export interface ElevatorScene {
   player: PersonObject;
 }
 
-export async function createElevatorScene(options: ElevatorSceneOptions): Promise<ElevatorScene> {
+export async function createElevatorScene(opts: ElevatorSceneOptions): Promise<ElevatorScene> {
   const canvas = new RenderCanvas(document.getElementById("game") as HTMLCanvasElement, {
     width: 900,
     height: 650,
@@ -33,11 +33,11 @@ export async function createElevatorScene(options: ElevatorSceneOptions): Promis
         y: 100,
         stops: [[0, 0], [100, 0], [100, 100]],
         speed: 200,
-        ...(options.movement == null ? {} : { movement: options.movement })
+        ...(opts.movement == null ? {} : { movement: opts.movement })
       }],
       [PersonObject, {
-        x: options.rider === "roof" ? 420 : 400,
-        y: options.rider === "roof" ? 390 : 170
+        x: opts.rider === "roof" ? 420 : 400,
+        y: opts.rider === "roof" ? 390 : 170
       }]
     ])
   }));

@@ -41,8 +41,8 @@ export async function createSleepScene() {
     world,
     probe,
     initialStaticInsertions,
-    createBackground: (options: Parameters<BackgroundObject["create"]>[2]) => {
-      const background = world.objects.get(...world.createObject(BackgroundObject, options));
+    createBackground: (opts: Parameters<BackgroundObject["create"]>[2]) => {
+      const background = world.objects.get(...world.createObject(BackgroundObject, opts));
 
       if (!(background instanceof BackgroundObject)) {
         throw new Error("Sleep fixture: background was not created");

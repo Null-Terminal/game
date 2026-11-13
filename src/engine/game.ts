@@ -24,7 +24,7 @@ export type * from "#engine/game/render-canvas";
 export class Game extends Disposable {
   static camera(camera: Camera) {
     return {
-      create: (canvas: RenderCanvas, options: GameOptions = {}) => new Game(canvas, camera, options)
+      create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game(canvas, camera, opts)
     };
   }
 
@@ -59,14 +59,14 @@ export class Game extends Disposable {
   #world: World | null = null;
   #levelLoader: (() => Promise<World>) | null = null;
 
-  protected constructor(canvas: RenderCanvas, camera: Camera, options: GameOptions) {
+  protected constructor(canvas: RenderCanvas, camera: Camera, opts: GameOptions) {
     super();
 
     this.camera = camera;
     this.canvas = canvas;
 
     camera.mount(this);
-    this.sleep = new GameSleep(this, options.sleep);
+    this.sleep = new GameSleep(this, opts.sleep);
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Escape") {

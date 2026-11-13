@@ -1,11 +1,11 @@
 import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object/types";
 
-export function getBackgroundScrollFactor(options: DefaultBackgroundObjectOptions, axis: "w" | "h"): number {
-  if (options.static?.includes(axis)) {
+export function getBackgroundScrollFactor(opts: DefaultBackgroundObjectOptions, axis: "w" | "h"): number {
+  if (opts.static?.includes(axis)) {
     return 0;
   }
 
-  const { scrollFactor } = options;
+  const { scrollFactor } = opts;
 
   return axis === "w" ?
     scrollFactor?.[0] ?? 1 :

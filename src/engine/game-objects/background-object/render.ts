@@ -46,10 +46,10 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
 
   override drawBitmap(payload: go.BitmapRenderPayload) {
     const { go } = this;
-    const { options: opts } = go;
+    const { options } = go;
 
-    const wrapWidth = opts.stretch?.includes("w") && !opts.static?.includes("w");
-    const wrapHeight = opts.stretch?.includes("h") && !opts.static?.includes("h");
+    const wrapWidth = options.stretch?.includes("w") && !options.static?.includes("w");
+    const wrapHeight = options.stretch?.includes("h") && !options.static?.includes("h");
 
     const factorX = this.getScrollFactor("w");
     const factorY = this.getScrollFactor("h");

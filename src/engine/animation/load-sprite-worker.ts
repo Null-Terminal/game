@@ -11,7 +11,7 @@ scope.addEventListener("message", async ({ data: { id, payload } }: MessageEvent
     const bitmap = await bakeSprite(payload);
     scope.postMessage({ id, value: bitmap } satisfies WorkerResponse<ImageBitmap>, [bitmap]);
 
-  } catch (error) {
-    scope.postMessage({ id, error: String(error) } satisfies WorkerResponse<ImageBitmap>);
+  } catch (err) {
+    scope.postMessage({ id, error: String(err) } satisfies WorkerResponse<ImageBitmap>);
   }
 });

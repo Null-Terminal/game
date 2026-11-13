@@ -50,8 +50,8 @@ describe("Disposable", () => {
     try {
       resource.destroy();
 
-    } catch (error) {
-      caught = error;
+    } catch (err) {
+      caught = err;
     }
 
     expect(caught).toBeInstanceOf(AggregateError);

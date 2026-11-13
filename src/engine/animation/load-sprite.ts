@@ -13,8 +13,8 @@ class SpriteWorker extends WorkerClient<SpriteLoadData, ImageBitmap> {
 const workerPool = typeof Worker === "undefined" ? null :
   new WorkerPool(MAX_SPRITE_WORKERS, { idleTimeoutMs: null });
 
-export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
-  const { removeBackground = false, tolerance = 5 } = options ?? {};
+export function loadSprite(url: string, opts: LoadSpriteOptions = {}): Promise<ImageBitmap> {
+  const { removeBackground = false, tolerance = 5 } = opts ?? {};
 
   const cacheKey = [url, removeBackground, tolerance].join("_");
 
@@ -24,7 +24,7 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
     return fromCache;
   }
 
-  const promise = loadSpriteUncached(url, options);
+  const promise = loadSpriteUncached(url, opts);
 
   spriteCache.set(cacheKey, promise);
 

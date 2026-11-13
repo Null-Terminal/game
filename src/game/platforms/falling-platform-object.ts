@@ -38,13 +38,13 @@ export class FallingPlatformObject extends ColliderObject<FallingPlatformOptions
   }
 
   override allows(go: GameObject, kind: "stepUp", height: number): boolean;
-  override allows(go: GameObject, kind: string, options?: unknown): boolean | null;
-  override allows(_go: GameObject, kind: string, options?: unknown): boolean | null {
+  override allows(go: GameObject, kind: string, opts?: unknown): boolean | null;
+  override allows(_go: GameObject, kind: string, opts?: unknown): boolean | null {
     if (kind !== "stepUp") {
       return null;
     }
 
-    return typeof options === "number" && options <= this.options.maxStepHeight!;
+    return typeof opts === "number" && opts <= this.options.maxStepHeight!;
   }
 
   @ifAlive

@@ -131,12 +131,12 @@ export class GameStatus {
       this.#set(State.Playing);
       this.#game.canvas.resume();
 
-    } catch (error) {
+    } catch (err) {
       if (!this.#game.destroyed) {
         this.#set(State.Finished);
       }
 
-      throw error;
+      throw err;
     }
   }
 

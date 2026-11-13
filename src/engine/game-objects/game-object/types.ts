@@ -74,8 +74,8 @@ export type Refs<T extends WithMap> = {
 };
 
 export type RefOf<O, E> =
-  E extends ((options: O) => infer _ extends readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
-    ? (options: O) => readonly [C, CreateOptionsOf<C>?]
+  E extends ((opts: O) => infer _ extends readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
+    ? (opts: O) => readonly [C, CreateOptionsOf<C>?]
     : E extends (readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
       ? readonly [C, CreateOptionsOf<C>?]
       : E;

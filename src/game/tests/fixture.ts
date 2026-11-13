@@ -55,9 +55,9 @@ export async function createInteractionScene(): Promise<InteractionScene> {
 
   function createObject<T extends ControlObject | PickupObject | LiquidObject>(
     Class: { kind: number; new(): T },
-    options: Parameters<T["create"]>[2]
+    opts: Parameters<T["create"]>[2]
   ): T {
-    const pointer = world.createObject(Class, options);
+    const pointer = world.createObject(Class, opts);
     const object = world.objects.get(...pointer);
 
     if (!(object instanceof Class)) {

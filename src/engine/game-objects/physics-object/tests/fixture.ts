@@ -52,8 +52,8 @@ export async function createMovementScene(bounds: readonly BBoxTuple[]) {
 
   return {
     obstacles,
-    createProbe(options: Parameters<Probe["create"]>[2] = {}) {
-      const pointer = world.createObject(Probe, options);
+    createProbe(opts: Parameters<Probe["create"]>[2] = {}) {
+      const pointer = world.createObject(Probe, opts);
       const object = world.objects.get(...pointer);
 
       if (!(object instanceof Probe)) {
@@ -74,8 +74,8 @@ export async function createMovementScene(bounds: readonly BBoxTuple[]) {
       return object;
     },
 
-    createTallProbe(options: Parameters<TallProbe["create"]>[2] = {}) {
-      const pointer = world.createObject(TallProbe, options);
+    createTallProbe(opts: Parameters<TallProbe["create"]>[2] = {}) {
+      const pointer = world.createObject(TallProbe, opts);
       const object = world.objects.get(...pointer);
 
       if (!(object instanceof TallProbe)) {

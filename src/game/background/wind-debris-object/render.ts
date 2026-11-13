@@ -40,7 +40,12 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     if (particles.tumbleweed != null) {
       for (let i = 0; i < particles.tumbleweed.count; i++) {
         this.#particles.push(new TumbleweedParticle({
-          random, cameraX, viewWidth, wind, motion, options: particles.tumbleweed
+          random,
+          cameraX,
+          viewWidth,
+          wind,
+          motion,
+          options: particles.tumbleweed
         }));
       }
     }
@@ -48,7 +53,12 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     if (particles.newspaper != null) {
       for (let i = 0; i < particles.newspaper.count; i++) {
         this.#particles.push(new NewspaperParticle({
-          random, cameraX, viewWidth, wind, motion, options: particles.newspaper
+          random,
+          cameraX,
+          viewWidth,
+          wind,
+          motion,
+          options: particles.newspaper
         }));
       }
     }

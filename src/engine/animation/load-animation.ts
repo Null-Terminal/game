@@ -7,11 +7,11 @@ import type { Import, LoadAnimationOptions } from "#engine/animation/types";
 
 export async function loadAnimation(
   sprite: Import<string>,
-  options: LoadAnimationOptions
+  opts: LoadAnimationOptions
 ): Promise<LoadedAnimation> {
-  const [spriteUrl, animationOpts] = await Promise.all([resolve(sprite), resolve(options.animation)]);
+  const [spriteUrl, animationOpts] = await Promise.all([resolve(sprite), resolve(opts.animation)]);
 
-  const image = await loadSprite(spriteUrl.default, options.sprite);
+  const image = await loadSprite(spriteUrl.default, opts.sprite);
   const animation = new AnimationDefinition(animationOpts.default);
 
   return new LoadedAnimation(image, animation);

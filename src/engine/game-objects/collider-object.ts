@@ -33,9 +33,9 @@ export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> ext
     try {
       this.collision.mount();
 
-    } catch (error) {
+    } catch (err) {
       this.destroy();
-      throw error;
+      throw err;
     }
 
     return options;
