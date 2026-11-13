@@ -2,6 +2,7 @@ import { cache } from "#decorators/cache";
 import { isInRange } from "#/utils/validators";
 import { GameObject, type AnimationInstance } from "#engine/game-objects";
 
+import { FogObjectDebug } from "#game/background/fog-object/debug";
 import { FogObjectRender } from "#game/background/fog-object/render";
 import type { FogAppearanceOptions, FogObjectOptions } from "#game/background/fog-object/types";
 
@@ -29,6 +30,11 @@ export class FogObject extends GameObject<FogObjectOptions> {
   };
 
   override readonly animations = FogObject.animations;
+
+  @cache
+  override get debug(): FogObjectDebug {
+    return new FogObjectDebug(this);
+  }
 
   @cache
   override get render(): FogObjectRender {

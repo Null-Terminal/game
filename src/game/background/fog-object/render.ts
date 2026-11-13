@@ -1,5 +1,7 @@
 import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
+
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import type { DebugBounds } from "#engine/game-objects/game-object/debug";
 import type { RenderContext } from "#engine/rendering";
 
 import type { FogObject } from "#game/background/fog-object";
@@ -8,9 +10,14 @@ import type { FogAppearanceOptions } from "#game/background/fog-object/types";
 import { FogTexture, type FogStrip } from "#game/background/fog-object/texture";
 
 export class FogObjectRender extends GameObjectRender<FogObject> {
+  get visibleBounds(): DebugBounds | null {
+    return this.#visibleBounds;
+  }
+
   #texture: FogStrip | null = null;
   #builder: FogTexture | null = null;
   #appearance: FogAppearanceOptions | null = null;
+  #visibleBounds: DebugBounds | null = null;
 
   createPlayback(appearance: FogAppearanceOptions): AnimationInstance {
     this.#builder = new FogTexture(appearance.texture);
@@ -27,9 +34,12 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
     this.#texture = null;
     this.#builder = null;
     this.#appearance = null;
+    this.#visibleBounds = null;
   }
 
   #drawFog(frame: ObjectRenderPayload) {
+    this.#visibleBounds = null;
+
     const { ctx, elapsed } = frame;
     const { width: viewWidth, height: viewHeight } = this.go.canvas;
 
@@ -61,15 +71,15 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
     ctx.globalAlpha = Math.max(0, Math.min(1, opacity * (flow ? 0.7 : 1)));
 
     const [minX, , maxX] = bbox;
+    const left = Math.max(0, minX - cameraX);
+    const right = Math.min(viewWidth, maxX - cameraX);
+
+    if (left >= right) {
+      ctx.restore();
+      return;
+    }
+
     if (Number.isFinite(minX) || Number.isFinite(maxX)) {
-      const left = Math.max(0, minX - cameraX);
-      const right = Math.min(viewWidth, maxX - cameraX);
-
-      if (left >= right) {
-        ctx.restore();
-        return;
-      }
-
       ctx.beginPath();
       ctx.rect(left, 0, right - left, viewHeight);
       ctx.clip();
@@ -85,6 +95,15 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
 
     this.#drawRepeatedStrip(ctx, texture, scroll, screenTop, viewWidth);
     ctx.restore();
+
+    if (this.go.options.debug != null && this.go.debug.enabled) {
+      const top = Math.max(0, screenTop + texture.top);
+      const bottom = Math.min(viewHeight, screenTop + texture.top + texture.image.height);
+
+      if (top < bottom) {
+        this.#visibleBounds = { left, top, right, bottom };
+      }
+    }
   }
 
   #drawRepeatedStrip(ctx: RenderContext, texture: FogStrip, scroll: number, y: number, width: number) {
