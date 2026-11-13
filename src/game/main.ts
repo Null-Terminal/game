@@ -1,4 +1,5 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import type { WorldObjects } from "#engine/game";
 
 const query = new URLSearchParams(location.search);
 
@@ -51,6 +52,15 @@ await game.loadLevel(async () => {
 
   const { PersonObject } = await person;
   const player = World.of([[PersonObject, { y: 230, x: 100 }]]);
+  const worldObjects: WorldObjects = [...objects, ...player];
 
-  return new World({ objects: [...objects, ...player] });
+  if (query.get("debug") === "1") {
+    for (const [, options] of worldObjects) {
+      if (options != null) {
+        options.debug = { ...options.debug, bounds: true, label: true, inspect: true };
+      }
+    }
+  }
+
+  return new World({ objects: worldObjects });
 });

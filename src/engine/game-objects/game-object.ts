@@ -235,7 +235,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     this.render.onRedraw((frame) => {
       playback.draw(frame);
 
-      if (this.options.debug?.outline) {
+      if (this.options.debug != null && this.debug.enabled) {
         this.debug.draw(frame);
       }
 

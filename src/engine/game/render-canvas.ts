@@ -2,6 +2,7 @@ import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import { Disposable } from "#engine/disposable";
+import { RenderCanvasInspector } from "#engine/game/render-canvas/inspector";
 import { Canvas2DStrategy, WebGLStrategy, WebGLUnavailableError } from "#engine/rendering";
 
 import type { RenderContext, RenderStrategy } from "#engine/rendering";
@@ -30,6 +31,11 @@ export class RenderCanvas extends Disposable {
   @cache
   get events() {
     return this.emitter.events;
+  }
+
+  @cache
+  get inspector() {
+    return new RenderCanvasInspector(this);
   }
 
   get fps() {

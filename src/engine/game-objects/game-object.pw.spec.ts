@@ -49,6 +49,159 @@ test("destroying an object removes its movement subscription", async ({ page }) 
   expect(result).toEqual({ subscribed: 2, removed: 1, reused: true, afterReuse: 1 });
 });
 
+test("destroy releases its pool slot and reindexes the last object", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ pool, createProbe, destroy }) => {
+    const first = createProbe();
+    const second = createProbe();
+
+    first.object.destroy();
+    first.object.destroy();
+
+    const result = {
+      firstDestroyed: first.object.destroyed,
+      moved: pool.get(...first.pointer) === second.object,
+      movedIndex: second.object.poolPointer[1],
+      activeCount: pool.objects[first.pointer[0]]!.length
+    };
+
+    destroy();
+    return result;
+  });
+
+  expect(result).toEqual({
+    firstDestroyed: true,
+    moved: true,
+    movedIndex: 0,
+    activeCount: 1
+  });
+});
+
+test("destroy releases its pool slot when a destructor fails", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ pool, createProbe, destroy }) => {
+    const { object, pointer } = createProbe();
+    object.onDestroy(() => {
+      throw new Error("cleanup failed");
+    });
+
+    let error = "";
+
+    try {
+      object.destroy();
+
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : String(cause);
+    }
+
+    const result = {
+      error,
+      destroyed: object.destroyed,
+      activeCount: pool.objects[pointer[0]]!.length
+    };
+
+    destroy();
+    return result;
+  });
+
+  expect(result).toEqual({ error: "cleanup failed", destroyed: true, activeCount: 0 });
+});
+
+test("inspection shows the top object or every overlapping object in draw order", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ canvas, createProbe, destroy }) => {
+    const first = createProbe({ x: 10, y: 10, name: "behind", debug: { inspect: true } }).object;
+    const second = createProbe({ x: 10, y: 10, name: "front", debug: { inspect: true } }).object;
+
+    for (const object of [first, second]) {
+      object.resize(20, 20);
+      object.play(function still() {
+        return { draw() {} };
+      });
+    }
+
+    const context = canvas.canvas.getContext("2d")!;
+    canvas.emitter.emit(canvas.events.main, { ctx: context, now: 1, delta: 0 });
+    second.status.pause();
+
+    const tables: unknown[] = [];
+    const original = console.table;
+    console.table = (rows) => tables.push(rows);
+
+    try {
+      const bounds = canvas.canvas.getBoundingClientRect();
+      const click = new MouseEvent("click", {
+        clientX: bounds.left + bounds.width * 0.2,
+        clientY: bounds.top + bounds.height * 0.8
+      });
+
+      canvas.canvas.dispatchEvent(click);
+      canvas.canvas.dispatchEvent(new MouseEvent("click", {
+        clientX: click.clientX,
+        clientY: click.clientY,
+        ctrlKey: true
+      }));
+
+    } finally {
+      console.table = original;
+    }
+
+    destroy();
+    return tables;
+  });
+
+  expect(result).toMatchObject([
+    [{ type: "Probe", name: "front", animation: "still", status: "paused", layer: "main", drawOrder: 2 }],
+    [
+      { name: "behind", drawOrder: 1 },
+      { name: "front", drawOrder: 2 }
+    ]
+  ]);
+});
+
+test("inspection keeps the animation shown in the last rendered frame", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ canvas, createProbe, destroy }) => {
+    const { object } = createProbe({ x: 10, y: 10, debug: { inspect: true } });
+    object.resize(20, 20);
+
+    object.play(function first() {
+      return { draw() {} };
+    });
+
+    const ctx = canvas.canvas.getContext("2d")!;
+    canvas.emitter.emit(canvas.events.main, { ctx, now: 1, delta: 0 });
+
+    object.play(function second() {
+      return { draw() {} };
+    });
+
+    let rows: unknown[] = [];
+    const original = console.table;
+    console.table = (value) => { rows = value; };
+
+    try {
+      const rect = canvas.canvas.getBoundingClientRect();
+      canvas.canvas.dispatchEvent(new MouseEvent("click", {
+        clientX: rect.left + rect.width * 0.2,
+        clientY: rect.top + rect.height * 0.8
+      }));
+
+    } finally {
+      console.table = original;
+      destroy();
+    }
+
+    return rows;
+  });
+
+  expect(result).toMatchObject([{ animation: "first" }]);
+});
+
 test("animation listeners do not survive pool reuse", async ({ page }) => {
   const scene = await createScene(page);
 
