@@ -23,6 +23,25 @@ export class FailingProbe extends Probe {
   }
 }
 
+export class RevivingProbe extends Probe {
+  #revived = false;
+
+  override destroy() {
+    if (this.destroyed) {
+      return;
+    }
+
+    const revive = !this.#revived;
+    this.#revived = true;
+
+    super.destroy();
+
+    if (revive) {
+      this.game.world.objects.add(RevivingProbe, this.game, {});
+    }
+  }
+}
+
 export async function createLifecycleScene() {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 100, height: 100, backend: "2d" });
@@ -56,6 +75,10 @@ export async function createLifecycleScene() {
     },
     createFailingProbe() {
       return pool.add(FailingProbe, game, {});
+    },
+    createRevivingProbe() {
+      const pointer = pool.add(RevivingProbe, game, {});
+      return { pointer, object: getObject(pointer, RevivingProbe) };
     },
     tick(delta: number, now: number) {
       const ctx = element.getContext("2d")!;

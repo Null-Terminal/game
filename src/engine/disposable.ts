@@ -43,13 +43,27 @@ export abstract class Disposable {
     this.destroyed = true;
 
     const destructors = this.#destructors.splice(0);
+    const errors: unknown[] = [];
 
     for (let i = destructors.length; i--;) {
-      destructors[i]!();
+      try {
+        destructors[i]!();
+
+      } catch (error) {
+        errors.push(error);
+      }
     }
 
     this.#abortController.abort();
     this.#abortController = new AbortController();
+
+    if (errors.length === 1) {
+      throw errors[0];
+    }
+
+    if (errors.length > 1) {
+      throw new AggregateError(errors, `${this.constructor.name}: destroy failed`);
+    }
   }
 
   [Symbol.dispose]() {

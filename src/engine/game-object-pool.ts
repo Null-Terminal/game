@@ -65,43 +65,51 @@ export class GameObjectPool {
   }
 
   delete(kind: number, index: number) {
-    if (!this.has(kind, index)) {
+    const removed = this.get(kind, index);
+
+    if (removed == null) {
       return;
     }
 
-    const store = this.objects[kind]!;
-    const removed = store.buffer[index]!;
+    try {
+      removed.destroy();
 
-    removed.destroy();
+    } finally {
+      if (removed.destroyed) {
+        this.release(removed);
+      }
+    }
+  }
 
-    const [, removedIndex] = removed.poolPointer;
+  release(go: GameObject) {
+    const [kind, index] = go.poolPointer;
+    const store = this.objects[kind];
 
-    if (removedIndex >= store.length || store.buffer[removedIndex] !== removed) {
+    if (store == null || index >= store.length || store.buffer[index] !== go) {
       return;
     }
 
     const last = store.length - 1;
 
-    if (removedIndex < last) {
+    if (index < last) {
       const moved = store.buffer[last]!;
 
-      store.buffer[removedIndex] = moved;
-      store.buffer[last] = removed;
+      store.buffer[index] = moved;
+      store.buffer[last] = go;
 
-      moved.reindex(removedIndex);
-      removed.poolPointer = [kind, last];
+      moved.reindex(index);
+      go.poolPointer = [kind, last];
     }
 
     store.length = last;
   }
 
   destroy() {
-    for (const store of Object.values(this.objects)) {
-      for (let i = store.length; i--;) {
-        store.buffer[i]!.destroy();
+    for (const [kind, store] of Object.entries(this.objects)) {
+      while (store.length > 0) {
+        this.delete(Number(kind), store.length - 1);
       }
 
-      store.length = 0;
       store.buffer.length = 0;
     }
   }

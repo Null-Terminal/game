@@ -47,10 +47,10 @@ export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<
       return;
     }
 
-    super.destroy();
-
     this.#playingSprites = null;
     this.#seed = 0;
+
+    super.destroy();
   }
 
   @ifAlive

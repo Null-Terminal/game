@@ -42,8 +42,12 @@ export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> ext
   }
 
   override destroy() {
-    super.destroy();
+    if (this.destroyed) {
+      return;
+    }
+
     this.collision.destroy();
+    super.destroy();
   }
 
   override reindex(index: number) {

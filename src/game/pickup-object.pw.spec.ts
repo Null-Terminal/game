@@ -11,13 +11,17 @@ test("fuel pickup refills a partial tank and disappears", async ({ page }) => {
     const fuel = createPickup("fuel");
     fuel.visit(player);
 
-    const result = { fuel: player.stats.fuel, consumed: fuel.destroyed };
+    const result = {
+      fuel: player.stats.fuel,
+      consumed: fuel.destroyed,
+      inPool: fuel.world.objects.has(...fuel.poolPointer)
+    };
 
     destroy();
     return result;
   });
 
-  expect(result).toEqual({ fuel: 920, consumed: true });
+  expect(result).toEqual({ fuel: 920, consumed: true, inPool: false });
 });
 
 test("a full tank does not consume fuel pickup", async ({ page }) => {

@@ -140,12 +140,20 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       return;
     }
 
-    super.destroy();
+    try {
+      super.destroy();
 
-    this.render.clear();
-    this.animation.off();
-    this.#movement?.reset();
-    this.status.reset();
+    } finally {
+      try {
+        this.render.clear();
+        this.animation.off();
+        this.#movement?.reset();
+        this.status.reset();
+
+      } finally {
+        this.world.objects.release(this);
+      }
+    }
   }
 
   reindex(index: number) {
@@ -405,8 +413,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     this.refs[name] = instance;
 
     this.onDestroy(() => {
-      const [kind, index] = instance.poolPointer;
-      this.world.objects.delete(kind, index);
+      instance.destroy();
 
       instance.acceptor = null;
       this.refs[name] = null;

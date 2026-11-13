@@ -51,9 +51,14 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
   readonly #COLLISION_EPSILON = 0.001;
 
   override destroy() {
-    super.destroy();
+    if (this.destroyed) {
+      return;
+    }
+
     this.#riding = null;
     this.motion.reset();
+
+    super.destroy();
   }
 
   @ifDead

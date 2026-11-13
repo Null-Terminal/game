@@ -37,8 +37,12 @@ export class ControlObject extends InteractObject<ControlOptions> {
   }
 
   override destroy() {
-    super.destroy();
+    if (this.destroyed) {
+      return;
+    }
+
     this.#active = false;
+    super.destroy();
   }
 
   @ifAlive

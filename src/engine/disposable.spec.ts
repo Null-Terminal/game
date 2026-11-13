@@ -28,6 +28,50 @@ describe("Disposable", () => {
     expect(signal.aborted).toBe(true);
   });
 
+  it("runs every destructor and combines their errors", () => {
+    const resource = new Resource();
+    const signal = resource.abortSignal;
+    const calls: string[] = [];
+    const first = new Error("first");
+    const second = new Error("second");
+
+    resource.onDestroy(() => {
+      calls.push("first");
+      throw first;
+    });
+
+    resource.onDestroy(() => {
+      calls.push("second");
+      throw second;
+    });
+
+    let caught: unknown;
+
+    try {
+      resource.destroy();
+
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(AggregateError);
+    expect(caught).toMatchObject({ errors: [second, first] });
+    expect(calls).toEqual(["second", "first"]);
+    expect(signal.aborted).toBe(true);
+    expect(resource.destroyed).toBe(true);
+  });
+
+  it("preserves a single destructor error", () => {
+    const resource = new Resource();
+    const failure = new Error("failure");
+
+    resource.onDestroy(() => {
+      throw failure;
+    });
+
+    expect(() => resource.destroy()).toThrow(failure);
+  });
+
   it("runs a next-tick callback unless the resource was destroyed first", async () => {
     const live = new Resource();
     const destroyed = new Resource();

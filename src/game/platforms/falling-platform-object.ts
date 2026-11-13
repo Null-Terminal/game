@@ -87,8 +87,7 @@ export class FallingPlatformObject extends ColliderObject<FallingPlatformOptions
     super.onMove(status);
 
     if (status & CollisionStatus.BottomCollision) {
-      const [kind, index] = this.poolPointer;
-      this.world.objects.delete(kind, index);
+      this.destroy();
     }
   }
 }
