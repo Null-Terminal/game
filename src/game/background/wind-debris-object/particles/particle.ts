@@ -1,5 +1,6 @@
 import { AnimationPlayback } from "#engine/animation";
 import type { RenderContext } from "#engine/rendering";
+import type { DebugPart } from "#engine/game-objects/game-object/debug";
 import type { SeededRandom } from "#/utils/seeded-random";
 
 import { sampleWindRange } from "#game/background/wind-debris-object/utils";
@@ -70,8 +71,9 @@ export abstract class WindParticle {
     cameraX: number,
     cameraY: number,
     viewWidth: number,
-    viewHeight: number
-  ) {
+    viewHeight: number,
+    collectDebugPart = false
+  ): DebugPart | null {
     const { radius, angle, phase, options, x: worldX, y: worldY } = this;
     const { animation, lift, scale: baseScale, motion } = options;
 
@@ -89,7 +91,7 @@ export abstract class WindParticle {
     this.#playback.advance(elapsed);
 
     if (x + radius < 0 || x - radius > viewWidth || boundsY + radius < 0 || boundsY - radius > viewHeight) {
-      return;
+      return null;
     }
 
     const image = animation.getSpriteFrame(this.#playback.frameIndex);
@@ -102,6 +104,27 @@ export abstract class WindParticle {
     ctx.setTransform(cos * scale * flip, sin * scale * flip, -sin * scale, cos * scale, x, y);
     ctx.globalAlpha = this.opacity(flip);
     ctx.drawImage(image, -image.width / 2, -image.height / 2);
+
+    if (!collectDebugPart) {
+      return null;
+    }
+
+    const halfWidth = image.width * scale * Math.abs(flip) / 2;
+    const halfHeight = image.height * scale / 2;
+    const extentX = Math.abs(cos) * halfWidth + Math.abs(sin) * halfHeight;
+    const extentY = Math.abs(sin) * halfWidth + Math.abs(cos) * halfHeight;
+
+    return {
+      bounds: {
+        left: Math.max(0, x - extentX),
+        top: Math.max(0, y - extentY),
+        right: Math.min(viewWidth, x + extentX),
+        bottom: Math.min(viewHeight, y + extentY)
+      },
+      animation,
+      frame: this.#playback.frameIndex,
+      name: this.constructor.name
+    };
   }
 
   protected abstract rotate(distance: number, delta: number, gust: number): void;

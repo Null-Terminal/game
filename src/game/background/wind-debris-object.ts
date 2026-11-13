@@ -4,7 +4,9 @@ import type { AnimationInstance } from "#engine/game-objects";
 import { GameObject } from "#engine/game-objects";
 
 import { roadDebris, stormDebris } from "#game/background/wind-debris-object/presets";
+import { WindDebrisObjectDebug } from "#game/background/wind-debris-object/debug";
 import { WindDebrisRender } from "#game/background/wind-debris-object/render";
+
 import type { WindDebrisOptions, WindDebrisSceneOptions } from "#game/background/wind-debris-object/types";
 
 export type {
@@ -28,6 +30,11 @@ export class WindDebrisObject extends GameObject<WindDebrisOptions> {
   };
 
   override readonly animations = WindDebrisObject.animations;
+
+  @cache
+  override get debug(): WindDebrisObjectDebug {
+    return new WindDebrisObjectDebug(this);
+  }
 
   @cache
   override get render(): WindDebrisRender {

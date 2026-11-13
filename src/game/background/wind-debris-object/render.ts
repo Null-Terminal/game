@@ -99,10 +99,17 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     ctx.save();
     // Сохраняем чёткие пиксели при масштабировании и повороте спрайтов
     ctx.imageSmoothingEnabled = false;
+    const collectDebugParts = this.go.options.debug != null && this.go.debug.enabled;
 
     for (const particle of this.#particles) {
       particle.advance(elapsed, delta, gust, cameraX, width);
-      particle.draw(ctx, elapsed, gust, cameraX, cameraY, width, height);
+      const part = particle.draw(ctx, elapsed, gust, cameraX, cameraY, width, height, collectDebugParts);
+
+      if (part != null) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1;
+        this.go.debug.drawPart(frame, part);
+      }
     }
 
     ctx.restore();
