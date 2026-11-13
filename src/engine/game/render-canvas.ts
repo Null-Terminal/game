@@ -14,13 +14,13 @@ export class RenderCanvas extends Disposable {
   readonly options: Required<RenderCanvasOptions>;
 
   readonly emitter = new EventEmitter({
-    beforeRender: handler<RenderPayload>(),
-    background: handler<RenderPayload>(),
-    scene: handler<RenderPayload>({ withFlush: true }),
-    interact: handler<RenderPayload>({ withFlush: true }),
-    main: handler<RenderPayload>(),
-    overlay: handler<RenderPayload>(),
-    ui: handler<RenderPayload>(),
+    beforeRender: handler<RenderPayload>({ ordered: true }),
+    background: handler<RenderPayload>({ ordered: true }),
+    scene: handler<RenderPayload>({ ordered: true, withFlush: true }),
+    interact: handler<RenderPayload>({ ordered: true, withFlush: true }),
+    main: handler<RenderPayload>({ ordered: true }),
+    overlay: handler<RenderPayload>({ ordered: true }),
+    ui: handler<RenderPayload>({ ordered: true }),
   });
 
   get paused() {

@@ -23,7 +23,10 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   #cameraY = 0;
   #visualOffsetY = 0;
 
-  #stopRedraw: Destructor | null = null;
+  #redraw: ((payload: t.ObjectRenderPayload) => void) | null = null;
+  #redrawSubscription: Destructor | null = null;
+  #redrawElapsedStart: number | null = null;
+  #onRedrawStop: Destructor | null = null;
   #playing: PlayableAnimation | null = null;
 
   constructor(go: T) {
@@ -101,7 +104,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     let lastNow = 0;
 
     const handle = (frame: E["PayloadType"]) => {
-      if (lastNow !== 0 && !go.status.paused && !go.status.sleeping) {
+      if (lastNow !== 0 && !go.status.paused) {
         elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
       }
 
@@ -109,29 +112,24 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       listener(frame, elapsed);
     };
 
-    let unsubscribe: Destructor | null = null;
-
+    const subscription = go.canvas.emitter.on(event, handle);
     const syncSubscription = (sleeping: boolean) => {
       if (sleeping) {
-        unsubscribe?.();
-        unsubscribe = null;
-        return;
-      }
-
-      if (unsubscribe == null) {
+        subscription.sleep();
+      } else {
         lastNow = 0;
-        unsubscribe = go.canvas.emitter.on(event, handle);
+        subscription.wake();
       }
     };
 
     const { emitter, events } = go.status;
-    const offStatus = emitter.on(events.sleepChange, syncSubscription);
+    const statusSubscription = emitter.on(events.sleepChange, syncSubscription);
     syncSubscription(go.status.sleeping);
 
     const stop = () => {
       if (this.#listeners.delete(stop)) {
-        offStatus();
-        unsubscribe?.();
+        statusSubscription.dispose();
+        subscription.dispose();
       }
     };
 
@@ -149,13 +147,21 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
 
     this.stopRedraw();
     this.#playing = animation;
+    this.#redraw = draw;
+    this.#redrawElapsedStart = null;
+    this.#onRedrawStop = onStop ?? null;
 
     const payload = this.#payload;
-    const unsubscribe = this.on(go.redrawEvent, (frame, elapsed) => {
+    this.#redrawSubscription ??= this.on(go.redrawEvent, (frame, elapsed) => {
+      if (this.#redraw == null) {
+        return;
+      }
+
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
-      payload.elapsed = elapsed;
+      this.#redrawElapsedStart ??= elapsed;
+      payload.elapsed = elapsed - this.#redrawElapsedStart;
 
       const bitmap = this.#playing instanceof LoadedAnimation;
 
@@ -168,24 +174,23 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       payload.x = bitmap ? Math.round(payload.getScreenX()) : payload.getScreenX();
       payload.y = bitmap ? Math.round(payload.getScreenY()) : payload.getScreenY();
 
-      draw(payload);
+      this.#redraw(payload);
     });
-
-    this.#stopRedraw = () => {
-      unsubscribe();
-      onStop?.();
-    };
   }
 
   stopRedraw() {
-    const stop = this.#stopRedraw;
-    this.#stopRedraw = null;
+    const onStop = this.#onRedrawStop;
+    this.#onRedrawStop = null;
+    this.#redraw = null;
+    this.#redrawElapsedStart = null;
     this.#playing = null;
-    stop?.();
+    onStop?.();
   }
 
   clear() {
     this.stopRedraw();
+    this.#redrawSubscription?.();
+    this.#redrawSubscription = null;
     this.#visualOffsetY = 0;
 
     for (const stop of this.#listeners) {

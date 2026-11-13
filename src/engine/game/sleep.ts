@@ -1,5 +1,6 @@
 import { isPositive } from "#/utils/validators";
 
+import type { Subscription } from "#/event-emitter";
 import type { Game } from "#engine/game";
 import type { GameObject } from "#engine/game-objects";
 import type { GameSleepOptions } from "#engine/game/sleep/types";
@@ -7,7 +8,7 @@ import type { GameSleepOptions } from "#engine/game/sleep/types";
 export class GameSleep {
   readonly #game: Game;
   readonly #options: Required<GameSleepOptions> | null;
-  readonly #unsubscribe: Destructor | null;
+  readonly #subscription: Subscription | null;
 
   #elapsed = 0;
 
@@ -16,7 +17,7 @@ export class GameSleep {
 
     if (opts == null) {
       this.#options = null;
-      this.#unsubscribe = null;
+      this.#subscription = null;
       return;
     }
 
@@ -38,7 +39,7 @@ export class GameSleep {
     this.#options = { distanceScreens, wakeDistanceScreens, checkIntervalSeconds };
     this.#elapsed = checkIntervalSeconds;
 
-    this.#unsubscribe = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ delta }) => {
+    this.#subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ delta }) => {
       this.#elapsed += delta;
 
       if (this.#elapsed >= checkIntervalSeconds) {
@@ -98,6 +99,6 @@ export class GameSleep {
   }
 
   destroy() {
-    this.#unsubscribe?.();
+    this.#subscription?.dispose();
   }
 }

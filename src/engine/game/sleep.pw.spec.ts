@@ -4,17 +4,41 @@ import type * as fixture from "#engine/game/tests/sleep-fixture";
 
 type SleepScene = Awaited<ReturnType<typeof fixture.createSleepScene>>;
 
+test("destroy removes an object before the sleep update", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ game, world, probe, destroy }) => {
+    const pointer = [...probe.poolPointer] as const;
+    probe.destroy();
+    game.sleep.update();
+
+    const result = {
+      destroyed: probe.destroyed,
+      inPool: world.objects.has(...pointer)
+    };
+
+    destroy();
+
+    return result;
+  });
+
+  expect(result).toEqual({ destroyed: true, inPool: false });
+});
+
 test("distant objects start asleep and resume movement, rendering, and collisions nearby", async ({ page }) => {
   const scene = await createScene(page);
 
   const result = await scene.evaluate(({ game, canvas, world, probe, initialStaticInsertions, destroy }) => {
     const bounds = [350, 0, 360, 10] as const;
+    const activeListeners = (event: Iterable<{ sleeping: boolean }>) =>
+      Array.from(event).filter((subscription) => !subscription.sleeping).length;
+
     const asleep = {
       sleeping: probe.status.sleeping,
       collides: world.hasCollision(...bounds),
-      frameListeners: canvas.events.beforeRender.length,
-      sceneListeners: canvas.events.scene.length,
-      collisionListeners: canvas.events.scene.flush!.length
+      frameListeners: activeListeners(canvas.events.beforeRender),
+      sceneListeners: activeListeners(canvas.events.scene),
+      collisionListeners: activeListeners(canvas.events.scene.flush!)
     };
 
     game.camera.x = 300;
@@ -23,9 +47,9 @@ test("distant objects start asleep and resume movement, rendering, and collision
     const awake = {
       sleeping: probe.status.sleeping,
       collides: world.hasCollision(...bounds),
-      frameListeners: canvas.events.beforeRender.length,
-      sceneListeners: canvas.events.scene.length,
-      collisionListeners: canvas.events.scene.flush!.length
+      frameListeners: activeListeners(canvas.events.beforeRender),
+      sceneListeners: activeListeners(canvas.events.scene),
+      collisionListeners: activeListeners(canvas.events.scene.flush!)
     };
 
     const ctx = canvas.canvas.getContext("2d")!;
@@ -145,6 +169,36 @@ test("parallax backgrounds sleep by their projected bounds while screen-fixed ba
   expect(result.near).toEqual({ parallax: false, fixed: false });
   expect(result.far).toEqual({ parallax: true, fixed: false });
   expect(result.returned).toEqual({ parallax: false, fixed: false });
+});
+
+test("waking a background restores its original drawing order", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ game, canvas, createBackground, destroy }) => {
+    const bbox: [number, number, number, number] = [90, 0, 100, 10];
+    const first = createBackground({ bbox, sleep: false });
+    const middle = createBackground({ bbox });
+    const last = createBackground({ bbox, sleep: false });
+
+    const drawOrder: string[] = [];
+    first.render.on(canvas.events.background, () => drawOrder.push("first"));
+    middle.render.on(canvas.events.background, () => drawOrder.push("middle"));
+    last.render.on(canvas.events.background, () => drawOrder.push("last"));
+
+    game.camera.x = 1600;
+    game.sleep.update();
+
+    game.camera.x = 0;
+    game.sleep.update();
+
+    const ctx = canvas.canvas.getContext("2d")!;
+    canvas.emitter.emit(canvas.events.background, { ctx, now: 16, delta: 0.016 });
+
+    destroy();
+    return drawOrder;
+  });
+
+  expect(result).toEqual(["first", "middle", "last"]);
 });
 
 async function createScene(page: Page): Promise<JSHandle<SleepScene>> {

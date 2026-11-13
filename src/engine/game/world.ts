@@ -50,12 +50,12 @@ export class World extends Disposable {
     this.#mounted = true;
     this.game = game;
 
-    this.onDestroy(
-      game.canvas.emitter.on(game.canvas.events.beforeRender, () => {
-        this.dynamics.clear();
-        this.dynamicInteracts.clear();
-      })
-    );
+    const subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, () => {
+      this.dynamics.clear();
+      this.dynamicInteracts.clear();
+    });
+
+    this.onDestroy(() => subscription.dispose());
 
     this.nextTick(() => {
       for (const elem of this.options.objects) {

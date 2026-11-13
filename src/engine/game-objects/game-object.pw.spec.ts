@@ -29,17 +29,17 @@ test("destroying an object removes its movement subscription", async ({ page }) 
 
   const result = await scene.evaluate(({ pool, canvas, createProbe, destroy }) => {
     const first = createProbe({ movement: { at: (distance) => [distance, 0] } });
-    const subscribed = canvas.events.beforeRender.length;
+    const subscribed = canvas.events.beforeRender.size;
 
     pool.delete(...first.pointer);
-    const removed = canvas.events.beforeRender.length;
+    const removed = canvas.events.beforeRender.size;
 
     const second = createProbe();
     const result = {
       subscribed,
       removed,
       reused: second.object === first.object,
-      afterReuse: canvas.events.beforeRender.length
+      afterReuse: canvas.events.beforeRender.size
     };
 
     destroy();
@@ -57,16 +57,18 @@ test("animation listeners do not survive pool reuse", async ({ page }) => {
     const event = first.object.animation.events.test;
 
     first.object.animation.on(event, () => {});
-    const subscribed = event.length;
+    const subscribed = event instanceof Set ? event.size : event.length;
 
     pool.delete(...first.pointer);
 
     const second = createAnimatedProbe();
     const result = {
       subscribed,
-      removed: event.length,
+      removed: event instanceof Set ? event.size : event.length,
       reused: second.object === first.object,
-      afterReuse: second.object.animation.events.test.length
+      afterReuse: second.object.animation.events.test instanceof Set ?
+        second.object.animation.events.test.size :
+        second.object.animation.events.test.length
     };
 
     destroy();
@@ -112,7 +114,7 @@ test("play preserves auxiliary render listeners until destroy", async ({ page })
     object.play(() => ({ draw() {} }));
     object.play(() => ({ draw() {} }));
 
-    const subscribed = canvas.events.main.length;
+    const subscribed = canvas.events.main.size;
 
     const ctx = canvas.canvas.getContext("2d")!;
     canvas.emitter.emit(canvas.events.main, { ctx, now: 1, delta: 0.016 });
@@ -122,7 +124,7 @@ test("play preserves auxiliary render listeners until destroy", async ({ page })
     const result = {
       subscribed,
       ticks,
-      remaining: canvas.events.main.length,
+      remaining: canvas.events.main.size,
       playing: object.nowPlaying
     };
 
@@ -131,6 +133,51 @@ test("play preserves auxiliary render listeners until destroy", async ({ page })
   });
 
   expect(result).toEqual({ subscribed: 2, ticks: 1, remaining: 0, playing: null });
+});
+
+test("switching playback keeps its render position and restarts elapsed time", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ createProbe, canvas, destroy }) => {
+    const { object } = createProbe();
+    const calls: string[] = [];
+    const elapsed: number[] = [];
+    const ctx = canvas.canvas.getContext("2d")!;
+
+    object.play(() => ({
+      draw: (frame) => {
+        calls.push("first");
+        elapsed.push(frame.elapsed);
+      }
+    }));
+
+    canvas.emitter.on(canvas.events.main, () => calls.push("later"));
+
+    const emit = (now: number) => {
+      canvas.emitter.emit(canvas.events.main, { ctx, now, delta: 1 });
+    };
+
+    emit(1);
+    emit(2);
+
+    object.play(() => ({
+      draw: (frame) => {
+        calls.push("second");
+        elapsed.push(frame.elapsed);
+      }
+    }));
+
+    emit(3);
+    emit(4);
+
+    destroy();
+    return { calls, elapsed };
+  });
+
+  expect(result).toEqual({
+    calls: ["first", "later", "first", "later", "second", "later", "second", "later"],
+    elapsed: [0, 1, 0, 1]
+  });
 });
 
 const fixtureUrl = "/src/engine/game-objects/game-object/tests/fixture.ts";

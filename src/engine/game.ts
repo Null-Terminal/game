@@ -95,9 +95,9 @@ export class Game extends Disposable {
     const offError = error == null ? null : emitter.on(events.levelLoadFailed, error);
 
     return () => {
-      offLoading();
-      offLoaded();
-      offError?.();
+      offLoading.dispose();
+      offLoaded.dispose();
+      offError?.dispose();
     };
   }
 

@@ -61,11 +61,11 @@ export class Camera extends Disposable {
 
     const { canvas } = game;
 
-    this.onDestroy(
-      canvas.emitter.on(canvas.events.background, () => {
-        this.update();
-      })
-    );
+    const subscription = canvas.emitter.on(canvas.events.background, () => {
+      this.update();
+    });
+
+    this.onDestroy(() => subscription.dispose());
   }
 
   bindTo(target: PhysicsObject): Destructor {
