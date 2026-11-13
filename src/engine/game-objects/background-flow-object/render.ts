@@ -2,7 +2,7 @@ import { BackgroundObjectRender } from "#engine/game-objects/background-object/r
 
 import type { AnimationPlayback } from "#engine/animation";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
-import type { RenderContext } from "#engine/rendering";
+import type { DebugPart } from "#engine/game-objects/game-object/debug";
 
 import type { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
 import type { FlowLayout, FlowPosition } from "#engine/game-objects/background-flow-object/layout";
@@ -16,6 +16,8 @@ export interface BackgroundFlowRenderState {
 }
 
 export class BackgroundFlowObjectRender extends BackgroundObjectRender<BackgroundFlowObject> {
+  #debugParts: DebugPart[] | null = null;
+
   drawComposition(frame: ObjectRenderPayload, state: BackgroundFlowRenderState) {
     const { go } = this;
 
@@ -83,7 +85,7 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
         }
 
         const tileBottom = wrapHeight ? tileY + tileHeight : originBottom;
-        this.#drawTile(frame.ctx, state, tileX, tileBottom, left, top, right, bottom);
+        this.#drawTile(frame, state, tileX, tileBottom, left, top, right, bottom);
 
         if (go.options.debug?.stretchSeams) {
           go.debug.drawStretchSeams(frame.ctx, {
@@ -100,7 +102,7 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
   }
 
   #drawTile(
-    ctx: RenderContext,
+    frame: ObjectRenderPayload,
     state: BackgroundFlowRenderState,
     originX: number,
     originBottom: number,
@@ -109,7 +111,16 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
     right: number,
     bottom: number
   ) {
+    const { ctx } = frame;
     const { playbacks, direction, maxSize } = state;
+
+    const collectDebugParts = this.go.options.debug != null && this.go.debug.enabled;
+    const debugParts = collectDebugParts ? this.#debugParts ??= [] : null;
+
+    if (debugParts != null) {
+      debugParts.length = 0;
+    }
+
     const positions = state.layout.positions;
     const horizontal = direction === "horizontal";
     const localStart = horizontal ? left - originX : originBottom - bottom;
@@ -143,9 +154,30 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
       const y = horizontal ? originBottom - image.height : originBottom - position - image.height;
 
       ctx.drawImage(image, x, y);
+
+      if (debugParts != null) {
+        debugParts.push({
+          bounds: {
+            left: Math.max(left, x),
+            top: Math.max(top, y),
+            right: Math.min(right, x + image.width),
+            bottom: Math.min(bottom, y + image.height)
+          },
+
+          animation: playback.animation,
+          frame: playback.frameIndex,
+          name: `sprite ${index}`
+        });
+      }
     }
 
     ctx.restore();
+
+    if (debugParts != null) {
+      for (const part of debugParts) {
+        this.go.debug.drawPart(frame, part);
+      }
+    }
   }
 
   #getTileSize(axis: "w" | "h", fallback: number): number {

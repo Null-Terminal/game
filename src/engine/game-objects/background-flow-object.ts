@@ -6,6 +6,7 @@ import { ifAlive } from "#engine/game-objects/decorators";
 import { BackgroundObject } from "#engine/game-objects/background-object";
 import type * as go from "#engine/game-objects/game-object";
 
+import { BackgroundFlowObjectDebug } from "#engine/game-objects/background-flow-object/debug";
 import { FlowLayout } from "#engine/game-objects/background-flow-object/layout";
 import { BackgroundFlowObjectRender } from "#engine/game-objects/background-flow-object/render";
 
@@ -29,6 +30,11 @@ export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<
   @cache
   override get render(): BackgroundFlowObjectRender {
     return new BackgroundFlowObjectRender(this);
+  }
+
+  @cache
+  override get debug(): BackgroundFlowObjectDebug {
+    return new BackgroundFlowObjectDebug(this);
   }
 
   #playingSprites: readonly LoadedAnimation[] | null = null;

@@ -13,7 +13,7 @@ export interface RepeatCellBounds {
   bottom: number;
 }
 
-export class BackgroundObjectDebug extends GameObjectDebug<BackgroundObject> {
+export class BackgroundObjectDebug<T extends BackgroundObject = BackgroundObject> extends GameObjectDebug<T> {
   override draw(payload: ObjectRenderPayload) {
     const { go } = this;
 

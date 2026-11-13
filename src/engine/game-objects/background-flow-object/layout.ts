@@ -8,8 +8,13 @@ export interface FlowPosition {
 }
 
 interface FlowLayoutOptions {
+  // Порядок выбора спрайтов
   order?: BackgroundFlowOrder;
+
+  // Расстояние между соседними спрайтами
   gap?: BackgroundFlowGap;
+
+  // Начальное значение генератора для повторяемой раскладки
   seed: number;
 }
 
