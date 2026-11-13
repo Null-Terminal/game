@@ -11,6 +11,11 @@ export type WorkerResponse<T> =
 
 export type WorkerClass = new () => WorkerClient<unknown, unknown>;
 
+export interface WorkerPoolOptions {
+  // null сохраняет свободные воркеры до уничтожения пула
+  idleTimeoutMs?: number | null;
+}
+
 export interface WorkerJob {
   id: number;
   workerClass: WorkerClass;
@@ -24,4 +29,5 @@ export interface WorkerSlot {
   workerClass: WorkerClass;
   worker: Worker;
   job: WorkerJob | null;
+  idleTimer: ReturnType<typeof setTimeout> | null;
 }

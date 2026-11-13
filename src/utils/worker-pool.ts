@@ -1,11 +1,14 @@
-import type { WorkerClass, WorkerJob, WorkerRequest, WorkerResponse, WorkerSlot } from "#/utils/worker-pool/types";
+import { isPositive } from "#/utils/validators";
 
-export type { WorkerRequest, WorkerResponse } from "#/utils/worker-pool/types";
+import type { WorkerClass, WorkerJob, WorkerPoolOptions, WorkerRequest, WorkerResponse, WorkerSlot } from "#/utils/worker-pool/types";
+
+export type { WorkerPoolOptions, WorkerRequest, WorkerResponse } from "#/utils/worker-pool/types";
+
+const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
 
 export abstract class WorkerClient<Request, Result> {
-  declare readonly requestType: Request;
-  declare readonly resultType: Result;
-
+  declare readonly RequestType: Request;
+  declare readonly ResultType: Result;
   abstract readonly worker: Worker;
 }
 
@@ -13,17 +16,25 @@ export class WorkerPool {
   readonly #slots: WorkerSlot[] = [];
   readonly #queue: WorkerJob[] = [];
   readonly #maxWorkers: number;
+  readonly #idleTimeoutMs: number | null;
 
   #nextId = 0;
   #destroyed = false;
 
-  constructor(maxWorkers: number) {
+  constructor(maxWorkers: number, options: WorkerPoolOptions = {}) {
     if (!Number.isInteger(maxWorkers) || maxWorkers < 1) {
       throw new RangeError("Worker count must be a positive integer");
     }
 
+    const idleTimeoutMs = options.idleTimeoutMs === undefined ? DEFAULT_IDLE_TIMEOUT_MS : options.idleTimeoutMs;
+
+    if (idleTimeoutMs !== null && !isPositive(idleTimeoutMs)) {
+      throw new RangeError("Worker idle timeout must be a positive finite number");
+    }
+
     const cores = typeof navigator === "undefined" ? maxWorkers : navigator.hardwareConcurrency;
     this.#maxWorkers = Math.min(maxWorkers, Number.isInteger(cores) && cores > 0 ? cores : maxWorkers);
+    this.#idleTimeoutMs = idleTimeoutMs;
   }
 
   run<Request, Result>(
@@ -60,6 +71,7 @@ export class WorkerPool {
 
     for (const slot of this.#slots) {
       slot.job?.reject(new Error("Worker pool is destroyed"));
+      this.#clearIdleTimer(slot);
       slot.worker.terminate();
     }
 
@@ -93,6 +105,7 @@ export class WorkerPool {
       } catch (err) {
         slot.job = null;
         job.reject(err instanceof Error ? err : new Error(String(err)));
+        this.#scheduleIdle(slot);
       }
     }
   }
@@ -101,6 +114,7 @@ export class WorkerPool {
     const same = this.#slots.find((slot) => slot.job == null && slot.workerClass === WorkerClass);
 
     if (same != null) {
+      this.#clearIdleTimer(same);
       return same;
     }
 
@@ -118,6 +132,7 @@ export class WorkerPool {
 
     const index = this.#slots.indexOf(other);
 
+    this.#clearIdleTimer(other);
     other.worker.terminate();
     this.#slots.splice(index, 1);
 
@@ -129,7 +144,7 @@ export class WorkerPool {
 
   #createSlot(WorkerClass: WorkerClass): WorkerSlot {
     const worker = new WorkerClass().worker;
-    const slot: WorkerSlot = { workerClass: WorkerClass, worker, job: null };
+    const slot: WorkerSlot = { workerClass: WorkerClass, worker, job: null, idleTimer: null };
 
     worker.addEventListener("message", ({ data }: MessageEvent<WorkerResponse<unknown>>) => {
       const job = slot.job;
@@ -148,10 +163,12 @@ export class WorkerPool {
       }
 
       this.#dispatch();
+      this.#scheduleIdle(slot);
     });
 
     const fail = (event: ErrorEvent | MessageEvent) => {
       slot.job?.reject(new Error(event instanceof ErrorEvent ? event.message : "Worker message could not be decoded"));
+      this.#clearIdleTimer(slot);
       worker.terminate();
 
       const index = this.#slots.indexOf(slot);
@@ -167,5 +184,34 @@ export class WorkerPool {
     worker.addEventListener("messageerror", fail);
 
     return slot;
+  }
+
+  #scheduleIdle(slot: WorkerSlot) {
+    if (this.#idleTimeoutMs === null || this.#destroyed || slot.job != null || !this.#slots.includes(slot)) {
+      return;
+    }
+
+    this.#clearIdleTimer(slot);
+    slot.idleTimer = setTimeout(() => {
+      slot.idleTimer = null;
+
+      if (slot.job != null) {
+        return;
+      }
+
+      const index = this.#slots.indexOf(slot);
+
+      if (index !== -1) {
+        this.#slots.splice(index, 1);
+        slot.worker.terminate();
+      }
+    }, this.#idleTimeoutMs);
+  }
+
+  #clearIdleTimer(slot: WorkerSlot) {
+    if (slot.idleTimer != null) {
+      clearTimeout(slot.idleTimer);
+      slot.idleTimer = null;
+    }
   }
 }

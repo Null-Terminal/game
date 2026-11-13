@@ -1,27 +1,5 @@
 import { WorkerClient, WorkerPool } from "#/utils/worker-pool";
-
-interface EchoRequest {
-  value: number;
-  delay?: number;
-  fail?: boolean;
-  data?: ArrayBuffer;
-}
-
-function createEchoWorkerUrl() {
-  const source = `
-    self.onmessage = ({ data: { id, payload } }) => {
-      setTimeout(() => {
-        if (payload.fail) {
-          self.postMessage({ id, error: "Requested failure" });
-        } else {
-          self.postMessage({ id, value: payload.data?.byteLength ?? payload.value });
-        }
-      }, payload.delay ?? 0);
-    };
-  `;
-
-  return URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-}
+import { createEchoWorkerUrl, type EchoRequest } from "#/utils/worker-pool/tests/echo-worker";
 
 export async function reuseWorker() {
   const url = createEchoWorkerUrl();
