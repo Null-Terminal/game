@@ -18,6 +18,7 @@ test("switching sky presets replaces baked textures", async ({ page }) => {
     const stormAgain = pixel(0, 0);
 
     destroy();
+
     return { storm, overcast, stormAgain };
   });
 
@@ -38,6 +39,7 @@ test("the sky rebuilds at the new canvas size", async ({ page }) => {
     const resized = [sky.width, sky.height];
 
     destroy();
+
     return { initial, resized };
   });
 

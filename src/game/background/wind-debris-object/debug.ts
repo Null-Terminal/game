@@ -1,4 +1,4 @@
-import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import { GameObjectDebug } from "#engine/game-objects";
 
 import type { WindDebrisObject } from "#game/background/wind-debris-object";
 

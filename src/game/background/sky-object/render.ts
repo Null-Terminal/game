@@ -1,6 +1,6 @@
-import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
-import type { DebugBounds } from "#engine/game-objects/game-object/debug";
+import { GameObjectRender } from "#engine/game-objects";
+
+import type { AnimationInstance, DebugBounds, ObjectRenderPayload } from "#engine/game-objects";
 import type { RenderContext } from "#engine/rendering";
 
 import type { SkyObject } from "#game/background/sky-object";
@@ -175,6 +175,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     const celestialScrollX = Math.round(
       frame.getScrollOffsetX(this.go.options.celestialScrollFactor ?? 0)
     );
+
     this.#celestialScrollX = celestialScrollX;
 
     if (this.#stars) {
@@ -190,6 +191,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
       const cloudScrollX = Math.round(
         frame.getScrollOffsetX(0.025) + elapsed / 1000 * this.#scene.clouds.speed
       );
+
       this.#cloudScrollX = cloudScrollX;
       this.#drawRepeatedStrip(ctx, this.#clouds.image, cloudScrollX, width, this.#clouds.top);
     }

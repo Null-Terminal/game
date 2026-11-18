@@ -66,12 +66,16 @@ export class Clouds {
       const groupWidth = 240 + random.next() * 180;
       const groupX = random.next() * (width - groupWidth);
       const groupY = height * (0.09 + random.next() * 0.39);
-      const cluster: CloudBounds | null = bounds == null ? null : {
-        left: Infinity,
-        top: Infinity,
-        right: -Infinity,
-        bottom: -Infinity
-      };
+      let cluster: CloudBounds | null = null;
+
+      if (bounds != null) {
+        cluster = {
+          left: Infinity,
+          top: Infinity,
+          right: -Infinity,
+          bottom: -Infinity
+        };
+      }
 
       ctx.fillStyle = group % 3 === 0 ? "#8E63854D" : "#25244166";
 

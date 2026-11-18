@@ -1,6 +1,6 @@
 import { AnimationPlayback } from "#engine/animation";
 import type { RenderContext } from "#engine/rendering";
-import type { DebugPart } from "#engine/game-objects/game-object/debug";
+import type { DebugPart } from "#engine/game-objects";
 import type { SeededRandom } from "#/utils/seeded-random";
 
 import { sampleWindRange } from "#game/background/wind-debris-object/utils";

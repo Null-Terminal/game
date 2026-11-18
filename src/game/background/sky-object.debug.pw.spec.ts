@@ -1,4 +1,4 @@
-﻿import { expect, test, type JSHandle, type Page } from "@playwright/test";
+import { expect, test, type JSHandle, type Page } from "@playwright/test";
 
 import type * as fixture from "#game/background/sky-object/tests/fixture";
 
@@ -25,6 +25,7 @@ test("inspection covers the visible sky", async ({ page }) => {
     }
 
     destroy();
+
     return rows;
   });
 

@@ -1,7 +1,6 @@
 import { cache } from "#decorators/cache";
 
-import type { AnimationInstance } from "#engine/game-objects";
-import { GameObject } from "#engine/game-objects";
+import { GameObject, type AnimationInstance } from "#engine/game-objects";
 
 import { roadDebris, stormDebris } from "#game/background/wind-debris-object/presets";
 import { WindDebrisObjectDebug } from "#game/background/wind-debris-object/debug";

@@ -1,7 +1,6 @@
-import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
+import { GameObjectRender } from "#engine/game-objects";
 
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
-import type { DebugBounds } from "#engine/game-objects/game-object/debug";
+import type { AnimationInstance, DebugBounds, ObjectRenderPayload } from "#engine/game-objects";
 import type { RenderContext } from "#engine/rendering";
 
 import type { FogObject } from "#game/background/fog-object";

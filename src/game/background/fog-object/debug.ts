@@ -1,5 +1,4 @@
-import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
-import type { ObjectRenderPayload } from "#engine/game-objects/game-object/render";
+import { GameObjectDebug, type ObjectRenderPayload } from "#engine/game-objects";
 
 import type { FogObject } from "#game/background/fog-object";
 
