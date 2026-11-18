@@ -15,6 +15,7 @@ export async function createCameraScene() {
     smoothness: 1,
     deadZone: { left: 25, right: 25, top: 20, bottom: 20 }
   });
+
   const game = Game.camera(camera).create(canvas);
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 

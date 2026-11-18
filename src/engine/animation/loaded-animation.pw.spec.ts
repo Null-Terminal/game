@@ -19,6 +19,7 @@ test("sprite frames keep source pixels and cache each effect separately", async 
     };
 
     destroy();
+
     return result;
   });
 
@@ -46,6 +47,7 @@ test("a repeat region uses only its selected fragment", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 

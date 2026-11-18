@@ -3,8 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AnimationDefinition, type AnimationOrder } from "#/animation-definition";
 import { cast } from "#/tstools";
 
-import { AnimationPlayback } from "#engine/animation/animation-playback";
-import { LoadedAnimation } from "#engine/animation/loaded-animation";
+import { AnimationPlayback, LoadedAnimation } from "#engine/animation";
 
 describe("AnimationPlayback", () => {
   it("plays forward and repeats from the chosen frame", () => {

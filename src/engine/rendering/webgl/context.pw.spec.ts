@@ -76,19 +76,37 @@ test("recovers after WebGL context loss", async ({ page }) => {
 
     if (extension == null) {
       ctx.destroy();
+
       return "unsupported";
     }
 
-    const lost = new Promise<void>((resolve) => canvas.addEventListener("webglcontextlost", () => resolve(), { once: true }));
+    const lost = new Promise<void>((resolve) => {
+      canvas.addEventListener("webglcontextlost", () => resolve(), { once: true });
+    });
+
     extension.loseContext();
 
-    await Promise.race([lost, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("context loss event missing")), 3000))]);
+    await Promise.race([
+      lost,
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("context loss event missing")), 3000);
+      })
+    ]);
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const restored = new Promise<void>((resolve) => canvas.addEventListener("webglcontextrestored", () => resolve(), { once: true }));
+    const restored = new Promise<void>((resolve) => {
+      canvas.addEventListener("webglcontextrestored", () => resolve(), { once: true });
+    });
+
     extension.restoreContext();
-    await Promise.race([restored, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("context restore event missing")), 3000))]);
+
+    await Promise.race([
+      restored,
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("context restore event missing")), 3000);
+      })
+    ]);
 
     ctx.fillStyle = "#ff0000";
     ctx.fillRect(0, 0, 2, 2);

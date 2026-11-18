@@ -26,6 +26,7 @@ test("destroying a child keeps its slot while the parent survives", async ({ pag
     };
 
     destroy();
+
     return result;
   });
 
@@ -39,7 +40,9 @@ test("destroying a child keeps its slot while the parent survives", async ({ pag
 test("a destroyed parent does not shift the next root slot", async ({ page }) => {
   const scene = await createScene(page);
 
-  const result = await scene.evaluate(async ({ game, CompositeProbe, ChildProbe, ArenaProbe, World, createWorld, destroy }) => {
+  const result = await scene.evaluate(async ({
+    game, CompositeProbe, ChildProbe, ArenaProbe, World, createWorld, destroy
+  }) => {
     const world = await game.loadLevel(async () => createWorld());
     const source = () => ({ objects: World.of([
       [CompositeProbe, {}],
@@ -73,6 +76,7 @@ test("a destroyed parent does not shift the next root slot", async ({ page }) =>
     };
 
     destroy();
+
     return result;
   });
 
@@ -93,13 +97,15 @@ test("explicit keys keep state attached when source entries change order", async
     let reversed = false;
 
     const source = () => ({
-      objects: reversed ? World.of([
-        [ArenaProbe, { stateKey: "right", bbox: [50, 40, 70, 60] }],
-        [ArenaProbe, { stateKey: "left/door", bbox: [10, 40, 30, 60] }]
-      ]) : World.of([
-        [ArenaProbe, { stateKey: "left/door", bbox: [10, 40, 30, 60] }],
-        [ArenaProbe, { stateKey: "right", bbox: [50, 40, 70, 60] }]
-      ])
+      objects: reversed ?
+        World.of([
+          [ArenaProbe, { stateKey: "right", bbox: [50, 40, 70, 60] }],
+          [ArenaProbe, { stateKey: "left/door", bbox: [10, 40, 30, 60] }]
+        ]) :
+        World.of([
+          [ArenaProbe, { stateKey: "left/door", bbox: [10, 40, 30, 60] }],
+          [ArenaProbe, { stateKey: "right", bbox: [50, 40, 70, 60] }]
+        ])
     });
 
     const arena = await world.arenas.loadArena(source);
@@ -129,6 +135,7 @@ test("explicit keys keep state attached when source entries change order", async
     };
 
     destroy();
+
     return result;
   });
 

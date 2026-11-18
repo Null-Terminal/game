@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { World } from "#engine/game";
 import { AnimationDefinition } from "#/animation-definition";
 import { LoadedAnimation } from "#engine/animation";
-import { World } from "#engine/game/world";
 import type { GameObject } from "#engine/game-objects";
 
 describe("World collision bounds", () => {

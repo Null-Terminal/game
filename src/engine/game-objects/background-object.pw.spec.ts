@@ -16,6 +16,7 @@ test("a finite bbox clips the repeated background at both horizontal edges", asy
     };
 
     destroy();
+
     return colors;
   });
 
@@ -49,6 +50,7 @@ test("parallax moves the horizontal axis while the static vertical axis stays pu
     };
 
     destroy();
+
     return colors;
   });
 

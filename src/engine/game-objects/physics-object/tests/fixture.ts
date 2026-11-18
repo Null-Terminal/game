@@ -1,6 +1,5 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { PhysicsObject } from "#engine/game-objects/physics-object";
-import { ColliderObject } from "#engine/game-objects/collider-object";
+import { ColliderObject, PhysicsObject } from "#engine/game-objects";
 import type { BBoxTuple } from "#engine/rtree";
 
 class Probe extends PhysicsObject {

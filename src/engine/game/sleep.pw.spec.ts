@@ -113,6 +113,7 @@ test("distance wakeup preserves a manually paused object", async ({ page }) => {
     };
 
     destroy();
+
     return { stillPaused, resumed };
   });
 
@@ -195,6 +196,7 @@ test("waking a background restores its original drawing order", async ({ page })
     canvas.emitter.emit(canvas.events.background, { ctx, now: 16, delta: 0.016 });
 
     destroy();
+
     return drawOrder;
   });
 

@@ -2,11 +2,13 @@ import { AnimationDefinition } from "#/animation-definition";
 
 import { LoadedAnimation } from "#engine/animation";
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { BackgroundObject } from "#engine/game-objects/background-object";
-import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object/types";
+import { BackgroundObject, type DefaultBackgroundObjectOptions } from "#engine/game-objects";
 import type { BBoxTuple } from "#engine/rtree";
 
-export interface BackgroundSceneOptions extends Pick<DefaultBackgroundObjectOptions, "scrollFactor" | "static" | "stretch"> {
+export interface BackgroundSceneOptions extends Pick<
+  DefaultBackgroundObjectOptions,
+  "scrollFactor" | "static" | "stretch"
+> {
   bbox: BBoxTuple;
 }
 

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { AnimationDefinition } from "#/animation-definition";
-import { AnimationLayer } from "#engine/animation/animation-layer";
-import { LoadedAnimation } from "#engine/animation/loaded-animation";
+import { AnimationLayer, LoadedAnimation } from "#engine/animation";
 
 describe("AnimationLayer collision bounds", () => {
   it("uses the same center anchor and scale as a separately drawn roof", () => {

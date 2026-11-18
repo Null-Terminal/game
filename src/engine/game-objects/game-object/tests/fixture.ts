@@ -1,6 +1,6 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { GameObject } from "#engine/game-objects/game-object";
 import type { PoolPointer } from "#engine/game-object-pool";
+import { GameObject } from "#engine/game-objects";
 
 export class Probe extends GameObject {
   override init() {}
@@ -67,23 +67,31 @@ export async function createLifecycleScene() {
     canvas,
     createProbe(opts: Parameters<Probe["create"]>[2] = {}) {
       const pointer = pool.add(Probe, game, opts);
+
       return { pointer, object: getObject(pointer, Probe) };
     },
+
     createAnimatedProbe() {
       const pointer = pool.add(AnimatedProbe, game, {});
+
       return { pointer, object: getObject(pointer, AnimatedProbe) };
     },
+
     createFailingProbe() {
       return pool.add(FailingProbe, game, {});
     },
+
     createRevivingProbe() {
       const pointer = pool.add(RevivingProbe, game, {});
+
       return { pointer, object: getObject(pointer, RevivingProbe) };
     },
+
     tick(delta: number, now: number) {
       const ctx = element.getContext("2d")!;
       canvas.emitter.emit(canvas.events.beforeRender, { ctx, delta, now });
     },
+
     destroy() {
       game.destroy();
     }

@@ -1,8 +1,8 @@
-import { Arena, Arenas, Camera, Game, RenderCanvas, World } from "#engine/game";
-import type { ArenasOptions } from "#engine/game";
-import { ColliderObject } from "#engine/game-objects/collider-object";
-import { GameObject } from "#engine/game-objects/game-object";
-import { PhysicsObject } from "#engine/game-objects/physics-object";
+import {
+  Arena, Arenas, Camera, Game, RenderCanvas, World,
+  type ArenasOptions
+} from "#engine/game";
+import { ColliderObject, GameObject, PhysicsObject } from "#engine/game-objects";
 
 export class ArenaProbe extends ColliderObject {
   override init() {}
@@ -55,16 +55,20 @@ export function createArenaScene(arenas?: ArenasOptions) {
     Arenas,
     World,
     createWorld: (defaultX = 0) => {
-      const declared = Arenas.declare({ start: () => ({
-        objects: World.of([[ArenaProbe, { bbox: [defaultX, 0, defaultX + 20, 20] }]])
-      }) }, arenas);
+      const declared = Arenas.declare({
+        start: () => ({
+          objects: World.of([[ArenaProbe, { bbox: [defaultX, 0, defaultX + 20, 20] }]])
+        })
+      }, arenas);
 
       declared.preload(declared.refs.start);
+
       return new World({
         persistentObjects: World.of([[GlobalProbe, { x: 100 }]]),
         arenas: declared
       });
     },
+
     destroy: () => game.destroy()
   };
 }

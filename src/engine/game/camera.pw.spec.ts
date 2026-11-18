@@ -23,6 +23,7 @@ test("the dead zone keeps the same proportions when the canvas is resized", asyn
     const large = { x: camera.x, y: camera.y };
 
     destroy();
+
     return { small, large };
   });
 

@@ -20,6 +20,7 @@ test("delete keeps an object revived during its destructor in the pool", async (
     };
 
     destroy();
+
     return result;
   }, "/src/engine/game-objects/game-object/tests/fixture.ts");
 
@@ -38,6 +39,7 @@ test("add restores a snapshot without an arena argument", async ({ page }) => {
     const result = { x: object?.x, y: object?.y, arena: object?.arena };
 
     destroy();
+
     return result;
   }, "/src/engine/game-objects/game-object/tests/fixture.ts");
 

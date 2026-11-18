@@ -17,6 +17,7 @@ test("a path visits its points in order and starts again", async ({ page }) => {
     }
 
     destroy();
+
     return positions;
   });
 
@@ -44,6 +45,7 @@ test("following a new route replaces the previous one", async ({ page }) => {
     const newRoute = object.x;
 
     destroy();
+
     return { firstRoute, newRoute };
   });
 
@@ -69,6 +71,7 @@ test("a custom route does not advance while its object is paused", async ({ page
     const afterResume = object.x;
 
     destroy();
+
     return { beforePause, duringPause, afterResume };
   });
 

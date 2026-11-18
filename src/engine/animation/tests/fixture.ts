@@ -1,6 +1,6 @@
 import { AnimationDefinition } from "#/animation-definition";
 
-import { LoadedAnimation } from "#engine/animation/loaded-animation";
+import { LoadedAnimation } from "#engine/animation";
 
 export interface FrameScene {
   animation: LoadedAnimation;

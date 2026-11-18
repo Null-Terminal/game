@@ -4,11 +4,9 @@ import { AnimationDefinition } from "#/animation-definition";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import { LoadedAnimation } from "#engine/animation";
+import { World, type Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
-import type { Game } from "#engine/game";
-import { World } from "#engine/game/world";
-import { ColliderObject, CollisionBody } from "#engine/game-objects/collider-object";
-import { InteractObject } from "#engine/game-objects/interact-object";
+import { ColliderObject, CollisionBody, InteractObject } from "#engine/game-objects";
 
 function createGame() {
   const world = new World({ persistentObjects: [] });
@@ -16,6 +14,7 @@ function createGame() {
     scene: handler({ withFlush: true }),
     interact: handler({ withFlush: true })
   };
+
   const emitter = new EventEmitter(events);
 
   const game = {

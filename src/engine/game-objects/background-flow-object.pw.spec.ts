@@ -64,6 +64,7 @@ test("inspection selects a flow sprite instead of the whole background", async (
     }
 
     destroy();
+
     return rows;
   });
 
@@ -114,6 +115,7 @@ test("flow labels remain visible above clipped sprites", async ({ page }) => {
 
     const color = colorAt(1, 65);
     destroy();
+
     return color;
   });
 

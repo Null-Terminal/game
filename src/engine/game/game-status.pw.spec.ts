@@ -91,6 +91,7 @@ test("a failed load preserves the current world and reports the error", async ({
     };
 
     destroy();
+
     return result;
   });
 
@@ -130,6 +131,7 @@ test("restart loads a fresh world without reloading the page", async ({ page }) 
     };
 
     destroy();
+
     return result;
   });
 

@@ -19,6 +19,7 @@ test("a preloaded arena shares the world's collision trees", async ({ page }) =>
     };
 
     destroy();
+
     return result;
   });
 
@@ -35,7 +36,6 @@ test("a preloaded arena source can access the world's arena manager", async ({ p
   const scene = await createScene(page);
 
   const accessed = await scene.evaluate(async ({ game, Arenas, World, destroy }) => {
-    let world: InstanceType<typeof World>;
     let sourceSawManager = false;
 
     const declaration = Arenas.declare({
@@ -46,10 +46,11 @@ test("a preloaded arena source can access the world's arena manager", async ({ p
     });
 
     declaration.preload(declaration.refs.start);
-    world = new World({ persistentObjects: [], arenas: declaration });
+    const world = new World({ persistentObjects: [], arenas: declaration });
     await game.loadLevel(async () => world);
 
     destroy();
+
     return sourceSawManager;
   });
 
@@ -64,6 +65,7 @@ test("declared arena refs reuse and restore the same arena", async ({ page }) =>
       start: () => ({ objects: [[ArenaProbe, { bbox: [0, 0, 20, 20] }]] }),
       next: () => ({ objects: [[ArenaProbe, { bbox: [40, 0, 60, 20] }]] })
     });
+
     arenas.preload(arenas.refs.start);
 
     const world = await game.loadLevel(async () => new World({ persistentObjects: [], arenas }));
@@ -76,6 +78,7 @@ test("declared arena refs reuse and restore the same arena", async ({ page }) =>
       world.arenas.loadArena(arenas.refs.next),
       world.arenas.loadArena(arenas.refs.next)
     ]);
+
     const dynamic = await world.arenas.loadArena(arenas.refs.next.source);
     const externalRef = Arena.ref(arenas.refs.next.source);
     const external = await world.arenas.loadArena(externalRef);
@@ -91,6 +94,7 @@ test("declared arena refs reuse and restore the same arena", async ({ page }) =>
     };
 
     destroy();
+
     return result;
   });
 
@@ -111,6 +115,7 @@ test("an arena declaration creates independent managers for each world", async (
     const declaration = Arenas.declare({
       start: () => ({ objects: [[ArenaProbe, { bbox: [0, 0, 20, 20] }]] })
     });
+
     declaration.preload(declaration.refs.start);
 
     const first = await game.loadLevel(async () => new World({ persistentObjects: [], arenas: declaration }));
@@ -124,6 +129,7 @@ test("an arena declaration creates independent managers for each world", async (
     };
 
     destroy();
+
     return result;
   });
 
@@ -145,6 +151,7 @@ test("loading a ref waits for a queued unload", async ({ page }) => {
 
     const result = { sameArena: restored === arena, loaded: restored.loaded };
     destroy();
+
     return result;
   });
 
@@ -164,6 +171,7 @@ test("loading a ref waits for a queued destroy and creates one replacement", asy
       world.arenas.loadArena(ref),
       world.arenas.loadArena(ref)
     ]);
+
     await destroying;
 
     const result = {
@@ -174,6 +182,7 @@ test("loading a ref waits for a queued destroy and creates one replacement", asy
     };
 
     destroy();
+
     return result;
   });
 
@@ -210,6 +219,7 @@ test("arenas can overlap and unload independently", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -246,6 +256,7 @@ test("composed children belong to their parent's arena", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -273,6 +284,7 @@ test("a failed preloaded arena leaves the previous level active", async ({ page 
         const arenas = Arenas.declare({ start: async () => {
           throw new Error("arena failed");
         } });
+
         arenas.preload(arenas.refs.start);
         return new World({ persistentObjects: [], arenas });
       });
@@ -290,6 +302,7 @@ test("a failed preloaded arena leaves the previous level active", async ({ page 
     };
 
     destroy();
+
     return result;
   });
 
@@ -330,6 +343,7 @@ test("a partially created arena rolls back all its objects", async ({ page }) =>
     };
 
     destroy();
+
     return result;
   });
 
@@ -359,6 +373,7 @@ test("loading another level unloads its arenas and global objects", async ({ pag
     };
 
     destroy();
+
     return result;
   });
 
@@ -390,6 +405,7 @@ test("destroying the previous level keeps the new camera target", async ({ page 
     };
 
     destroy();
+
     return result;
   });
 
@@ -427,6 +443,7 @@ test("a failing world destructor still unloads its arena", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 

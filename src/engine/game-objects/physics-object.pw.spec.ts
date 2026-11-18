@@ -1,6 +1,6 @@
 import { expect, test, type JSHandle, type Page } from "@playwright/test";
 
-import { CollisionStatus } from "#engine/game-objects/physics-object";
+import { CollisionStatus } from "#engine/game-objects";
 import type * as fixture from "#engine/game-objects/physics-object/tests/fixture";
 import type { BBoxTuple } from "#engine/rtree";
 
@@ -21,6 +21,7 @@ test("a large step stops at the nearest obstacle", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -40,6 +41,7 @@ test("a fractional step cannot cross a thinner obstacle", async ({ page }) => {
     const result = { x: object.x, status };
 
     destroy();
+
     return result;
   });
 
@@ -57,6 +59,7 @@ test("a partial downward move reports landing", async ({ page }) => {
     const result = { y: object.y, status };
 
     destroy();
+
     return result;
   });
 
@@ -75,6 +78,7 @@ test("an infinite floor keeps the rider's horizontal coordinate finite", async (
     const result = { x: go.x, y: go.y, first, second };
 
     destroy();
+
     return result;
   });
 
@@ -109,6 +113,7 @@ test("movement stops at left and upper obstacle edges", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 

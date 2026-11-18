@@ -24,6 +24,7 @@ test("restoring an arena reuses its resolved definition", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -71,6 +72,7 @@ test("restoring an arena returns a moving collider to its saved position", async
     };
 
     destroy();
+
     return result;
   });
 
@@ -127,6 +129,7 @@ test("a restored arena continues a route from its saved point", async ({ page })
     };
 
     destroy();
+
     return result;
   });
 
@@ -172,6 +175,7 @@ test("a serialized arena keeps destroyed objects absent until a fresh load", asy
     };
 
     destroy();
+
     return result;
   });
 
@@ -212,6 +216,7 @@ test("an invalid state part does not partially restore the object", async ({ pag
     const result = { error, x: object.x, y: object.y, solid: object.motion.solid };
 
     destroy();
+
     return result;
   });
 

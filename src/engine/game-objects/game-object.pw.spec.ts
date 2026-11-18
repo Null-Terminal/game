@@ -18,6 +18,7 @@ test("reusing an object resets its position and size", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -43,6 +44,7 @@ test("destroying an object removes its movement subscription", async ({ page }) 
     };
 
     destroy();
+
     return result;
   });
 
@@ -67,6 +69,7 @@ test("destroy releases its pool slot and reindexes the last object", async ({ pa
     };
 
     destroy();
+
     return result;
   });
 
@@ -103,6 +106,7 @@ test("destroy releases its pool slot when a destructor fails", async ({ page }) 
     };
 
     destroy();
+
     return result;
   });
 
@@ -150,6 +154,7 @@ test("inspection shows the top object or every overlapping object in draw order"
     }
 
     destroy();
+
     return tables;
   });
 
@@ -225,6 +230,7 @@ test("animation listeners do not survive pool reuse", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -247,6 +253,7 @@ test("a failed subclass creation rolls back the pool", async ({ page }) => {
     const entries = Object.values(pool.objects).reduce((count, store) => count + store.length, 0);
 
     destroy();
+
     return { error, entries };
   });
 
@@ -282,6 +289,7 @@ test("play preserves auxiliary render listeners until destroy", async ({ page })
     };
 
     destroy();
+
     return result;
   });
 
@@ -324,6 +332,7 @@ test("switching playback keeps its render position and restarts elapsed time", a
     emit(4);
 
     destroy();
+
     return { calls, elapsed };
   });
 

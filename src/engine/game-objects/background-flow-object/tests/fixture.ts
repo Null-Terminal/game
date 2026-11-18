@@ -2,7 +2,7 @@ import { AnimationDefinition } from "#/animation-definition";
 
 import { LoadedAnimation } from "#engine/animation";
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
+import { BackgroundFlowObject } from "#engine/game-objects";
 
 export interface FlowScene {
   flow: BackgroundFlowObject;
@@ -21,6 +21,7 @@ export async function createFlowScene(): Promise<FlowScene> {
     backgroundColor: "#FFFFFF",
     backend: "2d"
   });
+
   canvas.stop();
 
   const first = createAnimation(["#FF0000", "#00FF00"], 50);
