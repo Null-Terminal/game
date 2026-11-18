@@ -1,8 +1,8 @@
 import { LoadedAnimation } from "#engine/animation";
 
+import type { PlayableAnimation } from "#engine/game-objects";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 import type { GameObject } from "#engine/game-objects/game-object";
-import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
 
 export interface InspectionEntry {
   go: GameObject;

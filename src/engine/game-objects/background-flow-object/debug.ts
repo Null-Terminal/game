@@ -1,4 +1,4 @@
-import { BackgroundObjectDebug } from "#engine/game-objects/background-object/debug";
+import { BackgroundObjectDebug } from "#engine/game-objects/background-object";
 
 import type { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object";

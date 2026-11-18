@@ -1,8 +1,7 @@
-import { BackgroundObjectRender } from "#engine/game-objects/background-object/render";
+import { BackgroundObjectRender } from "#engine/game-objects/background-object";
 
 import type { AnimationPlayback } from "#engine/animation";
-import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
-import type { DebugPart } from "#engine/game-objects/game-object/debug";
+import type { DebugPart, ObjectRenderPayload } from "#engine/game-objects/game-object";
 
 import type { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
 import type { FlowLayout, FlowPosition } from "#engine/game-objects/background-flow-object/layout";

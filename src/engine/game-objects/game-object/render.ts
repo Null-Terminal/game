@@ -1,15 +1,14 @@
 import type { Handlers } from "#/event-emitter";
 
-import { AnimationLayer, LoadedAnimation } from "#engine/animation";
+import { AnimationLayer, LoadedAnimation, type SpriteAnchorX, type SpriteAnchorY } from "#engine/animation";
+import type { RenderPayload } from "#engine/game";
+import type { RenderContext } from "#engine/rendering";
+
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
+import type { GameObject, PlayableAnimation } from "#engine/game-objects/game-object";
 
-import type { SpriteAnchorX, SpriteAnchorY } from "#engine/animation";
-import type { RenderPayload } from "#engine/game";
-import type { GameObject } from "#engine/game-objects/game-object";
-import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
 import type * as t from "#engine/game-objects/game-object/render/types";
-import type { RenderContext } from "#engine/rendering";
 
 export type * from "#engine/game-objects/game-object/render/types";
 
@@ -113,9 +112,11 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     };
 
     const subscription = go.canvas.emitter.on(event, handle);
+
     const syncSubscription = (sleeping: boolean) => {
       if (sleeping) {
         subscription.sleep();
+
       } else {
         lastNow = 0;
         subscription.wake();
@@ -123,6 +124,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     };
 
     const { emitter, events } = go.status;
+
     const statusSubscription = emitter.on(events.sleepChange, syncSubscription);
     syncSubscription(go.status.sleeping);
 
@@ -147,6 +149,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
 
     this.stopRedraw();
     this.#playing = animation;
+
     this.#redraw = draw;
     this.#redrawElapsedStart = null;
     this.#onRedrawStop = onStop ?? null;

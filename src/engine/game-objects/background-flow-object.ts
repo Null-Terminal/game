@@ -1,6 +1,5 @@
 import { cache } from "#decorators/cache";
-import { AnimationPlayback } from "#engine/animation";
-import type { LoadedAnimation } from "#engine/animation";
+import { AnimationPlayback, type LoadedAnimation } from "#engine/animation";
 
 import { ifAlive } from "#engine/game-objects/decorators";
 import { BackgroundObject } from "#engine/game-objects/background-object";

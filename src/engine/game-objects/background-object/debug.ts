@@ -1,8 +1,7 @@
-import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import { GameObjectDebug, type ObjectRenderPayload } from "#engine/game-objects/game-object";
 
-import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
-import type { BackgroundObject } from "#engine/game-objects/background-object";
 import type { RenderContext } from "#engine/rendering";
+import type { BackgroundObject } from "#engine/game-objects/background-object";
 
 export interface RepeatCellBounds {
   x: number;

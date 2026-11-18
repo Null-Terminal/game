@@ -45,7 +45,7 @@ export class GameStatus {
     const { events } = game;
 
     if (game.destroyed || this.#loadingLevel) {
-      throw new Error("Game.status: game is destroyed or a level is already loading");
+      throw new Error(`${this.constructor.name}: game is destroyed or a level is already loading`);
     }
 
     this.#loadingLevel = true;
@@ -142,7 +142,7 @@ export class GameStatus {
 
   #set(state: State) {
     if (this.#game.destroyed) {
-      throw new Error("Game.status: called on destroyed game");
+      throw new Error(`${this.constructor.name}: called on destroyed game`);
     }
 
     this.#state = state;
