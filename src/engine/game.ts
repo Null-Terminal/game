@@ -8,14 +8,16 @@ import { GameSleep } from "#engine/game/sleep";
 import type { Camera } from "#engine/game/camera";
 import type { RenderCanvas } from "#engine/game/render-canvas";
 import type { World } from "#engine/game/world";
-import type { GameOptions } from "#engine/game/sleep/types";
+import type { GameOptions } from "#engine/game/types";
 
+export type * from "#engine/game/types";
 export type * from "#engine/game/sleep/types";
 
 export { Camera } from "#engine/game/camera";
 export type * from "#engine/game/camera";
 
 export { World } from "#engine/game/world";
+export { Arena, Arenas } from "#engine/game/arena";
 export type * from "#engine/game/world";
 
 export { RenderCanvas } from "#engine/game/render-canvas";
@@ -30,8 +32,13 @@ export class Game extends Disposable {
 
   readonly camera: Camera;
   readonly canvas: RenderCanvas;
+  readonly options: GameOptions;
   readonly status = new GameStatus(this);
-  readonly sleep: GameSleep;
+
+  @cache
+  get sleep() {
+    return new GameSleep(this);
+  }
 
   readonly emitter = new EventEmitter({
     levelLoading: handler<null>(),
@@ -50,7 +57,7 @@ export class Game extends Disposable {
 
   get world(): World {
     if (this.#world == null) {
-      throw new Error("Game.world: no level is loaded");
+      throw new Error(`${this.constructor.name}.world: no level is loaded`);
     }
 
     return this.#world;
@@ -64,9 +71,8 @@ export class Game extends Disposable {
 
     this.camera = camera;
     this.canvas = canvas;
-
+    this.options = opts;
     camera.mount(this);
-    this.sleep = new GameSleep(this, opts.sleep);
 
     window.addEventListener("keydown", (e) => {
       if (e.code === "Escape") {
@@ -107,29 +113,65 @@ export class Game extends Disposable {
 
       if (this.destroyed) {
         nextWorld.destroy();
-        throw new Error("Game.loadLevel: game was destroyed during loading");
+        throw new Error(`${this.constructor.name}.loadLevel: game was destroyed during loading`);
       }
 
       if (nextWorld === this.#world) {
-        throw new Error("Game.loadLevel: level is already active");
-      }
-
-      try {
-        nextWorld.mount(this);
-
-      } catch (err) {
-        nextWorld.destroy();
-        throw err;
+        throw new Error(`${this.constructor.name}.loadLevel: level is already active`);
       }
 
       const previousWorld = this.#world;
+      const previousTarget = this.camera.target;
+
+      const previousX = this.camera.x;
+      const previousY = this.camera.y;
+
+      this.camera.x = 0;
+      this.camera.y = 0;
+
+      const abort = () => nextWorld.destroy();
+      this.abortSignal.addEventListener("abort", abort, { once: true });
+
+      try {
+        await nextWorld.mount(this);
+
+        if (this.destroyed) {
+          throw new Error(`${this.constructor.name}.loadLevel: game was destroyed during loading`);
+        }
+
+      } catch (err) {
+        let cleanupError: unknown;
+
+        try {
+          nextWorld.destroy();
+
+        } catch (error) {
+          cleanupError = error;
+        }
+
+        if (!this.destroyed) {
+          this.camera.x = previousX;
+          this.camera.y = previousY;
+
+          if (previousTarget != null) {
+            this.camera.bindTo(previousTarget);
+          }
+        }
+
+        if (cleanupError != null) {
+          throw new AggregateError([err, cleanupError], `${this.constructor.name}.loadLevel: rollback failed`, { cause: err });
+        }
+
+        throw err;
+
+      } finally {
+        this.abortSignal.removeEventListener("abort", abort);
+      }
+
       previousWorld?.destroy();
 
       this.#world = nextWorld;
       this.#levelLoader = load;
-
-      this.camera.x = 0;
-      this.camera.y = 0;
 
       return nextWorld;
     });
@@ -137,7 +179,7 @@ export class Game extends Disposable {
 
   reloadLevel(): Promise<World> {
     if (this.#levelLoader == null) {
-      throw new Error("Game.reloadLevel: no level loader is available");
+      throw new Error(`${this.constructor.name}.reloadLevel: no level loader is available`);
     }
 
     return this.loadLevel(this.#levelLoader);

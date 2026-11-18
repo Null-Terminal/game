@@ -1,10 +1,19 @@
-import type { CreateParameters, GameObject } from "#engine/game-objects";
+import type { CreateParameters, GameObject, StateValue } from "#engine/game-objects";
+
+import { Arena } from "#engine/game/arena";
+import type { World } from "#engine/game/world";
+
 import type * as t from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
 
 export class GameObjectPool {
   readonly objects: Record<number, t.GameObjectStore> = {};
+  readonly #world: World;
+
+  constructor(world: World) {
+    this.#world = world;
+  }
 
   has(kind: number, index: number) {
     const store = this.objects[kind];
@@ -22,8 +31,29 @@ export class GameObjectPool {
   add<T extends typeof GameObject, A extends CreateParameters<T>>(
     GObject: t.KindedGameObjectCtor<T>,
     game: A[0],
-    opts: A[2]
+    opts: A[2],
+    snapshot?: StateValue
+  ): t.PoolPointer;
+
+  add<T extends typeof GameObject, A extends CreateParameters<T>>(
+    GObject: t.KindedGameObjectCtor<T>,
+    game: A[0],
+    opts: A[2],
+    arena: Arena,
+    snapshot?: StateValue
+  ): t.PoolPointer;
+
+  add<T extends typeof GameObject, A extends CreateParameters<T>>(
+    GObject: t.KindedGameObjectCtor<T>,
+    game: A[0],
+    opts: A[2],
+    arenaOrSnapshot?: Arena | StateValue,
+    snapshot?: StateValue
   ): t.PoolPointer {
+    const hasArena = arenaOrSnapshot instanceof Arena;
+    const arena = hasArena ? arenaOrSnapshot : null;
+
+    const state = hasArena ? snapshot : arenaOrSnapshot;
     const kind = GObject.kind;
 
     const init = kind in this.objects;
@@ -39,10 +69,12 @@ export class GameObjectPool {
     const fromPool = buffer.length > length;
     const object = fromPool ? buffer[length]! : new GObject();
 
+    object.world = this.#world;
+    object.arena = arena;
     store.length++;
 
     try {
-      object.create(game, poolPointer, opts);
+      object.create(game, poolPointer, opts, state);
 
       if (!fromPool) {
         buffer.push(object);

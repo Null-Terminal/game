@@ -17,7 +17,7 @@ export async function createSleepScene() {
     sleep: { distanceScreens: 2, wakeDistanceScreens: 1, checkIntervalSeconds: 0.1 }
   });
 
-  const world = await game.loadLevel(async () => new World({ objects: [] }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
   canvas.stop();
 
   const insert = world.statics.insert.bind(world.statics);

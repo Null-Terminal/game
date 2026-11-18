@@ -4,13 +4,14 @@ import { AnimationDefinition } from "#/animation-definition";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import { LoadedAnimation } from "#engine/animation";
+import type { PoolPointer } from "#engine/game-object-pool";
 import type { Game } from "#engine/game";
 import { World } from "#engine/game/world";
 import { ColliderObject, CollisionBody } from "#engine/game-objects/collider-object";
 import { InteractObject } from "#engine/game-objects/interact-object";
 
 function createGame() {
-  const world = new World({ objects: [] });
+  const world = new World({ persistentObjects: [] });
   const events = {
     scene: handler({ withFlush: true }),
     interact: handler({ withFlush: true })
@@ -20,7 +21,7 @@ function createGame() {
   const game = {
     world,
     canvas: { events, emitter, canvas: { height: 600 } },
-    sleep: { prepare() {} }
+    sleep: { sleepIfFar() {} }
   } as unknown as Game;
 
   return { game, world };
@@ -33,12 +34,22 @@ function createAnimation(collisionY: number) {
   }));
 }
 
+function getObject<T extends ColliderObject>(world: World, pointer: PoolPointer, ctor: new () => T): T {
+  const object = world.objects.get(...pointer);
+
+  if (!(object instanceof ctor)) {
+    throw new Error(`Expected ${ctor.name} in the object pool`);
+  }
+
+  return object;
+}
+
 describe("ColliderObject collision", () => {
   it("moves its geometry between solid and interaction trees", () => {
     const { game, world } = createGame();
-    const object = new ColliderObject();
+    const pointer = world.objects.add(ColliderObject, game, { bbox: [0, 0, 100, 20] });
+    const object = getObject(world, pointer, ColliderObject);
 
-    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
     expect(world.statics.search(-1, -1, 101, 21)).toHaveLength(1);
 
     object.collision.toInteract();
@@ -55,17 +66,18 @@ describe("ColliderObject collision", () => {
 
   it("restores the default kind when a pooled object is created again", () => {
     const { game, world } = createGame();
-    const object = new InteractObject();
+    const pointer = world.objects.add(InteractObject, game, { bbox: [0, 0, 100, 20] });
+    const object = getObject(world, pointer, InteractObject);
 
-    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
     expect(object.collision.kind).toBe(CollisionBody.Kind.Interact);
 
     object.collision.toSolid();
     object.destroy();
     expect(() => object.collision.toInteract()).toThrow(/destroyed object/);
 
-    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
+    const reused = world.objects.add(InteractObject, game, { bbox: [0, 0, 100, 20] });
 
+    expect(world.objects.get(...reused)).toBe(object);
     expect(object.collision.kind).toBe(CollisionBody.Kind.Interact);
     expect(world.statics.search(-1, -1, 101, 21)).toHaveLength(0);
     expect(world.staticInteracts.search(-1, -1, 101, 21)).toHaveLength(1);
@@ -75,17 +87,15 @@ describe("ColliderObject collision", () => {
 
   it("requires geometry before registering a static collision", () => {
     const { game, world } = createGame();
-    const object = new ColliderObject();
 
-    expect(() => object.create(game, [1, 0], {})).toThrow(/needs width and height/);
+    expect(() => world.objects.add(ColliderObject, game, {})).toThrow(/needs width and height/);
     expect(world.statics.search(-100, -100, 100, 100)).toEqual([]);
   });
 
   it("keeps an explicit bbox without a sprite", () => {
     const { game, world } = createGame();
-    const object = new ColliderObject();
-
-    object.create(game, [1, 0], { bbox: [0, 0, 100, 20] });
+    const pointer = world.objects.add(ColliderObject, game, { bbox: [0, 0, 100, 20] });
+    const object = world.objects.get(...pointer)!;
 
     expect(world.statics.search(-1, -1, 101, 21)[0]?.bbox).toEqual([0, 0, 100, 20]);
     object.destroy();
@@ -93,14 +103,14 @@ describe("ColliderObject collision", () => {
 
   it("updates only when an animation changes the collision rectangle", () => {
     const { game, world } = createGame();
-    const object = new ColliderObject();
     const first = createAnimation(0);
     const second = createAnimation(25);
 
     const insert = vi.spyOn(world.statics, "insert");
     const remove = vi.spyOn(world.statics, "remove");
 
-    object.create(game, [1, 0], { show: first, x: 10, y: 20 });
+    const pointer = world.objects.add(ColliderObject, game, { show: first, x: 10, y: 20 });
+    const object = getObject(world, pointer, ColliderObject);
     object.play(first);
 
     expect(insert).toHaveBeenCalledTimes(1);

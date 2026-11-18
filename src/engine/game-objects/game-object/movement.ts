@@ -7,9 +7,23 @@ export type * from "#engine/game-objects/game-object/movement/types";
 
 export class Movement extends ServantObject {
   #cancelMovementHandler: Destructor | null = null;
+  #progress: t.MovementSnapshot | null = null;
 
   constructor(go: GameObject) {
     super(go);
+
+    go.state.add("movement", {
+      save: () => this.#save(),
+
+      validate: (value): value is t.MovementSnapshot | null =>
+        value === null || this.#isSnapshot(value),
+
+      restore: (value) => {
+        if (value != null) {
+          this.#restore(value);
+        }
+      }
+    });
   }
 
   follow(movement: t.MovementOptions) {
@@ -41,6 +55,7 @@ export class Movement extends ServantObject {
   reset() {
     this.#cancelMovementHandler?.();
     this.#cancelMovementHandler = null;
+    this.#progress = null;
   }
 
   #followPath(path: t.MovePath, { tolerance = 5, speed = 100 }: Pick<t.PathMovement, "tolerance" | "speed">) {
@@ -50,13 +65,18 @@ export class Movement extends ServantObject {
 
     const go = this.go;
 
-    let pathIndex = 0;
-    let elapsed = 0;
+    const state: Extract<t.MovementSnapshot, { kind: "path" }> = {
+      kind: "path",
+      pathIndex: 0,
+      elapsed: 0
+    };
+
+    this.#progress = state;
 
     this.#drive((delta) => {
-      elapsed += delta;
+      state.elapsed += delta;
 
-      const target = path[pathIndex]!;
+      const target = path[state.pathIndex % path.length]!;
 
       const dx = target[0] - go.x;
       const dy = target[1] - go.y;
@@ -65,12 +85,12 @@ export class Movement extends ServantObject {
 
       if (distance < tolerance) {
         // Достигли цели - переключаемся на следующую
-        pathIndex = (pathIndex + 1) % path.length;
+        state.pathIndex = (state.pathIndex + 1) % path.length;
         go.move(dx, dy);
         return;
       }
 
-      const step = this.#velocity(speed ?? 100, elapsed) * delta;
+      const step = this.#velocity(speed ?? 100, state.elapsed) * delta;
       const ratio = Math.min(1, step / distance);
 
       go.move(dx * ratio, dy * ratio);
@@ -80,8 +100,13 @@ export class Movement extends ServantObject {
   #followAt(at: (distance: number) => t.MovePoint, speed?: t.MoveSpeed) {
     const go = this.go;
 
-    let elapsed = 0;
-    let distance = 0;
+    const state: Extract<t.MovementSnapshot, { kind: "curve" }> = {
+      kind: "curve",
+      elapsed: 0,
+      distance: 0
+    };
+
+    this.#progress = state;
 
     this.#drive((delta) => {
       if (go.status.paused) {
@@ -89,25 +114,25 @@ export class Movement extends ServantObject {
         return;
       }
 
-      elapsed += delta;
+      state.elapsed += delta;
 
       if (speed != null) {
-        const [x, y] = at(distance);
+        const [x, y] = at(state.distance);
 
-        const probe = distance + 0.001;
+        const probe = state.distance + 0.001;
         const [nx, ny] = at(probe);
 
         const derivative = Math.hypot(nx - x, ny - y) / 0.001;
 
         if (derivative > 0) {
-          distance += this.#velocity(speed, elapsed) * delta / derivative;
+          state.distance += this.#velocity(speed, state.elapsed) * delta / derivative;
         }
 
       } else {
-        distance = elapsed;
+        state.distance = state.elapsed;
       }
 
-      const [x, y] = at(distance);
+      const [x, y] = at(state.distance);
       go.move(x - go.x, y - go.y);
     });
   }
@@ -131,9 +156,9 @@ export class Movement extends ServantObject {
       const along = ping * length;
       const across = Math.sin(ping * Math.PI * 2) * amplitude;
 
-      return axis === "x"
-        ? [originX + along, originY + across]
-        : [originX + across, originY + along];
+      return axis === "x" ?
+        [originX + along, originY + across] :
+        [originX + across, originY + along];
     }, speed);
   }
 
@@ -156,5 +181,47 @@ export class Movement extends ServantObject {
     this.#cancelMovementHandler = go.render.on(go.canvas.events.beforeRender, ({ delta }) => {
       step(delta);
     });
+  }
+
+  #save(): t.MovementSnapshot | null {
+    return this.#progress == null ? null : { ...this.#progress };
+  }
+
+  #isSnapshot(snapshot: unknown): snapshot is t.MovementSnapshot {
+    const progress = this.#progress;
+
+    if (progress == null || snapshot == null || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+      return false;
+    }
+
+    if (!("kind" in snapshot) || snapshot.kind !== progress.kind) {
+      return false;
+    }
+
+    const elapsed = "elapsed" in snapshot ? snapshot.elapsed : undefined;
+
+    if (typeof elapsed !== "number" || !Number.isFinite(elapsed) || elapsed < 0) {
+      return false;
+    }
+
+    if (progress.kind === "path") {
+      const pathIndex = "pathIndex" in snapshot ? snapshot.pathIndex : undefined;
+      return typeof pathIndex === "number" && Number.isInteger(pathIndex) && pathIndex >= 0;
+    }
+
+    const distance = "distance" in snapshot ? snapshot.distance : undefined;
+    return typeof distance === "number" && Number.isFinite(distance) && distance >= 0;
+  }
+
+  #restore(snapshot: t.MovementSnapshot) {
+    const progress = this.#progress!;
+    progress.elapsed = snapshot.elapsed;
+
+    if (progress.kind === "path" && snapshot.kind === "path") {
+      progress.pathIndex = snapshot.pathIndex;
+
+    } else if (progress.kind === "curve" && snapshot.kind === "curve") {
+      progress.distance = snapshot.distance;
+    }
   }
 }

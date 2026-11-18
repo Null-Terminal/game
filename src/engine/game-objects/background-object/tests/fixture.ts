@@ -29,7 +29,7 @@ export async function createBackgroundScene(opts: BackgroundSceneOptions): Promi
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
-  const world = await game.loadLevel(async () => new World({ objects: [] }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const source = new OffscreenCanvas(10, 10);
   const sourceCtx = source.getContext("2d")!;

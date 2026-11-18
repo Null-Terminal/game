@@ -38,7 +38,7 @@ export async function createMovementScene(bounds: readonly BBoxTuple[]) {
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
-  const world = await game.loadLevel(async () => new World({ objects: World.of([]) }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: World.of([]) }));
   const obstacles = bounds.map((bbox) => {
     const pointer = world.createObject(Obstacle, { bbox });
     const object = world.objects.get(...pointer);

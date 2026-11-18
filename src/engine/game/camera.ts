@@ -72,7 +72,9 @@ export class Camera extends Disposable {
     this.#target = target;
 
     return () => {
-      this.#target = null;
+      if (this.#target === target) {
+        this.#target = null;
+      }
     };
   }
 

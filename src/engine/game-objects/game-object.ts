@@ -3,6 +3,8 @@ import { cache } from "#decorators/cache";
 import { AnimationPlayback, LoadedAnimation } from "#engine/animation";
 
 import type { Game, WorldObject } from "#engine/game";
+import type { Arena } from "#engine/game/arena";
+import type { World } from "#engine/game/world";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
 
@@ -13,11 +15,18 @@ import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 import { Movement } from "#engine/game-objects/game-object/movement";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
 import { GameObjectStatus } from "#engine/game-objects/game-object/status";
+import { GameObjectState, type StateValue } from "#engine/game-objects/game-object/state";
+import { registerPositionState } from "#engine/game-objects/game-object/state/position";
 
 import type * as go from "#engine/game-objects/game-object/types";
 import type { BitmapRenderPayload } from "#engine/game-objects/game-object/render";
 
 export type * from "#engine/game-objects/game-object/types";
+
+export { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+export { GameObjectRender } from "#engine/game-objects/game-object/render";
+
+export type { DebugBounds, DebugPart } from "#engine/game-objects/game-object/debug";
 
 export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectOptions> extends KindedObject {
   static refs<O extends go.GameObjectOptions>() {
@@ -53,6 +62,8 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   });
 
   game!: Game;
+  world!: World;
+  arena: Arena | null = null;
   poolPointer!: PoolPointer;
 
   options!: T;
@@ -66,6 +77,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   prevY = 0;
 
   readonly status = new GameObjectStatus(this);
+  readonly state: GameObjectState = new GameObjectState(this);
 
   @cache
   get render(): GameObjectRender {
@@ -98,10 +110,6 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     return true;
   }
 
-  get world() {
-    return this.game.world;
-  }
-
   get nowPlaying(): go.PlayableAnimation | null {
     return this.render.nowPlaying;
   }
@@ -131,6 +139,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   constructor() {
     super();
     this.destroyed = true;
+    registerPositionState(this);
   }
 
   abstract init(): void;
@@ -151,6 +160,8 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
         this.status.reset();
 
       } finally {
+        this.arena?.release(this);
+        this.arena = null;
         this.world.objects.release(this);
       }
     }
@@ -161,36 +172,41 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   }
 
   @ifDead
-  create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+  create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
     this.destroyed = false;
     this.status.reset();
 
     this.game = game;
     this.poolPointer = poolPointer;
 
-    const options = { ...opts! } as T;
-    this.options = options;
+    const resolvedOptions = { ...opts! } as T;
+    this.options = resolvedOptions;
 
     try {
-      this.#initializeState(options);
+      this.#initializeState(resolvedOptions);
       this.#createRefs();
       this.init();
 
-      const animation = typeof options.show === "string" ?
-        this.animations[options.show] :
-        options.show;
+      const animation = typeof resolvedOptions.show === "string" ?
+        this.animations[resolvedOptions.show] :
+        resolvedOptions.show;
 
       if (animation != null) {
         this.play(animation);
       }
 
-      if (options.movement != null) {
-        this.movement.follow(options.movement);
+      if (resolvedOptions.movement != null) {
+        this.movement.follow(resolvedOptions.movement);
       }
 
-      game.sleep.prepare(this);
+      if (snapshot !== undefined) {
+        this.state.restore(snapshot);
+      }
+
+      game.sleep.sleepIfFar(this);
       this.mountFlush();
-      return options;
+
+      return resolvedOptions;
 
     } catch (err) {
       this.destroy();
@@ -297,12 +313,18 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     return 0;
   }
 
-  protected createRefOptions(childOptions?: go.WithEntry[1]): go.DefaultGameObjectOptions & {
+  protected createRefOptions(childOpts?: go.WithEntry[1]): go.DefaultGameObjectOptions & {
     x: number;
     y: number;
     bbox?: BBoxTuple;
   } {
-    return { ...this.options, x: 0, y: 0, ...childOptions, acceptor: this };
+    const opts = { ...this.options, x: 0, y: 0, ...childOpts, acceptor: this };
+
+    if (childOpts?.stateKey == null) {
+      delete opts.stateKey;
+    }
+
+    return opts;
   }
 
   protected onMove(_status: number) {
@@ -395,7 +417,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
         }
       }
 
-      this.#createRef(name, go, resolvedOptions);
+      this.#createRef(name, go, resolvedOptions, "with");
     }
 
     if (this.options.accept != null) {
@@ -403,13 +425,22 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
       for (const [name, entry] of Object.entries(acceptMap)) {
         const [go, childOptions] = typeof entry === "function" ? entry(this.options) : entry;
-        this.#createRef(name, go, { ...childOptions, acceptor: this });
+        this.#createRef(name, go, { ...childOptions, acceptor: this }, "accept");
       }
     }
   }
 
-  #createRef(name: string, go: WorldObject[0], opts: WorldObject[1]) {
-    const instance = this.world.objects.get(...this.world.createObject(go, opts))!;
+  #createRef(name: string, go: WorldObject[0], opts: WorldObject[1], group: "with" | "accept") {
+    const pointer = this.arena != null ?
+      this.arena.createChildObject(`${group}:${name}`, go, opts) :
+      this.world.createObject(go, opts);
+
+    if (pointer == null) {
+      this.refs[name] = null;
+      return;
+    }
+
+    const instance = this.world.objects.get(...pointer)!;
     this.refs[name] = instance;
 
     this.onDestroy(() => {

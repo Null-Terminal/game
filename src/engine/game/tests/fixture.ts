@@ -17,7 +17,7 @@ export function createLevelScene(): LevelScene {
   return {
     game,
     canvas,
-    createWorld: () => new World({ objects: [] }),
+    createWorld: () => new World({ persistentObjects: [] }),
     destroy: () => game.destroy()
   };
 }

@@ -21,6 +21,9 @@ export interface Effects extends FrameEffects {
 export interface DefaultGameObjectOptions {
   name?: string;
 
+  // Стабильный ID, если порядок создания объекта может меняться
+  stateKey?: string;
+
   show?: string | PlayableAnimation;
   movement?: MovementOptions;
   sleep?: boolean;

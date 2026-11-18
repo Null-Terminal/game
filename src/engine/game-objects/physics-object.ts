@@ -2,10 +2,11 @@ import type { Collision, CollisionScore, Game, RenderPayload } from "#engine/gam
 import type { PoolPointer } from "#engine/game-object-pool";
 
 import { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
-import { GameObject } from "#engine/game-objects/game-object";
-import type { GameObjectOptions } from "#engine/game-objects/game-object";
+import { GameObject, type GameObjectOptions } from "#engine/game-objects/game-object";
 
 import { PhysicsObjectMotion } from "#engine/game-objects/physics-object/motion";
+import { registerPhysicsStatsState } from "#engine/game-objects/physics-object/stats-state";
+import type { StateValue } from "#engine/game-objects";
 
 export { PhysicsObjectMotion } from "#engine/game-objects/physics-object/motion";
 
@@ -50,6 +51,11 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
   readonly #INITIAL_RIDING_TOLERANCE = 5;
   readonly #COLLISION_EPSILON = 0.001;
 
+  constructor() {
+    super();
+    registerPhysicsStatsState(this);
+  }
+
   override destroy() {
     if (this.destroyed) {
       return;
@@ -62,10 +68,10 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
   }
 
   @ifDead
-  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+  override create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
     this.#stats = { ...(this.constructor as typeof PhysicsObject).stats };
     this.motion.reset();
-    return super.create(game, poolPointer, opts);
+    return super.create(game, poolPointer, opts, snapshot);
   }
 
   @ifAlive

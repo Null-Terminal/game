@@ -1,8 +1,12 @@
 export { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 
-export { GameObject } from "#engine/game-objects/game-object";
-export { ServantObject } from "#engine/game-objects/servant-object";
+export { GameObject, GameObjectDebug, GameObjectRender } from "#engine/game-objects/game-object";
 export type * from "#engine/game-objects/game-object";
+
+export { GameObjectState } from "#engine/game-objects/game-object/state";
+export type * from "#engine/game-objects/game-object/state";
+
+export { ServantObject } from "#engine/game-objects/servant-object";
 
 export { BackgroundObject } from "#engine/game-objects/background-object";
 export type * from "#engine/game-objects/background-object";

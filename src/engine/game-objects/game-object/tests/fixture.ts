@@ -37,7 +37,7 @@ export class RevivingProbe extends Probe {
     super.destroy();
 
     if (revive) {
-      this.game.world.objects.add(RevivingProbe, this.game, {});
+      this.world.objects.add(RevivingProbe, this.game, {});
     }
   }
 }
@@ -48,7 +48,7 @@ export async function createLifecycleScene() {
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
-  const world = await game.loadLevel(async () => new World({ objects: World.of([]) }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: World.of([]) }));
   const pool = world.objects;
 
   function getObject<T extends GameObject>(pointer: PoolPointer, ctor: new () => T): T {

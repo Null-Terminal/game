@@ -28,6 +28,10 @@ export class RenderCanvas extends Disposable {
     return this.#paused;
   }
 
+  get running() {
+    return this.#redrawId !== 0;
+  }
+
   @cache
   get events() {
     return this.emitter.events;
@@ -195,6 +199,7 @@ export class RenderCanvas extends Disposable {
 
   stop() {
     cancelAnimationFrame(this.#redrawId);
+    this.#redrawId = 0;
   }
 
   clear() {

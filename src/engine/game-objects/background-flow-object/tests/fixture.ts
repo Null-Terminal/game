@@ -28,7 +28,7 @@ export async function createFlowScene(): Promise<FlowScene> {
   const game = Game.camera(new Camera()).create(canvas);
 
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[
+    persistentObjects: World.of([[
       BackgroundFlowObject,
       { sprites: [first, second], order: "round-robin", gap: 0, seed: 1, y: 10 }
     ]])

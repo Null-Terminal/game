@@ -1,9 +1,9 @@
+import { PhysicsObject } from "#engine/game-objects/physics-object";
+import { CollisionBody, type CollisionShape } from "#engine/game-objects/collider-object/body";
+
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
-
-import { PhysicsObject } from "#engine/game-objects/physics-object";
-import type { GameObjectOptions, PlayableAnimation } from "#engine/game-objects/game-object";
-import { CollisionBody, type CollisionShape } from "#engine/game-objects/collider-object/body";
+import type { GameObjectOptions, PlayableAnimation, StateValue } from "#engine/game-objects";
 
 export { CollisionBody } from "#engine/game-objects/collider-object/body";
 
@@ -27,8 +27,8 @@ export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> ext
     return this.canvas.events.scene;
   }
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
-    const options = super.create(game, poolPointer, opts);
+  override create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
+    const resolvedOptions = super.create(game, poolPointer, opts, snapshot);
 
     try {
       this.collision.mount();
@@ -38,7 +38,7 @@ export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> ext
       throw err;
     }
 
-    return options;
+    return resolvedOptions;
   }
 
   override destroy() {

@@ -1,6 +1,7 @@
 import type { BBoxTuple } from "#engine/rtree/bbox";
 import type { CreateOptionsOf, GameObject } from "#engine/game-objects";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
+import type { ArenasDeclaration } from "#engine/game/arena";
 
 export type WorldObject<T extends typeof GameObject = typeof GameObject> = [
   GameObject: KindedGameObjectCtor<T>,
@@ -10,7 +11,11 @@ export type WorldObject<T extends typeof GameObject = typeof GameObject> = [
 export type WorldObjects = WorldObject[];
 
 export interface WorldOptions {
-  objects: WorldObjects
+  // Объекты мира, не принадлежащие аренам
+  persistentObjects: WorldObjects;
+
+  // Объявленные арены и правила их предзагрузки
+  arenas?: ArenasDeclaration;
 }
 
 export interface Collision {

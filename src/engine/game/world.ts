@@ -4,6 +4,7 @@ import { Disposable } from "#engine/disposable";
 
 import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
+import { Arenas } from "#engine/game/arena";
 
 import type { Game } from "#engine/game";
 import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
@@ -11,6 +12,9 @@ import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
 import type * as t from "#engine/game/world/types";
 
 export type * from "#engine/game/world/types";
+export type * from "#engine/game/arena";
+
+export { Arena, Arenas } from "#engine/game/arena";
 
 export class World extends Disposable {
   static of<const T extends [new (...args: any[]) => GameObject, object?][]>(entries: {
@@ -25,7 +29,7 @@ export class World extends Disposable {
   }
 
   game!: Game;
-  readonly options: Required<t.WorldOptions>;
+  readonly options: t.WorldOptions;
 
   readonly statics = new RTree();
   readonly dynamics = new RTree();
@@ -33,16 +37,25 @@ export class World extends Disposable {
   readonly staticInteracts = new RTree();
   readonly dynamicInteracts = new RTree();
 
-  readonly objects = new GameObjectPool();
+  readonly objects = new GameObjectPool(this);
+  #arenas: Arenas | null = null;
+
+  get arenas(): Arenas {
+    if (this.#arenas == null) {
+      throw new Error(`${this.constructor.name}.arenas: world is not mounted`);
+    }
+
+    return this.#arenas;
+  }
 
   #mounted = false;
 
   constructor(opts: t.WorldOptions) {
     super();
-    this.options = { ...opts };
+    this.options = opts;
   }
 
-  mount(game: Game) {
+  async mount(game: Game) {
     if (this.#mounted) {
       throw new Error(`${this.constructor.name}.mount: already mounted`);
     }
@@ -50,23 +63,60 @@ export class World extends Disposable {
     this.#mounted = true;
     this.game = game;
 
-    const subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, () => {
+    const declaredArenas = this.options.arenas ?? Arenas.declare({});
+    this.#arenas = declaredArenas.create(this);
+
+    const subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ delta }) => {
       this.dynamics.clear();
       this.dynamicInteracts.clear();
+      this.arenas.flush();
+      this.arenas.checkAutoUnload(delta);
     });
 
     this.onDestroy(() => subscription.dispose());
 
-    this.nextTick(() => {
-      for (const elem of this.options.objects) {
-        this.createObject(elem[0], elem[1]);
-      }
-    });
+    for (const [go, opts] of this.options.persistentObjects) {
+      this.createObject(go, opts);
+    }
+
+    await this.#arenas.preload();
   }
 
   override destroy() {
-    super.destroy();
-    this.objects.destroy();
+    if (this.destroyed) {
+      return;
+    }
+
+    const errors: unknown[] = [];
+
+    try {
+      super.destroy();
+
+    } catch (err) {
+      errors.push(err);
+    }
+
+    try {
+      this.#arenas?.destroy();
+
+    } catch (err) {
+      errors.push(err);
+    }
+
+    try {
+      this.objects.destroy();
+
+    } catch (err) {
+      errors.push(err);
+    }
+
+    if (errors.length === 1) {
+      throw errors[0];
+    }
+
+    if (errors.length > 1) {
+      throw new AggregateError(errors, `${this.constructor.name}.destroy: cleanup failed`);
+    }
   }
 
   createObject(go: t.WorldObject[0], opts?: t.WorldObject[1]): PoolPointer {

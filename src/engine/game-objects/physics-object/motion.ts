@@ -18,6 +18,22 @@ export class PhysicsObjectMotion extends ServantObject<PhysicsObject> {
 
   constructor(go: PhysicsObject) {
     super(go);
+
+    go.state.add("motion", {
+      save: (): "kinematic" | "solid" => this.kinematic ? "kinematic" : "solid",
+
+      validate: (value): value is "kinematic" | "solid" =>
+        value === "kinematic" || value === "solid",
+
+      restore: (value) => {
+        if (value === "kinematic") {
+          this.toKinematic();
+
+        } else {
+          this.toSolid();
+        }
+      }
+    });
   }
 
   get kinematic() {

@@ -8,7 +8,3 @@ export interface GameSleepOptions {
   // Интервал проверки расстояния в секундах
   checkIntervalSeconds?: number;
 }
-
-export interface GameOptions {
-  sleep?: GameSleepOptions;
-}

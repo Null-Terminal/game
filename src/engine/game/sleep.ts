@@ -7,13 +7,16 @@ import type { GameSleepOptions } from "#engine/game/sleep/types";
 
 export class GameSleep {
   readonly #game: Game;
+
   readonly #options: Required<GameSleepOptions> | null;
   readonly #subscription: Subscription | null;
 
   #elapsed = 0;
 
-  constructor(game: Game, opts?: GameSleepOptions) {
+  constructor(game: Game) {
     this.#game = game;
+
+    const opts = game.options.sleep;
 
     if (opts == null) {
       this.#options = null;
@@ -49,21 +52,21 @@ export class GameSleep {
     });
   }
 
-  prepare(go: GameObject) {
-    const options = this.#options;
+  sleepIfFar(go: GameObject) {
+    const opts = this.#options;
 
-    if (options == null || go === this.#game.camera.target || !go.sleepable || go.options.sleep === false) {
+    if (opts == null || go === this.#game.camera.target || !go.sleepable || go.options.sleep === false) {
       return;
     }
 
-    if (go.isFarFromViewport(options.distanceScreens)) {
+    if (go.isFarFromViewport(opts.distanceScreens)) {
       go.status.sleep();
     }
   }
 
   update() {
-    const opts = this.#options;
     const game = this.#game;
+    const opts = this.#options;
 
     if (!game.hasWorld || opts == null) {
       return;
