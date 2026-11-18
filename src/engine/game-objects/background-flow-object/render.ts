@@ -52,9 +52,14 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
     const originBottom = Number.isFinite(frame.y) ? viewHeight - frame.y : viewHeight + scrollY;
 
     const horizontal = state.direction === "horizontal";
-    const layoutEnd = horizontal ?
-      (stretchWidth ? tileWidth : bounds.right - originX) :
-      (stretchHeight ? tileHeight : originBottom - bounds.top);
+    let layoutEnd = originBottom - bounds.top;
+
+    if (horizontal) {
+      layoutEnd = stretchWidth ? tileWidth : bounds.right - originX;
+
+    } else if (stretchHeight) {
+      layoutEnd = tileHeight;
+    }
 
     if (layoutEnd > 0) {
       state.layout.extendTo(layoutEnd);

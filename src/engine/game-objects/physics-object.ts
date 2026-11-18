@@ -251,11 +251,19 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
 
     const riding = collision != null ? collision.object : lastRiding;
 
-    const shiftX = riding == null ? 0 :
-      riding === lastRiding ? lastShiftX : this.#shift(riding.x, riding.prevX);
+    let shiftX = 0;
+    let shiftY = 0;
 
-    const shiftY = riding == null ? 0 :
-      riding === lastRiding ? lastShiftY : this.#shift(riding.y, riding.prevY);
+    if (riding != null) {
+      if (riding === lastRiding) {
+        shiftX = lastShiftX;
+        shiftY = lastShiftY;
+
+      } else {
+        shiftX = this.#shift(riding.x, riding.prevX);
+        shiftY = this.#shift(riding.y, riding.prevY);
+      }
+    }
 
     const left = collision?.bbox[0] ?? this.#ridingLeft + shiftX;
     const right = collision?.bbox[2] ?? this.#ridingRight + shiftX;

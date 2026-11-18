@@ -10,7 +10,8 @@ class SpriteWorker extends WorkerClient<SpriteLoadData, ImageBitmap> {
   readonly worker = new Worker(new URL("./load-sprite-worker.ts", import.meta.url), { type: "module" });
 }
 
-const workerPool = typeof Worker === "undefined" ? null :
+const workerPool = typeof Worker === "undefined" ?
+  null :
   new WorkerPool(MAX_SPRITE_WORKERS, { idleTimeoutMs: null });
 
 export function loadSprite(url: string, opts: LoadSpriteOptions = {}): Promise<ImageBitmap> {

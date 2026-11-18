@@ -37,8 +37,8 @@ export class AnimationLayer {
     const width = animation.maxWidth * effectScale;
     const height = animation.maxHeight * effectScale;
 
-    const left = x - (this.#anchorX === "center" ? width / 2 : this.#anchorX === "right" ? width : 0);
-    const bottom = y - (this.#anchorY === "center" ? height / 2 : this.#anchorY === "top" ? height : 0);
+    const left = x - anchorOffset(this.#anchorX, "right", width);
+    const bottom = y - anchorOffset(this.#anchorY, "top", height);
 
     const bounds = animation.collisionBounds;
 
@@ -60,8 +60,8 @@ export class AnimationLayer {
     const { animation, frameIndex } = this.#playback;
 
     const image = animation.getSpriteFrame(frameIndex, this.#effects);
-    const anchorWidth = this.#anchorX === "center" ? image.width / 2 : this.#anchorX === "right" ? image.width : 0;
-    const anchorHeight = this.#anchorY === "center" ? image.height / 2 : this.#anchorY === "bottom" ? image.height : 0;
+    const anchorWidth = anchorOffset(this.#anchorX, "right", image.width);
+    const anchorHeight = anchorOffset(this.#anchorY, "bottom", image.height);
 
     const left = Math.round(x - anchorWidth) - Math.round(this.#camera.x);
     const top = ctx.canvas.height - Math.round(y) + Math.round(this.#camera.y) - Math.round(anchorHeight);
@@ -70,4 +70,12 @@ export class AnimationLayer {
       ctx.drawImage(image, left, top);
     }
   }
+}
+
+function anchorOffset(anchor: string, full: string, size: number): number {
+  if (anchor === "center") {
+    return size / 2;
+  }
+
+  return anchor === full ? size : 0;
 }
