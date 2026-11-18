@@ -1,6 +1,4 @@
-import { RTree } from "#engine/rtree";
-
-import type { BBoxTuple } from "#engine/rtree";
+import { RTree, type BBoxTuple } from "#engine/rtree";
 
 export const COLLISION_INDEX_VERSION = "stationary-dynamic-v2";
 
@@ -38,9 +36,12 @@ export function compareCollisionIndexes(movingCount: number, swapsPerFrame = 0):
   const all = new RTree();
   const stationary = new RTree();
   const moving = new RTree();
+
   const movingFlags = Array.from({ length: OBJECT_COUNT }, (_, index) =>
     (index * 73) % OBJECT_COUNT < movingCount);
+
   const xOffsets = Array<number>(OBJECT_COUNT).fill(0);
+
   const movingIds = movingFlags.flatMap((moving, index) => moving ? [index] : []);
   const stationaryIds = movingFlags.flatMap((moving, index) => moving ? [] : [index]);
 
@@ -105,6 +106,7 @@ export function compareCollisionIndexes(movingCount: number, swapsPerFrame = 0):
     }
 
     rebuildAllMs += performance.now() - start;
+
     start = performance.now();
 
     for (const query of queries) {
@@ -112,6 +114,7 @@ export function compareCollisionIndexes(movingCount: number, swapsPerFrame = 0):
     }
 
     queryAllMs += performance.now() - start;
+
     start = performance.now();
 
     moving.clear();
@@ -124,6 +127,7 @@ export function compareCollisionIndexes(movingCount: number, swapsPerFrame = 0):
     }
 
     rebuildSplitMs += performance.now() - start;
+
     start = performance.now();
 
     for (const query of queries) {

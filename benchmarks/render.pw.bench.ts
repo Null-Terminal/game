@@ -53,6 +53,7 @@ test("render the loaded demo scene", async ({ page }, testInfo) => {
     objectCount,
     viewport
   }));
+
   const warmups = Number(process.env["BENCH_WARMUPS"] ?? 1);
 
   if (!Number.isInteger(warmups) || warmups < 1) {

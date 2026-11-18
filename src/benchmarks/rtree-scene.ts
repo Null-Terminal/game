@@ -1,5 +1,4 @@
-import { RTree } from "#engine/rtree";
-import type { BBoxTuple, RTreePublicNode } from "#engine/rtree";
+import { RTree, type BBoxTuple, type RTreePublicNode } from "#engine/rtree";
 
 export const RTREE_VERSION = "grid-4000-queries-20000-x4-v2";
 

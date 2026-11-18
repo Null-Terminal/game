@@ -5,6 +5,7 @@ import type * as scene from "../src/benchmarks/offscreen-scene";
 import { cpuRate, median, saveReport } from "./report";
 
 type OffscreenScene = Awaited<ReturnType<typeof scene.createOffscreenScene>>;
+type OffscreenSample = Awaited<ReturnType<OffscreenScene["runSample"]>>;
 
 interface OffscreenRun {
   objectCount: number;
@@ -24,7 +25,9 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
   const requestedMode = process.env["BENCH_OFFSCREEN_MODE"];
   const mode: scene.OffscreenMode = requestedMode === "paused" || requestedMode === "sleep" ||
     requestedMode === "culled" || requestedMode === "absent" ?
-    requestedMode : "active";
+    requestedMode :
+    "active";
+
   const kind: scene.OffscreenObjectKind = process.env["BENCH_OBJECT_KIND"] === "collider" ? "collider" : "plain";
   const layout: scene.OffscreenLayout = process.env["BENCH_OFFSCREEN_LAYOUT"] === "spread" ? "spread" : "far";
   const count = Number(process.env["BENCH_OFFSCREEN_COUNT"] ?? 500);
@@ -68,7 +71,8 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
   const runs: OffscreenRun[] = [];
 
   for (let index = 0; index < 3; index++) {
-    const { frameTimes, renderTimes, awakeCount, targetX } = await fixture.evaluate(({ runSample }) => runSample());
+    const sample: OffscreenSample = await fixture.evaluate(({ runSample }) => runSample());
+    const { frameTimes, renderTimes, awakeCount, targetX } = sample;
     const total = frameTimes.reduce((sum, value) => sum + value, 0);
 
     if (layout === "spread") {

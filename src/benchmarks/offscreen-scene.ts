@@ -73,6 +73,7 @@ export async function createOffscreenScene(
   let renderStart = 0;
   let sampleStart = 0;
   let target: BenchmarkTarget | null = null;
+
   const renderTimes: number[] = [];
 
   canvas.emitter.on(canvas.events.beforeRender, ({ now }) => {
@@ -94,10 +95,12 @@ export async function createOffscreenScene(
     }
   });
 
-  const game = Game.camera(new Camera()).create(canvas, mode === "sleep" ? {
-    sleep: { distanceScreens: 2 }
-  } : {});
-  const world = await game.loadLevel(async () => new World({ objects: [] }));
+  const options = mode === "sleep" ?
+    { sleep: { distanceScreens: 2 } } :
+    {};
+
+  const game = Game.camera(new Camera()).create(canvas, options);
+  const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
   const objects: GameObject[] = [];
 
   if (mode === "sleep" || layout === "spread") {
@@ -111,18 +114,27 @@ export async function createOffscreenScene(
   }
 
   if (mode !== "absent") {
+    let objectClass: typeof BenchmarkDynamicObject | typeof BenchmarkColliderObject = BenchmarkDynamicObject;
+
+    if (mode === "culled") {
+      objectClass = CulledDynamicObject;
+
+    } else if (kind === "collider") {
+      objectClass = BenchmarkColliderObject;
+    }
+
     for (let index = 0; index < count; index++) {
       const x = layout === "spread" ?
         viewport.width * SPREAD_SCREENS * index / count :
         100_000 + index * 40;
-      const objectClass = mode === "culled" ? CulledDynamicObject :
-        kind === "collider" ? BenchmarkColliderObject : BenchmarkDynamicObject;
+
       const pointer = world.createObject(objectClass, {
         bbox: [x, 0, x + 20, 20],
         movement: {
           sine: { axis: "x", amplitude: 5, length: 30, period: 3 }
         }
       });
+
       const object = world.objects.get(...pointer)!;
       objects.push(object);
 

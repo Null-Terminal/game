@@ -47,7 +47,7 @@ export async function createObjectCountScene(
     }]);
   }
 
-  await game.loadLevel(async () => new World({ objects }));
+  await game.loadLevel(async () => new World({ persistentObjects: objects }));
   await Promise.resolve();
 
   let measuring = false;
@@ -69,6 +69,7 @@ export async function createObjectCountScene(
   return {
     version: OBJECT_COUNT_SCENE_VERSION,
     objectCount: objects.length,
+
     async runSample() {
       renderTimes.length = 0;
       measuring = true;
@@ -83,6 +84,7 @@ export async function createObjectCountScene(
         textureStats: canvas.textureStats
       };
     },
+
     destroy: () => game.destroy()
   };
 }

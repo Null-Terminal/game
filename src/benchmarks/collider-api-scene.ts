@@ -52,8 +52,8 @@ export async function compareColliderApis(movingCount: number, reverse = false):
   const switchingGame = createStoppedGame();
 
   try {
-    const baselineWorld = await baselineGame.loadLevel(async () => new World({ objects: [] }));
-    const switchingWorld = await switchingGame.loadLevel(async () => new World({ objects: [] }));
+    const baselineWorld = await baselineGame.loadLevel(async () => new World({ persistentObjects: [] }));
+    const switchingWorld = await switchingGame.loadLevel(async () => new World({ persistentObjects: [] }));
 
     baselineGame.canvas.stop();
     switchingGame.canvas.stop();
@@ -69,6 +69,7 @@ export async function compareColliderApis(movingCount: number, reverse = false):
 
       return go;
     });
+
     const setupBaselineMs = performance.now() - start;
 
     start = performance.now();
@@ -82,6 +83,7 @@ export async function compareColliderApis(movingCount: number, reverse = false):
 
       return go;
     });
+
     const setupSwitchingMs = performance.now() - start;
 
     const movingIds = Array.from({ length: OBJECT_COUNT }, (_, index) => index)
@@ -133,6 +135,7 @@ export async function compareColliderApis(movingCount: number, reverse = false):
       if (reverse) {
         updateSwitching(shift);
         updateBaseline(shift);
+
       } else {
         updateBaseline(shift);
         updateSwitching(shift);

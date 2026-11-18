@@ -1,5 +1,4 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import type { WorldObjects } from "#engine/game";
+import { Camera, Game, RenderCanvas, World, type WorldObjects } from "#engine/game";
 import { BackgroundFlowObject, BackgroundObject } from "#engine/game-objects";
 
 import { createDemoWorld } from "#game/world";
@@ -66,6 +65,7 @@ export async function createBenchmarkScene(
       bottom: 50
     }
   })).create(canvas);
+
   const objects: WorldObjects = [...await createDemoWorld()];
 
   for (let index = objects.length - 1; index >= 0; index--) {
@@ -107,7 +107,7 @@ export async function createBenchmarkScene(
     }
   }
 
-  const world = await game.loadLevel(async () => new World({ objects }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: objects }));
   await Promise.resolve();
 
   const pointer = world.createObject(PersonObject, { x: 0, y: 0 });
@@ -135,6 +135,7 @@ export async function createBenchmarkScene(
     overlay: [] as number[],
     ui: [] as number[]
   };
+
   const coverage: ScanCoverage = {
     roadEnd: false,
     middleLeft: false,
