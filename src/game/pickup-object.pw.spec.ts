@@ -18,6 +18,7 @@ test("fuel pickup refills a partial tank and disappears", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -38,6 +39,7 @@ test("a full tank does not consume fuel pickup", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
@@ -57,6 +59,7 @@ test("medkit heals up to the maximum health", async ({ page }) => {
     const result = { hp: player.stats.hp, consumed: medkit.destroyed };
 
     destroy();
+
     return result;
   });
 

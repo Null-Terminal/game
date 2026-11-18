@@ -28,7 +28,7 @@ export async function createMovingPlatformScene({
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
-  const world = await game.loadLevel(async () => new World({ objects: [] }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const platformPointer = world.createObject(PlatformObject, { bbox: [100, 230, 260, 250] });
   const playerPointer = world.createObject(PersonObject, { x: 150, y: playerY });

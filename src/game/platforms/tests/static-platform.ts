@@ -1,5 +1,5 @@
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { PhysicsObject } from "#engine/game-objects/physics-object";
+import { PhysicsObject } from "#engine/game-objects";
 
 import { PlatformObject } from "#game/platforms/platform-object";
 
@@ -16,7 +16,7 @@ export async function createStaticPlatformScene() {
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
-  const world = await game.loadLevel(async () => new World({ objects: [] }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const platformPointer = world.createObject(PlatformObject, { bbox: [5, 0, 10, 1] });
   const playerPointer = world.createObject(Probe, { x: 4, y: 0 });
@@ -28,7 +28,13 @@ export async function createStaticPlatformScene() {
     throw new Error("Static platform fixture: objects were not created");
   }
 
-  return { game, world, platform, player, destroy: () => game.destroy() };
+  return {
+    game,
+    world,
+    platform,
+    player,
+    destroy: () => game.destroy()
+  };
 }
 
 export type StaticPlatformScene = Awaited<ReturnType<typeof createStaticPlatformScene>>;

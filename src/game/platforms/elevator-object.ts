@@ -1,6 +1,7 @@
 import { cache } from "#decorators/cache";
-import { GameObject, ifAlive } from "#engine/game-objects";
-import type { WithEntry } from "#engine/game-objects";
+import { GameObject, ifAlive, type StateValue, type WithEntry } from "#engine/game-objects";
+import type { Game } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
 
 import { PlatformObject } from "#game/platforms/platform-object";
 import { ElevatorObjectRender } from "#game/platforms/elevator-object/render";
@@ -37,6 +38,17 @@ export class ElevatorObject extends PlatformObject<ElevatorOptions> {
   #originY = 0;
   #targetStop = 0;
 
+  constructor() {
+    super();
+
+    this.state.add("targetStop", {
+      save: () => this.#targetStop,
+      validate: (value): value is number =>
+        typeof value === "number" && Number.isInteger(value) && value >= 0 && value < this.options.stops.length,
+      restore: (value) => { this.#targetStop = value; }
+    });
+  }
+
   @cache
   override get render(): ElevatorObjectRender {
     return new ElevatorObjectRender(this);
@@ -64,6 +76,52 @@ export class ElevatorObject extends PlatformObject<ElevatorOptions> {
 
     this.render.mountCabin(this.options.cabin);
     this.addCollisionShape(() => this.render.ceilingBounds);
+  }
+
+  override create(game: Game, pointer: PoolPointer, opts?: ElevatorOptions, snapshot?: StateValue): ElevatorOptions {
+    if (opts == null || opts.movement != null) {
+      return super.create(game, pointer, opts, snapshot);
+    }
+
+    if (snapshot == null || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+      return super.create(game, pointer, opts, snapshot);
+    }
+
+    const targetStop = snapshot["targetStop"];
+
+    if (typeof targetStop !== "number" || snapshot["movement"] == null) {
+      return super.create(game, pointer, opts, snapshot);
+    }
+
+    const stop = opts.stops[targetStop];
+
+    if (stop == null) {
+      return super.create(game, pointer, opts, snapshot);
+    }
+
+    let originX = 0;
+    let originY = 0;
+
+    if ("bbox" in opts && opts.bbox != null) {
+      [originX, originY] = opts.bbox;
+
+    } else {
+      if ("x" in opts) {
+        originX = opts.x ?? 0;
+      }
+
+      if ("y" in opts) {
+        originY = opts.y ?? 0;
+      }
+    }
+
+    return super.create(game, pointer, {
+      ...opts,
+      movement: {
+        path: [[originX + stop[0], originY + stop[1]]],
+        speed: opts.speed
+      }
+    }, snapshot);
   }
 
   @ifAlive

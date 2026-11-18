@@ -1,6 +1,7 @@
 import type { LoadedAnimation } from "#engine/animation";
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
+import type { StateValue } from "#engine/game-objects";
 
 import { InteractObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
@@ -21,7 +22,17 @@ export class ControlObject extends InteractObject<ControlOptions> {
 
   #active = false;
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: ControlOptions) {
+  constructor() {
+    super();
+
+    this.state.add("active", {
+      save: () => this.active,
+      validate: (value): value is boolean => typeof value === "boolean",
+      restore: (value) => this.#restoreActivation(value)
+    });
+  }
+
+  override create(game: Game, poolPointer: PoolPointer, opts?: ControlOptions, snapshot?: StateValue) {
     if (opts == null) {
       throw new TypeError("Control kind is required");
     }
@@ -29,7 +40,7 @@ export class ControlObject extends InteractObject<ControlOptions> {
     return super.create(game, poolPointer, {
       ...ControlObject.kinds[opts.kind],
       ...opts
-    });
+    }, snapshot);
   }
 
   get active(): boolean {
@@ -67,5 +78,13 @@ export class ControlObject extends InteractObject<ControlOptions> {
     }
 
     this.acceptor?.visit(this);
+  }
+
+  #restoreActivation(active: boolean) {
+    this.#active = active;
+
+    if (active && this.options.showActivate != null) {
+      this.play(this.options.showActivate);
+    }
   }
 }

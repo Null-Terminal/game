@@ -1,5 +1,6 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
+import type { StateValue } from "#engine/game-objects";
 
 import { InteractObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
@@ -23,7 +24,7 @@ export class PickupObject extends InteractObject<PickupOptions> {
     this.initPhysics();
   }
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: PickupOptions) {
+  override create(game: Game, poolPointer: PoolPointer, opts?: PickupOptions, snapshot?: StateValue) {
     if (opts == null) {
       throw new TypeError("Pickup kind is required");
     }
@@ -31,7 +32,7 @@ export class PickupObject extends InteractObject<PickupOptions> {
     return super.create(game, poolPointer, {
       show: PickupObject.kinds[opts.kind].show,
       ...opts
-    });
+    }, snapshot);
   }
 
   @ifAlive

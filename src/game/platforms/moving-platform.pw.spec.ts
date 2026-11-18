@@ -13,7 +13,13 @@ const approaches = [
   { name: "a fast jetpack meets a descending platform", platformSpeed: 600, jetpackSpeed: 700, frames: 4 },
 
   { name: "a descending platform blocks the jetpack at 30 FPS", platformSpeed: 600, jetpackSpeed: 350, frames: 3, fps: 30 },
-  { name: "a descending platform blocks the jetpack at 144 FPS", platformSpeed: 600, jetpackSpeed: 350, frames: 10, fps: 144 }
+  {
+    name: "a descending platform blocks the jetpack at 144 FPS",
+    platformSpeed: 600,
+    jetpackSpeed: 350,
+    frames: 10,
+    fps: 144
+  }
 ];
 
 for (const { name, platformSpeed, jetpackSpeed, frames, fps = 60 } of approaches) {
@@ -29,6 +35,7 @@ for (const { name, platformSpeed, jetpackSpeed, frames, fps = 60 } of approaches
       }
 
       destroy();
+
       return gaps;
     }, { frames, fps });
 
@@ -54,6 +61,7 @@ for (const { name, platformSpeed } of [
       }
 
       destroy();
+
       return gaps;
     });
 
@@ -63,7 +71,10 @@ for (const { name, platformSpeed } of [
 
 const fixtureUrl = "/src/game/platforms/tests/moving-platform.ts";
 
-async function createScene(page: Page, options: fixture.MovingPlatformOptions): Promise<JSHandle<fixture.MovingPlatformScene>> {
+async function createScene(
+  page: Page,
+  options: fixture.MovingPlatformOptions
+): Promise<JSHandle<fixture.MovingPlatformScene>> {
   await page.goto("/tests/fixture.html");
 
   return page.evaluateHandle(async ({ url, options }) => {

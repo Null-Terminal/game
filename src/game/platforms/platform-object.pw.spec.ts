@@ -15,6 +15,7 @@ test("a stationary platform stays in the static collision tree", async ({ page }
     };
 
     destroy();
+
     return result;
   });
 
@@ -88,6 +89,7 @@ test("a stationary platform still allows a small step up", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 

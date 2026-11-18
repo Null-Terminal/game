@@ -1,5 +1,6 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
+import type { StateValue } from "#engine/game-objects";
 
 import { ColliderObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
@@ -15,11 +16,11 @@ export class PlatformObject<T extends PlatformOptions = PlatformOptions> extends
     this.motion.toKinematic();
   }
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+  override create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
     return super.create(game, poolPointer, {
       maxStepHeight: 8,
       ...opts
-    } as T);
+    } as T, snapshot);
   }
 
   override allows(go: GameObject, kind: "stepUp", height: number): boolean;

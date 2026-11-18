@@ -21,6 +21,7 @@ test("a falling plank drops between adjacent static planks", async ({ page }) =>
     };
 
     destroy();
+
     return result;
   });
 

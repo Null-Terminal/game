@@ -16,7 +16,7 @@ export async function createFogScene(): Promise<FogScene> {
 
   const game = Game.camera(new Camera()).create(canvas);
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[
+    persistentObjects: World.of([[
       FogObject,
       {
         show: "fog",

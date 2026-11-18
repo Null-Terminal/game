@@ -1,7 +1,6 @@
 import type { LoadedAnimation } from "#engine/animation";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
-import type { InteractObject } from "#engine/game-objects";
-import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects";
+import type { DefaultGameObjectOptions, GameObjectOptions, InteractObject } from "#engine/game-objects";
 
 export interface ElevatorCabin {
   // Задняя стенка за игроком

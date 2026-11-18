@@ -17,7 +17,7 @@ export async function createWindDebrisScene(): Promise<WindDebrisScene> {
 
   const game = Game.camera(new Camera()).create(canvas);
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[
+    persistentObjects: World.of([[
       WindDebrisObject,
       {
         ...roadDebris,

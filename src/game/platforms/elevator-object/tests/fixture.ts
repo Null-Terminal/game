@@ -10,6 +10,9 @@ export interface ElevatorSceneOptions {
 }
 
 export interface ElevatorScene {
+  World: typeof World;
+  world: World;
+  ElevatorObject: typeof ElevatorObject;
   elevator: ElevatorObject;
   panel: ElevatorPanelObject;
   player: PersonObject;
@@ -26,7 +29,7 @@ export async function createElevatorScene(opts: ElevatorSceneOptions): Promise<E
   const game = Game.camera(new Camera({ limit: { y: 0 } })).create(canvas);
 
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([
+    persistentObjects: World.of([
       [ElevatorObject, {
         ...industrialElevator,
         x: 350,
@@ -43,6 +46,9 @@ export async function createElevatorScene(opts: ElevatorSceneOptions): Promise<E
   }));
 
   return {
+    World,
+    world,
+    ElevatorObject,
     elevator: world.objects.get(ElevatorObject.kind, 0) as ElevatorObject,
     panel: world.objects.get(ElevatorPanelObject.kind, 0) as ElevatorPanelObject,
     player: world.objects.get(PersonObject.kind, 0) as PersonObject

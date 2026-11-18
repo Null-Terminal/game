@@ -1,10 +1,10 @@
+import { scaffoldPlank } from "#/sprites/platforms/scaffold-plank";
+
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
 
 import { PersonObject } from "#game/person-object";
 import { FallingPlatformObject } from "#game/platforms/falling-platform-object";
 import { PlatformObject } from "#game/platforms/platform-object";
-
-import { scaffoldPlank } from "#/sprites/platforms/scaffold-plank";
 
 export async function createFallingPlatformScene() {
   const element = document.getElementById("game") as HTMLCanvasElement;
@@ -12,7 +12,7 @@ export async function createFallingPlatformScene() {
   canvas.stop();
 
   const game = Game.camera(new Camera()).create(canvas);
-  const world = await game.loadLevel(async () => new World({ objects: [] }));
+  const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const leftPointer = world.createObject(PlatformObject, { show: scaffoldPlank.intact, x: 0, y: 200 });
   const fallingOptions = {
@@ -22,6 +22,7 @@ export async function createFallingPlatformScene() {
     x: 250,
     y: 200
   };
+
   const middlePointer = world.createObject(FallingPlatformObject, fallingOptions);
   const rightPointer = world.createObject(PlatformObject, { show: scaffoldPlank.intact, x: 500, y: 200 });
   const playerPointer = world.createObject(PersonObject, { x: 250, y: 240 });
@@ -36,7 +37,15 @@ export async function createFallingPlatformScene() {
     throw new Error("Falling platform fixture: objects were not created");
   }
 
-  return { game, world, left, middle, right, player, destroy: () => game.destroy() };
+  return {
+    game,
+    world,
+    left,
+    middle,
+    right,
+    player,
+    destroy: () => game.destroy()
+  };
 }
 
 export type FallingPlatformScene = Awaited<ReturnType<typeof createFallingPlatformScene>>;

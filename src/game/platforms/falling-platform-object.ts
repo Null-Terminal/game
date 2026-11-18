@@ -1,10 +1,11 @@
 import type { LoadedAnimation } from "#engine/animation";
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
+import type { StateValue } from "#engine/game-objects";
 
 import { CollisionStatus, ColliderObject, ifAlive } from "#engine/game-objects";
 import type { GameObject } from "#engine/game-objects";
-import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects/game-object";
+import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects";
 
 import { PersonObject } from "#game/person-object";
 
@@ -20,12 +21,18 @@ export type FallingPlatformOptions = GameObjectOptions<DefaultFallingPlatformObj
 export class FallingPlatformObject extends ColliderObject<FallingPlatformOptions> {
   #triggered = false;
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: FallingPlatformOptions) {
-    return super.create(game, poolPointer, opts == null ? opts : {
-      fallAfterSeconds: 0,
-      maxStepHeight: 8,
-      ...opts
-    });
+  override create(game: Game, poolPointer: PoolPointer, opts?: FallingPlatformOptions, snapshot?: StateValue) {
+    let resolvedOptions = opts;
+
+    if (opts != null) {
+      resolvedOptions = {
+        fallAfterSeconds: 0,
+        maxStepHeight: 8,
+        ...opts
+      };
+    }
+
+    return super.create(game, poolPointer, resolvedOptions, snapshot);
   }
 
   override get redrawEvent() {

@@ -1,4 +1,4 @@
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectRender } from "#engine/game-objects";
 
 import type { AnimationLayer } from "#engine/animation";
 import type { ElevatorObject } from "#game/platforms/elevator-object";

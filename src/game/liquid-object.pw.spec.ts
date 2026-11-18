@@ -24,6 +24,7 @@ test("water leaves health unchanged while acid damages per elapsed frame", async
     };
 
     destroy();
+
     return result;
   });
 

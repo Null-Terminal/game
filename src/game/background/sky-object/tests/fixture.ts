@@ -21,7 +21,7 @@ export async function createWebGLSkyScene(): Promise<WebGLSkyScene> {
   const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "webgl" });
   const game = Game.camera(new Camera()).create(canvas);
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[SkyObject, { show: "storm", debug: { bounds: true, inspect: true } }]])
+    persistentObjects: World.of([[SkyObject, { show: "storm", debug: { bounds: true, inspect: true } }]])
   }));
 
   const sky = world.objects.get(SkyObject.kind, 0);
@@ -40,7 +40,7 @@ export async function createSkyScene(preset: "storm" | "dusk" = "storm"): Promis
 
   const game = Game.camera(new Camera()).create(canvas);
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[SkyObject, preset === "dusk" ? { ...duskSky } : { show: "storm" }]])
+    persistentObjects: World.of([[SkyObject, preset === "dusk" ? { ...duskSky } : { show: "storm" }]])
   }));
 
   await Promise.resolve();
