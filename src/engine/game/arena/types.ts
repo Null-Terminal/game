@@ -27,12 +27,20 @@ export interface ArenasDeclaration<T extends Record<string, ArenaSource> = Recor
 }
 
 export interface ArenasOptions {
+  unload?: ArenaUnloadOptions;
+}
+
+export interface ArenaUnloadOptions {
   // Расстояние от камеры в размерах экрана, после которого арена может выгрузиться
   distanceScreens: number;
 
-  // Как часто проверять расстояние, в секундах
-  checkIntervalSeconds?: number;
+  // Как часто проверять расстояние, в миллисекундах
+  checkIntervalMs?: number;
 }
+
+export type ResolvedArenasOptions = Omit<ArenasOptions, "unload"> & {
+  unload?: Required<ArenaUnloadOptions>;
+};
 
 export type ArenaObjectSnapshot =
   | { destroyed: true }

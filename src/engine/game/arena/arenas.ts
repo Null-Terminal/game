@@ -2,29 +2,29 @@ import { Arena } from "#engine/game/arena/arena";
 import { isPositive } from "#/utils/validators";
 
 import type { World } from "#engine/game/world";
-import type { ArenaRef, ArenaRefs, ArenaSnapshot, ArenaSource, ArenasDeclaration, ArenasOptions } from "#engine/game/arena/types";
+import type * as t from "#engine/game/arena/types";
 
 type PendingCommit = {
   run(): void;
   reject(reason?: unknown): void;
 };
 
-export class Arenas<T extends Record<string, ArenaSource> = Record<string, ArenaSource>> implements Iterable<Arena> {
-  static declare<const T extends Record<string, ArenaSource>>(
+export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.ArenaSource>> implements Iterable<Arena> {
+  static declare<const T extends Record<string, t.ArenaSource>>(
     sources: T,
-    opts?: ArenasOptions
-  ): ArenasDeclaration<T> {
+    opts?: t.ArenasOptions
+  ): t.ArenasDeclaration<T> {
     const refs = Object.fromEntries(Object.entries(sources).map(([name, source]) => [
       name,
       Arena.ref(source, name)
-    ])) as ArenaRefs<T>;
+    ])) as t.ArenaRefs<T>;
 
-    const refsToPreload = new Set<ArenaRef>();
+    const refsToPreload = new Set<t.ArenaRef>();
 
-    if (opts != null) {
-      const { distanceScreens, checkIntervalSeconds = 1 } = opts;
+    if (opts?.unload != null) {
+      const { distanceScreens, checkIntervalMs } = opts.unload;
 
-      if (!isPositive(distanceScreens) || !isPositive(checkIntervalSeconds)) {
+      if (!isPositive(distanceScreens) || (checkIntervalMs != null && !isPositive(checkIntervalMs))) {
         throw new RangeError(`${this.name}.declare: expected positive distance and interval`);
       }
     }
@@ -46,8 +46,8 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
     };
   }
 
-  readonly refs: ArenaRefs<T>;
-  readonly options: ArenasOptions | undefined;
+  readonly refs: t.ArenaRefs<T>;
+  readonly options: t.ResolvedArenasOptions;
 
   get size() {
     return this.#arenas.values()
@@ -56,27 +56,39 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
   }
 
   readonly #world: World;
-  readonly #refsToPreload: Set<ArenaRef>;
+  readonly #refsToPreload: Set<t.ArenaRef>;
   readonly #arenas = new Set<Arena>();
 
-  readonly #byRef = new Map<ArenaRef, Arena>();
-  readonly #loadingByRef = new Map<ArenaRef, Promise<Arena>>();
+  readonly #byRef = new Map<t.ArenaRef, Arena>();
+  readonly #loadingByRef = new Map<t.ArenaRef, Promise<Arena>>();
   readonly #pendingByArena = new Map<Arena, Promise<unknown>>();
 
   readonly #pendingCommits: PendingCommit[] = [];
   readonly #scheduledUnloads = new Set<Arena>();
 
   #fallbackFrame = 0;
-  #checkElapsed = 0;
+  #lastAutoUnloadCheckAt = performance.now();
 
   protected constructor(
     world: World,
-    refs: ArenaRefs<T>,
-    refsToPreload: Set<ArenaRef>,
-    options?: ArenasOptions
+    refs: t.ArenaRefs<T>,
+    refsToPreload: Set<t.ArenaRef>,
+    opts?: t.ArenasOptions
   ) {
     this.refs = refs;
-    this.options = options;
+
+    if (opts?.unload == null) {
+      this.options = {};
+
+    } else {
+      this.options = {
+        ...opts,
+        unload: {
+          ...opts.unload,
+          checkIntervalMs: opts.unload.checkIntervalMs ?? 500
+        }
+      };
+    }
 
     this.#world = world;
     this.#refsToPreload = new Set(refsToPreload);
@@ -94,7 +106,7 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
     }
   }
 
-  getByRef(ref: ArenaRef): Arena | undefined {
+  getByRef(ref: t.ArenaRef): Arena | undefined {
     return this.#byRef.get(ref);
   }
 
@@ -104,7 +116,7 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
     }
   }
 
-  async loadArena(input: ArenaRef | ArenaSource, snapshot?: ArenaSnapshot): Promise<Arena> {
+  async loadArena(input: t.ArenaRef | t.ArenaSource, snapshot?: t.ArenaSnapshot): Promise<Arena> {
     if (typeof input !== "function") {
       const pending = this.#loadingByRef.get(input);
 
@@ -163,26 +175,24 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
     });
   }
 
-  checkAutoUnload(delta: number) {
-    const opts = this.options;
+  checkAutoUnload(now: number) {
+    const unload = this.options.unload;
 
-    if (opts == null) {
+    if (unload == null) {
       return;
     }
 
-    this.#checkElapsed += delta;
-
-    if (this.#checkElapsed < (opts.checkIntervalSeconds ?? 1)) {
+    if (now - this.#lastAutoUnloadCheckAt < unload.checkIntervalMs) {
       return;
     }
 
-    this.#checkElapsed = 0;
+    this.#lastAutoUnloadCheckAt = now;
 
     for (const arena of this) {
       const shouldIgnore =
         !arena.autoUnload ||
         this.#scheduledUnloads.has(arena) ||
-        !arena.isFarFromViewport(opts.distanceScreens);
+        !arena.isFarFromViewport(unload.distanceScreens);
 
       if (shouldIgnore) {
         continue;
@@ -191,7 +201,7 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
       this.#scheduledUnloads.add(arena);
 
       void this.#commitArena(arena, () => {
-        if (arena.loaded && arena.isFarFromViewport(opts.distanceScreens)) {
+        if (arena.loaded && arena.isFarFromViewport(unload.distanceScreens)) {
           this.#unloadArena(arena);
         }
       })
@@ -235,7 +245,7 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
     }
   }
 
-  async #loadByRef(ref: ArenaRef, snapshot?: ArenaSnapshot): Promise<Arena> {
+  async #loadByRef(ref: t.ArenaRef, snapshot?: t.ArenaSnapshot): Promise<Arena> {
     const current = this.#byRef.get(ref);
     const pendingChange = current == null ? undefined : this.#pendingByArena.get(current);
 
@@ -252,7 +262,7 @@ export class Arenas<T extends Record<string, ArenaSource> = Record<string, Arena
     return arena?.unloaded ? this.restoreArena(arena) : this.#loadNewArena(ref.source, snapshot);
   }
 
-  async #loadNewArena(source: ArenaSource, snapshot?: ArenaSnapshot): Promise<Arena> {
+  async #loadNewArena(source: t.ArenaSource, snapshot?: t.ArenaSnapshot): Promise<Arena> {
     const world = this.#world;
 
     if (world.destroyed || world.game == null) {

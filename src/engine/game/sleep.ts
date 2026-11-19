@@ -11,7 +11,7 @@ export class GameSleep {
   readonly #options: Required<GameSleepOptions> | null;
   readonly #subscription: Subscription | null;
 
-  #elapsed = 0;
+  #lastCheckAt: number | null = null;
 
   constructor(game: Game) {
     this.#game = game;
@@ -27,28 +27,27 @@ export class GameSleep {
     const {
       distanceScreens,
       wakeDistanceScreens = distanceScreens * 0.8,
-      checkIntervalSeconds = 0.25
+      checkIntervalMs = 250
     } = opts;
 
     if (
       !isPositive(distanceScreens) ||
       !isPositive(wakeDistanceScreens) ||
       wakeDistanceScreens >= distanceScreens ||
-      !isPositive(checkIntervalSeconds)
+      !isPositive(checkIntervalMs)
     ) {
       throw new RangeError(`${this.constructor.name}: expected positive distances, wake distance below sleep distance, and a positive interval`);
     }
 
-    this.#options = { distanceScreens, wakeDistanceScreens, checkIntervalSeconds };
-    this.#elapsed = checkIntervalSeconds;
+    this.#options = { distanceScreens, wakeDistanceScreens, checkIntervalMs };
 
-    this.#subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ delta }) => {
-      this.#elapsed += delta;
-
-      if (this.#elapsed >= checkIntervalSeconds) {
-        this.#elapsed = 0;
-        this.update();
+    this.#subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ now }) => {
+      if (this.#lastCheckAt != null && now - this.#lastCheckAt < checkIntervalMs) {
+        return;
       }
+
+      this.#lastCheckAt = now;
+      this.update();
     });
   }
 

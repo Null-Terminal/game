@@ -66,11 +66,11 @@ export class World extends Disposable {
     const declaredArenas = this.options.arenas ?? Arenas.declare({});
     this.#arenas = declaredArenas.create(this);
 
-    const subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ delta }) => {
+    const subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ now }) => {
       this.dynamics.clear();
       this.dynamicInteracts.clear();
       this.arenas.flush();
-      this.arenas.checkAutoUnload(delta);
+      this.arenas.checkAutoUnload(now);
     });
 
     this.onDestroy(() => subscription.dispose());

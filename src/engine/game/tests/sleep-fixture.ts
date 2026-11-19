@@ -14,7 +14,7 @@ export async function createSleepScene() {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 100, height: 100, backend: "2d" });
   const game = Game.camera(new Camera()).create(canvas, {
-    sleep: { distanceScreens: 2, wakeDistanceScreens: 1, checkIntervalSeconds: 0.1 }
+    sleep: { distanceScreens: 2, wakeDistanceScreens: 1, checkIntervalMs: 100 }
   });
 
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));

@@ -203,6 +203,35 @@ test("waking a background restores its original drawing order", async ({ page })
   expect(result).toEqual(["first", "middle", "last"]);
 });
 
+test("sleep checks use frame time instead of capped delta", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ game, canvas, probe, destroy }) => {
+    const ctx = canvas.canvas.getContext("2d")!;
+    const now = performance.now() + 1000;
+    const tick = (time: number) => {
+      canvas.emitter.emit(canvas.events.beforeRender, { ctx, now: time, delta: 0.001 });
+    };
+
+    game.camera.x = 300;
+    tick(now);
+    const awake = !probe.status.sleeping;
+
+    game.camera.x = 0;
+    tick(now + 99);
+    const awakeBeforeInterval = !probe.status.sleeping;
+
+    tick(now + 100);
+    const sleepingAfterInterval = probe.status.sleeping;
+
+    destroy();
+
+    return { awake, awakeBeforeInterval, sleepingAfterInterval };
+  });
+
+  expect(result).toEqual({ awake: true, awakeBeforeInterval: true, sleepingAfterInterval: true });
+});
+
 async function createScene(page: Page): Promise<JSHandle<SleepScene>> {
   await page.goto("/tests/fixture.html");
 

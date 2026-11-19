@@ -19,7 +19,7 @@ export function createDemoArenas(showSeams = false, debug = false) {
     street: streetSource,
     upper: upperSource,
     background: async () => ({ objects: (await parts).background, autoUnload: false })
-  }, { distanceScreens: 0.75, checkIntervalSeconds: 0.5 });
+  }, { unload: { distanceScreens: 0.75 } });
 
   arenas.preload(arenas.refs.background, arenas.refs.street);
 

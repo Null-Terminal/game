@@ -5,6 +5,6 @@ export interface GameSleepOptions {
   // Объект просыпается ближе этого расстояния; меньший порог предотвращает дрожание на границе
   wakeDistanceScreens?: number;
 
-  // Интервал проверки расстояния в секундах
-  checkIntervalSeconds?: number;
+  // Интервал проверки расстояния в миллисекундах
+  checkIntervalMs?: number;
 }

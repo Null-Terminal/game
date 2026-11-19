@@ -23,17 +23,22 @@ test("an arena unloads only after all its objects are far from the camera", asyn
     game.canvas.stop();
 
     const arena = world.arenas.getByRef(world.arenas.refs["start"]!)!;
-    world.arenas.checkAutoUnload(1);
+    const checkAt = performance.now() + 1000;
+    world.arenas.checkAutoUnload(checkAt);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
     const nearObjectKeepsArena = arena.loaded;
 
     game.camera.x = 1200;
-    world.arenas.checkAutoUnload(1);
+    world.arenas.checkAutoUnload(checkAt + 9);
+    const loadedBeforeInterval = arena.loaded;
+
+    world.arenas.checkAutoUnload(checkAt + 10);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
     const result = {
       nearObjectKeepsArena,
+      loadedBeforeInterval,
       unloaded: arena.unloaded,
       collisionsGone: world.findCollisions(0, 0, 20, 20).length === 0,
       activeArenas: world.arenas.size
@@ -46,6 +51,7 @@ test("an arena unloads only after all its objects are far from the camera", asyn
 
   expect(result).toEqual({
     nearObjectKeepsArena: true,
+    loadedBeforeInterval: true,
     unloaded: true,
     collisionsGone: true,
     activeArenas: 0
@@ -77,13 +83,14 @@ test("a moving object keeps its original arena loaded while it is nearby", async
     moving.motion.toKinematic();
     moving.move(950, 0);
 
-    world.arenas.checkAutoUnload(1);
+    const checkAt = performance.now() + 1000;
+    world.arenas.checkAutoUnload(checkAt);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
     const loadedWhileNearby = arena.loaded;
 
     moving.move(-950, 0);
-    world.arenas.checkAutoUnload(1);
+    world.arenas.checkAutoUnload(checkAt + 10);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
     const unloadedAfterLeaving = arena.unloaded;
@@ -114,7 +121,7 @@ test("pinned arenas stay loaded until explicitly unloaded", async ({ page }) => 
     game.canvas.stop();
 
     const pinned = world.arenas.getByRef(arenas.refs.pinned)!;
-    world.arenas.checkAutoUnload(1);
+    world.arenas.checkAutoUnload(performance.now() + 1000);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
     const stayedLoaded = pinned.loaded;
@@ -159,7 +166,7 @@ test("the automatic unload rechecks distance before committing", async ({ page }
     }));
 
     const arena = world.arenas.getByRef(world.arenas.refs["start"]!)!;
-    world.arenas.checkAutoUnload(1);
+    world.arenas.checkAutoUnload(performance.now() + 1000);
 
     game.camera.x = 900;
     world.arenas.flush();
@@ -187,7 +194,7 @@ test("loading a ref waits for a queued automatic unload", async ({ page }) => {
     const world = await game.loadLevel(async () => new World({ persistentObjects: [], arenas: declaration }));
     const arena = world.arenas.getByRef(declaration.refs.start)!;
 
-    world.arenas.checkAutoUnload(1);
+    world.arenas.checkAutoUnload(performance.now() + 1000);
     const loaded = await world.arenas.loadArena(declaration.refs.start);
 
     const result = { sameArena: loaded === arena, loaded: loaded.loaded };
@@ -207,6 +214,6 @@ async function createScene(page: Page): Promise<JSHandle<fixture.ArenaScene>> {
 
   return page.evaluateHandle(async (url) => {
     const { createArenaScene } = await import(url) as typeof fixture;
-    return createArenaScene({ distanceScreens: 1, checkIntervalSeconds: 0.01 });
+    return createArenaScene({ unload: { distanceScreens: 1, checkIntervalMs: 10 } });
   }, "/src/engine/game/tests/arena-fixture.ts");
 }
