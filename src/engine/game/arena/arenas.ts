@@ -22,9 +22,9 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
     const refsToPreload = new Set<t.ArenaRef>();
 
     if (opts?.unload != null) {
-      const { distanceScreens, checkIntervalMs } = opts.unload;
+      const { distanceScreens, checkInterval } = opts.unload;
 
-      if (!isPositive(distanceScreens) || (checkIntervalMs != null && !isPositive(checkIntervalMs))) {
+      if (!isPositive(distanceScreens) || (checkInterval != null && !isPositive(checkInterval))) {
         throw new RangeError(`${this.name}.declare: expected positive distance and interval`);
       }
     }
@@ -85,7 +85,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
         ...opts,
         unload: {
           ...opts.unload,
-          checkIntervalMs: opts.unload.checkIntervalMs ?? 500
+          checkInterval: opts.unload.checkInterval ?? 500
         }
       };
     }
@@ -182,7 +182,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       return;
     }
 
-    if (now - this.#lastAutoUnloadCheckAt < unload.checkIntervalMs) {
+    if (now - this.#lastAutoUnloadCheckAt < unload.checkInterval) {
       return;
     }
 

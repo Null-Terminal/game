@@ -6,5 +6,5 @@ export interface GameSleepOptions {
   wakeDistanceScreens?: number;
 
   // Интервал проверки расстояния в миллисекундах
-  checkIntervalMs?: number;
+  checkInterval?: number;
 }

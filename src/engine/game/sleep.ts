@@ -27,22 +27,22 @@ export class GameSleep {
     const {
       distanceScreens,
       wakeDistanceScreens = distanceScreens * 0.8,
-      checkIntervalMs = 250
+      checkInterval = 250
     } = opts;
 
     if (
       !isPositive(distanceScreens) ||
       !isPositive(wakeDistanceScreens) ||
       wakeDistanceScreens >= distanceScreens ||
-      !isPositive(checkIntervalMs)
+      !isPositive(checkInterval)
     ) {
       throw new RangeError(`${this.constructor.name}: expected positive distances, wake distance below sleep distance, and a positive interval`);
     }
 
-    this.#options = { distanceScreens, wakeDistanceScreens, checkIntervalMs };
+    this.#options = { distanceScreens, wakeDistanceScreens, checkInterval };
 
     this.#subscription = game.canvas.emitter.on(game.canvas.events.beforeRender, ({ now }) => {
-      if (this.#lastCheckAt != null && now - this.#lastCheckAt < checkIntervalMs) {
+      if (this.#lastCheckAt != null && now - this.#lastCheckAt < checkInterval) {
         return;
       }
 

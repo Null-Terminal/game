@@ -35,7 +35,7 @@ export interface ArenaUnloadOptions {
   distanceScreens: number;
 
   // Как часто проверять расстояние, в миллисекундах
-  checkIntervalMs?: number;
+  checkInterval?: number;
 }
 
 export type ResolvedArenasOptions = Omit<ArenasOptions, "unload"> & {

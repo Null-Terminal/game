@@ -13,7 +13,7 @@ export type WorkerClass = new () => WorkerClient<unknown, unknown>;
 
 export interface WorkerPoolOptions {
   // null сохраняет свободные воркеры до уничтожения пула
-  idleTimeoutMs?: number | null;
+  idleTimeout?: number | null;
 }
 
 export interface WorkerJob {

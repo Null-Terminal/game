@@ -5,7 +5,7 @@ import { loadSprite } from "#engine/animation/load-sprite";
 
 export async function retireIdleWorker() {
   const url = createEchoWorkerUrl();
-  const pool = new WorkerPool(1, { idleTimeoutMs: 30 });
+  const pool = new WorkerPool(1, { idleTimeout: 30 });
 
   let created = 0;
   let terminated = 0;
@@ -44,7 +44,7 @@ export async function retireIdleWorker() {
 
 export async function keepIdleWorkerWithoutTimeout() {
   const url = createEchoWorkerUrl();
-  const pool = new WorkerPool(1, { idleTimeoutMs: null });
+  const pool = new WorkerPool(1, { idleTimeout: null });
 
   let created = 0;
   let terminated = 0;
@@ -77,7 +77,7 @@ export async function keepIdleWorkerWithoutTimeout() {
 
 export async function keepBusyWorker() {
   const url = createEchoWorkerUrl();
-  const pool = new WorkerPool(1, { idleTimeoutMs: 30 });
+  const pool = new WorkerPool(1, { idleTimeout: 30 });
 
   let created = 0;
   let terminated = 0;
@@ -125,7 +125,7 @@ export async function useTransferredBitmapAfterRetirement() {
   `;
 
   const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-  const pool = new WorkerPool(1, { idleTimeoutMs: 30 });
+  const pool = new WorkerPool(1, { idleTimeout: 30 });
 
   let terminated = 0;
 

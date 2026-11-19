@@ -12,7 +12,7 @@ class SpriteWorker extends WorkerClient<SpriteLoadData, ImageBitmap> {
 
 const workerPool = typeof Worker === "undefined" ?
   null :
-  new WorkerPool(MAX_SPRITE_WORKERS, { idleTimeoutMs: null });
+  new WorkerPool(MAX_SPRITE_WORKERS, { idleTimeout: null });
 
 export function loadSprite(url: string, opts: LoadSpriteOptions = {}): Promise<ImageBitmap> {
   const { removeBackground = false, tolerance = 5 } = opts ?? {};

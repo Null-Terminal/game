@@ -214,6 +214,6 @@ async function createScene(page: Page): Promise<JSHandle<fixture.ArenaScene>> {
 
   return page.evaluateHandle(async (url) => {
     const { createArenaScene } = await import(url) as typeof fixture;
-    return createArenaScene({ unload: { distanceScreens: 1, checkIntervalMs: 10 } });
+    return createArenaScene({ unload: { distanceScreens: 1, checkInterval: 10 } });
   }, "/src/engine/game/tests/arena-fixture.ts");
 }

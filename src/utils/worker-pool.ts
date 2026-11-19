@@ -4,7 +4,7 @@ import type { WorkerClass, WorkerJob, WorkerPoolOptions, WorkerRequest, WorkerRe
 
 export type { WorkerPoolOptions, WorkerRequest, WorkerResponse } from "#/utils/worker-pool/types";
 
-const DEFAULT_IDLE_TIMEOUT_MS = 30_000;
+const DEFAULT_IDLE_TIMEOUT = 30_000;
 
 export abstract class WorkerClient<Request, Result> {
   declare readonly RequestType: Request;
@@ -16,7 +16,7 @@ export class WorkerPool {
   readonly #slots: WorkerSlot[] = [];
   readonly #queue: WorkerJob[] = [];
   readonly #maxWorkers: number;
-  readonly #idleTimeoutMs: number | null;
+  readonly #idleTimeout: number | null;
 
   #nextId = 0;
   #destroyed = false;
@@ -26,15 +26,15 @@ export class WorkerPool {
       throw new RangeError("Worker count must be a positive integer");
     }
 
-    const idleTimeoutMs = opts.idleTimeoutMs === undefined ? DEFAULT_IDLE_TIMEOUT_MS : opts.idleTimeoutMs;
+    const idleTimeout = opts.idleTimeout === undefined ? DEFAULT_IDLE_TIMEOUT : opts.idleTimeout;
 
-    if (idleTimeoutMs !== null && !isPositive(idleTimeoutMs)) {
+    if (idleTimeout !== null && !isPositive(idleTimeout)) {
       throw new RangeError("Worker idle timeout must be a positive finite number");
     }
 
     const cores = typeof navigator === "undefined" ? maxWorkers : navigator.hardwareConcurrency;
     this.#maxWorkers = Math.min(maxWorkers, Number.isInteger(cores) && cores > 0 ? cores : maxWorkers);
-    this.#idleTimeoutMs = idleTimeoutMs;
+    this.#idleTimeout = idleTimeout;
   }
 
   run<Request, Result>(
@@ -187,7 +187,7 @@ export class WorkerPool {
   }
 
   #scheduleIdle(slot: WorkerSlot) {
-    if (this.#idleTimeoutMs === null || this.#destroyed || slot.job != null || !this.#slots.includes(slot)) {
+    if (this.#idleTimeout === null || this.#destroyed || slot.job != null || !this.#slots.includes(slot)) {
       return;
     }
 
@@ -205,7 +205,7 @@ export class WorkerPool {
         this.#slots.splice(index, 1);
         slot.worker.terminate();
       }
-    }, this.#idleTimeoutMs);
+    }, this.#idleTimeout);
   }
 
   #clearIdleTimer(slot: WorkerSlot) {
