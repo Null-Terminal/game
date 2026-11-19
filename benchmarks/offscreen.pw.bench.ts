@@ -73,7 +73,7 @@ test("offscreen dynamic objects in each status", async ({ page }, testInfo) => {
   for (let index = 0; index < 3; index++) {
     const sample: OffscreenSample = await fixture.evaluate(({ runSample }) => runSample());
     const { frameTimes, renderTimes, awakeCount, targetX } = sample;
-    const total = frameTimes.reduce((sum, value) => sum + value, 0);
+    const total = frameTimes.reduce((sum: number, value: number) => sum + value, 0);
 
     if (layout === "spread") {
       expect(targetX).toBeGreaterThan(viewport.width * 9);
