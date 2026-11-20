@@ -12,7 +12,11 @@ enum State {
 export class GameObjectStatus extends ServantObject {
   static readonly State = State;
 
-  readonly emitter = new EventEmitter({ sleepChange: handler<boolean>() });
+  readonly emitter = new EventEmitter({
+    pauseChange: handler<boolean>(),
+    sleepChange: handler<boolean>()
+  });
+
   readonly events = this.emitter.events;
 
   #state = State.Active;
@@ -63,7 +67,12 @@ export class GameObjectStatus extends ServantObject {
 
   @ifAlive
   #set(state: State) {
+    if (this.#state === state) {
+      return;
+    }
+
     this.#state = state;
+    this.emitter.emit(this.events.pauseChange, this.paused);
   }
 
   @ifAlive

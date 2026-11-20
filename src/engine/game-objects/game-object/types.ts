@@ -1,3 +1,4 @@
+import type { LoadedSound } from "#/audio";
 import type { Handlers } from "#/event-emitter";
 
 import type { FrameEffects, LoadedAnimation } from "#engine/animation";
@@ -39,7 +40,13 @@ export type GameObjectOptions<T = DefaultGameObjectOptions> =
   | { x?: number; y?: number } & T
   | { bbox?: BBoxTuple } & T;
 
+export interface AnimationSoundBank {
+  readonly default?: LoadedSound;
+  readonly [name: string]: LoadedSound | undefined;
+}
+
 export interface AnimationInstance {
+  sounds?: AnimationSoundBank;
   draw(frame: ObjectRenderPayload): void;
   advance?(elapsed: number): void;
   destroy?(): void;

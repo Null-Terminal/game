@@ -15,6 +15,13 @@ export interface SpriteDescriptor extends SpriteRegion {
   spriteId: string;
 }
 
+export interface AnimationSound {
+  url: string;
+  loop?: boolean;
+  volume?: number;
+  category?: "effects" | "music";
+}
+
 export interface OptionalAnimationParameters {
   // Размер, в который вписываются кадры до применения scale
   maxWidth?: number;
@@ -29,6 +36,9 @@ export interface OptionalAnimationParameters {
 
   // Области повтора относительно левого верхнего угла кадра, в пикселях исходника
   repeat?: { width?: SpriteRegion; height?: SpriteRegion };
+
+  // Именованные звуки, доступные объекту во время этой анимации
+  sounds?: Record<string, AnimationSound>;
 }
 
 export type AnimationOrder = "forward" | "ping-pong" | "random";

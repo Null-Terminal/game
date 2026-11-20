@@ -342,6 +342,283 @@ test("switching playback keeps its render position and restarts elapsed time", a
   });
 });
 
+test("object sound follows object and canvas pauses, then stops on destroy", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({
+    createProbe, createFailingSoundProbe, createSoundAnimation, canvas, destroy, getAudioContext
+  }) => {
+    const context = getAudioContext();
+    const buffer = context.createBuffer(1, 4096, context.sampleRate);
+    const originalCreate = context.createBufferSource.bind(context);
+    const sources: AudioBufferSourceNode[] = [];
+    let starts = 0;
+    let stops = 0;
+
+    context.createBufferSource = () => {
+      const source = originalCreate();
+      const start = source.start.bind(source);
+      const stop = source.stop.bind(source);
+
+      source.start = () => {
+        starts++;
+        start();
+      };
+
+      source.stop = () => {
+        stops++;
+        stop();
+      };
+
+      sources.push(source);
+      return source;
+    };
+
+    try {
+      const { object } = createProbe();
+      const animation = createSoundAnimation(buffer);
+      const pauseListeners = () => [object.status.events.pauseChange.length, canvas.events.pauseChange.length];
+      const originalSound = object.sound;
+
+      originalSound.play(animation.sounds.default);
+      originalSound.ensurePlaying(animation.sounds.default);
+      const subscribed = pauseListeners();
+
+      originalSound.reset();
+      const manuallyReset = pauseListeners();
+      originalSound.play(animation.sounds.default);
+      const rebound = pauseListeners();
+
+      object.status.pause();
+      object.status.resume();
+      object.status.sleep();
+      object.status.wake();
+      canvas.pause();
+      canvas.resume();
+      object.destroy();
+      const released = pauseListeners();
+      let deadPlayRejected = false;
+
+      try {
+        originalSound.play(animation.sounds.default);
+
+      } catch {
+        deadPlayRejected = true;
+      }
+
+      const reused = createProbe().object;
+      const reusedSound = reused.sound;
+      reusedSound.play(animation.sounds.default);
+      const resubscribed = pauseListeners();
+      reused.destroy();
+
+      let failure = "";
+
+      try {
+        createFailingSoundProbe(animation);
+
+      } catch (error) {
+        failure = error instanceof Error ? error.message : String(error);
+      }
+
+      return {
+        bufferReady: buffer.duration > 0,
+        reused: reused === object,
+        deadPlayRejected,
+        soundReused: reusedSound === originalSound,
+        failure,
+        subscribed,
+        manuallyReset,
+        rebound,
+        released,
+        resubscribed,
+        cleared: pauseListeners(),
+        sources: sources.length,
+        looped: sources.every((source) => source.loop),
+        starts,
+        stops
+      };
+
+    } finally {
+      context.createBufferSource = originalCreate;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({
+    bufferReady: true,
+    reused: true,
+    deadPlayRejected: true,
+    soundReused: true,
+    failure: "Sound probe initialization failed",
+    subscribed: [1, 1],
+    manuallyReset: [0, 0],
+    rebound: [1, 1],
+    released: [0, 0],
+    resubscribed: [1, 1],
+    cleared: [0, 0],
+    sources: 7,
+    looped: true,
+    starts: 7,
+    stops: 7
+  });
+});
+
+test("animation default sound follows playback while manual sounds remain independent", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({
+    createProbe, createSoundAnimation, createSilentAnimation, destroy, getAudioContext
+  }) => {
+    const context = getAudioContext();
+    const buffer = context.createBuffer(1, 4096, context.sampleRate);
+    const originalCreate = context.createBufferSource.bind(context);
+    const originalCreateGain = context.createGain.bind(context);
+    const gains: GainNode[] = [];
+    let starts = 0;
+    let stops = 0;
+
+    const object = createProbe().object;
+    void object.game.audio;
+
+    context.createBufferSource = () => {
+      const source = originalCreate();
+      const start = source.start.bind(source);
+      const stop = source.stop.bind(source);
+
+      source.start = () => {
+        starts++;
+        start();
+      };
+
+      source.stop = () => {
+        stops++;
+        stop();
+      };
+
+      return source;
+    };
+
+    context.createGain = () => {
+      const gain = originalCreateGain();
+      gains.push(gain);
+      return gain;
+    };
+
+    try {
+      const animation = createSoundAnimation(buffer);
+      const silent = createSilentAnimation();
+      const counts = () => [starts, stops];
+
+      object.play(animation);
+      const first = counts();
+      const baseVolume = Number(gains[0]!.gain.value.toFixed(2));
+
+      object.sound.volume = 0.5;
+      const adjustedVolume = Number(gains[0]!.gain.value.toFixed(2));
+
+      object.ensurePlaying(animation);
+      const ensured = counts();
+
+      object.play(animation);
+      const restarted = counts();
+
+      const manual = { buffer, loop: true, volume: 0.2 };
+      object.sound.play(manual);
+      object.sound.ensurePlaying(manual);
+      const manualEnsured = counts();
+
+      object.play(silent);
+      const silentAnimation = counts();
+
+      const proceduralSounds = {
+        default: { buffer, loop: true, volume: 0.6 },
+        cue: { buffer, loop: false, volume: 0.8 }
+      };
+
+      object.play(() => ({ draw() {}, sounds: proceduralSounds }));
+      const proceduralDefault = counts();
+
+      object.sound.play(proceduralSounds.cue);
+      object.play(silent);
+      const proceduralStopped = counts();
+
+      object.destroy();
+      const resetVolume = object.sound.volume;
+
+      return {
+        first, ensured, restarted, manualEnsured, silentAnimation,
+        proceduralDefault, proceduralStopped, destroyed: counts(),
+        baseVolume, adjustedVolume, resetVolume,
+        volumes: gains.map((gain) => Number(gain.gain.value.toFixed(2)))
+      };
+
+    } finally {
+      context.createBufferSource = originalCreate;
+      context.createGain = originalCreateGain;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({
+    first: [1, 0],
+    ensured: [1, 0],
+    restarted: [2, 1],
+    manualEnsured: [3, 1],
+    silentAnimation: [3, 2],
+    proceduralDefault: [4, 2],
+    proceduralStopped: [5, 3],
+    destroyed: [5, 5],
+    baseVolume: 0.4,
+    adjustedVolume: 0.2,
+    resetVolume: 1,
+    volumes: [0.2, 0.2, 0.1, 0.3, 0.4]
+  });
+});
+
+test("game audio settings update effect and music buses", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ createProbe, destroy, getAudioContext }) => {
+    const context = getAudioContext();
+    const originalCreateGain = context.createGain.bind(context);
+    const gains: GainNode[] = [];
+
+    context.createGain = () => {
+      const gain = originalCreateGain();
+      gains.push(gain);
+      return gain;
+    };
+
+    try {
+      const object = createProbe().object;
+      const audio = object.game.audio;
+      const initial = gains.map((gain) => gain.gain.value);
+
+      object.game.settings.set("audio", { master: 0.5, effects: 0.25, music: 0.75 });
+      const changed = gains.map((gain) => gain.gain.value);
+
+      return {
+        initial,
+        changed,
+        effectsConnected: audio.output("effects") === gains[1],
+        musicConnected: audio.output("music") === gains[2]
+      };
+
+    } finally {
+      context.createGain = originalCreateGain;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({
+    initial: [1, 1, 1],
+    changed: [0.5, 0.25, 0.75],
+    effectsConnected: true,
+    musicConnected: true
+  });
+});
+
 const fixtureUrl = "/src/engine/game-objects/game-object/tests/fixture.ts";
 
 async function createScene(page: Page): Promise<JSHandle<fixture.LifecycleScene>> {

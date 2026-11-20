@@ -1,4 +1,9 @@
+import { AnimationDefinition } from "#/animation-definition";
+import { getAudioContext, type LoadedSound } from "#/audio";
+
+import { LoadedAnimation } from "#engine/animation";
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
+
 import type { PoolPointer } from "#engine/game-object-pool";
 import { GameObject } from "#engine/game-objects";
 
@@ -20,6 +25,21 @@ export class FailingProbe extends Probe {
   override create(...args: Parameters<Probe["create"]>): ReturnType<Probe["create"]> {
     super.create(...args);
     throw new Error("late failure");
+  }
+}
+
+export class FailingSoundProbe extends Probe {
+  static animation: LoadedAnimation<{ default: LoadedSound }> | null = null;
+
+  override init() {
+    const animation = FailingSoundProbe.animation;
+
+    if (animation == null) {
+      throw new Error("Missing test sound");
+    }
+
+    this.sound.play(animation.sounds.default);
+    throw new Error("Sound probe initialization failed");
   }
 }
 
@@ -65,6 +85,24 @@ export async function createLifecycleScene() {
     game,
     pool,
     canvas,
+    getAudioContext,
+    createSoundAnimation(buffer: AudioBuffer) {
+      const animation = new AnimationDefinition({
+        sprites: [{ x: 0, y: 0, width: 1, height: 1, duration: 100, spriteId: "" }]
+      });
+
+      return new LoadedAnimation<{ default: LoadedSound }>(
+        {} as ImageBitmap,
+        animation,
+        { default: { buffer, loop: true, volume: 0.4 } }
+      );
+    },
+
+    createSilentAnimation() {
+      return new LoadedAnimation({} as ImageBitmap, new AnimationDefinition({
+        sprites: [{ x: 0, y: 0, width: 1, height: 1, duration: 100, spriteId: "" }]
+      }));
+    },
     createProbe(opts: Parameters<Probe["create"]>[2] = {}) {
       const pointer = pool.add(Probe, game, opts);
 
@@ -79,6 +117,11 @@ export async function createLifecycleScene() {
 
     createFailingProbe() {
       return pool.add(FailingProbe, game, {});
+    },
+
+    createFailingSoundProbe(animation: LoadedAnimation<{ default: LoadedSound }>) {
+      FailingSoundProbe.animation = animation;
+      return pool.add(FailingSoundProbe, game, {});
     },
 
     createRevivingProbe() {

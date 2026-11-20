@@ -15,6 +15,7 @@ export class RenderCanvas extends Disposable {
   readonly options: Required<RenderCanvasOptions>;
 
   readonly emitter = new EventEmitter({
+    pauseChange: handler<boolean>(),
     beforeRender: handler<RenderPayload>({ ordered: true }),
     background: handler<RenderPayload>({ ordered: true }),
     scene: handler<RenderPayload>({ ordered: true, withFlush: true }),
@@ -122,11 +123,21 @@ export class RenderCanvas extends Disposable {
   }
 
   pause() {
+    if (this.#paused) {
+      return;
+    }
+
     this.#paused = true;
+    this.emitter.emit(this.events.pauseChange, true);
   }
 
   resume() {
+    if (!this.#paused) {
+      return;
+    }
+
     this.#paused = false;
+    this.emitter.emit(this.events.pauseChange, false);
   }
 
   togglePause() {

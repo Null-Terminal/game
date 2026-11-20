@@ -1,6 +1,6 @@
 export { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 
-export { GameObject, GameObjectDebug, GameObjectRender } from "#engine/game-objects/game-object";
+export { GameObject, GameObjectDebug, GameObjectRender, GameObjectSound } from "#engine/game-objects/game-object";
 export type * from "#engine/game-objects/game-object";
 
 export { GameObjectState } from "#engine/game-objects/game-object/state";

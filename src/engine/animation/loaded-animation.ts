@@ -1,15 +1,17 @@
 import { cache } from "#decorators/cache";
 
 import type { AnimationDefinition } from "#/animation-definition";
+import type { LoadedSound } from "#/audio";
 import type { FrameEffects } from "#engine/animation/types";
 
 const MAX_REPEAT_PATTERN_SIZE = 1024;
 
-export class LoadedAnimation {
+export class LoadedAnimation<S extends Record<string, LoadedSound> = Record<string, LoadedSound>> {
   name = "";
 
   readonly image;
   readonly animation: Readonly<AnimationDefinition>;
+  readonly sounds: Readonly<S>;
 
   @cache
   get maxWidth(): number {
@@ -71,9 +73,10 @@ export class LoadedAnimation {
 
   readonly #images: Record<string, ImageBitmap> = {};
 
-  constructor(image: ImageBitmap, animation: AnimationDefinition) {
+  constructor(image: ImageBitmap, animation: AnimationDefinition, sounds?: Readonly<S>) {
     this.image = image;
     this.animation = animation;
+    this.sounds = sounds ?? ({} as S);
   }
 
   getSpriteFrame(index: number, effects: FrameEffects = {}): ImageBitmap {

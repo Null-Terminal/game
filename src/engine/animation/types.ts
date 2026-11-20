@@ -1,4 +1,10 @@
-import type { Animation } from "#/animation-definition";
+import type { Animation, AnimationSound } from "#/animation-definition";
+import type { LoadedSound } from "#/audio";
+
+export type AnimationSounds<T extends Animation> =
+  T extends { params: { sounds: infer S extends Record<string, AnimationSound> } } ?
+    { readonly [K in keyof S]: LoadedSound } :
+    Record<never, LoadedSound>;
 
 export type Import<T> = T | Promise<{ default: T }>;
 
@@ -13,9 +19,9 @@ export interface SpriteLoadData {
   options: LoadSpriteOptions;
 }
 
-export interface LoadAnimationOptions {
+export interface LoadAnimationOptions<T extends Animation = Animation> {
   sprite?: LoadSpriteOptions;
-  animation: Import<Animation>;
+  animation: Import<T>;
 }
 
 export interface FrameEffects {

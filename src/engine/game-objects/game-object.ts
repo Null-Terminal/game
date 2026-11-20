@@ -14,6 +14,7 @@ import { KindedObject } from "#engine/game-objects/kinded-object";
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 import { Movement } from "#engine/game-objects/game-object/movement";
 import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectSound } from "#engine/game-objects/game-object/sound";
 import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 import { GameObjectState, type StateValue } from "#engine/game-objects/game-object/state";
 import { registerPositionState } from "#engine/game-objects/game-object/state/position";
@@ -25,6 +26,7 @@ export type * from "#engine/game-objects/game-object/types";
 
 export { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 export { GameObjectRender } from "#engine/game-objects/game-object/render";
+export { GameObjectSound } from "#engine/game-objects/game-object/sound";
 
 export type { DebugBounds, DebugPart } from "#engine/game-objects/game-object/debug";
 
@@ -81,12 +83,17 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
   @cache
   get render(): GameObjectRender {
-    return new GameObjectRender(this);
+    return this.#render = new GameObjectRender(this);
   }
 
   @cache
   get movement(): Movement {
     return this.#movement = new Movement(this);
+  }
+
+  @cache
+  get sound(): GameObjectSound {
+    return this.#sound = new GameObjectSound(this);
   }
 
   @cache
@@ -133,7 +140,9 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   #width = 0;
   #height = 0;
 
+  #render: GameObjectRender | null = null;
   #movement: Movement | null = null;
+  #sound: GameObjectSound | null = null;
 
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
@@ -154,9 +163,10 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
     } finally {
       try {
-        this.render.clear();
-        this.animation.off();
+        this.#sound?.reset();
+        this.#render?.clear();
         this.#movement?.reset();
+        this.animation.off();
         this.status.reset();
 
       } finally {
@@ -248,6 +258,12 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       animation(this) :
       this.#createBitmapPlayback(animation);
 
+    const defaultSound = playback.sounds?.default;
+
+    if (defaultSound != null) {
+      this.sound.play(defaultSound);
+    }
+
     this.render.onRedraw((frame) => {
       playback.draw(frame);
 
@@ -256,7 +272,13 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
       }
 
       playback.advance?.(frame.elapsed);
-    }, animation, () => playback.destroy?.());
+    }, animation, () => {
+      if (defaultSound != null) {
+        this.#sound?.stop(defaultSound);
+      }
+
+      playback.destroy?.();
+    });
   }
 
   isFarFromViewport(distanceScreens: number): boolean {
@@ -376,6 +398,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     }
 
     return {
+      sounds: animation.sounds,
       draw: (frame) => {
         const bitmapFrame = frame as BitmapRenderPayload;
 
