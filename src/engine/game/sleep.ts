@@ -1,16 +1,15 @@
 import { isPositive } from "#/utils/validators";
 
 import type { Subscription } from "#/event-emitter";
-import type { Game } from "#engine/game";
+import type { Game, SleepSettings } from "#engine/game";
 import type { GameObject } from "#engine/game-objects";
+import type { GameSleepOptions } from "#engine/game/sleep/types";
 
 export class GameSleep {
-  static readonly #defaultWakeDistanceFactor = 0.8;
-  static readonly #defaultCheckInterval = 250;
-
   readonly #game: Game;
-  readonly #wakeDistanceFactor: number;
-  readonly #checkInterval: number;
+
+  readonly #options: Required<GameSleepOptions>;
+  #sleepSettings: SleepSettings | null;
 
   #subscription: Subscription | null = null;
   readonly #settingsSubscription: Subscription;
@@ -21,19 +20,20 @@ export class GameSleep {
     this.#game = game;
 
     const {
-      wakeDistanceFactor = GameSleep.#defaultWakeDistanceFactor,
-      checkInterval = GameSleep.#defaultCheckInterval
+      wakeDistanceFactor = 0.8,
+      checkInterval = 250
     } = game.options.sleep ?? {};
 
     if (!isPositive(wakeDistanceFactor) || wakeDistanceFactor >= 1 || !isPositive(checkInterval)) {
       throw new RangeError(`${this.constructor.name}: expected a wake factor between 0 and 1 and a positive interval`);
     }
 
-    this.#wakeDistanceFactor = wakeDistanceFactor;
-    this.#checkInterval = checkInterval;
+    this.#options = { wakeDistanceFactor, checkInterval };
+    this.#sleepSettings = game.settings.get("sleep");
 
     this.#settingsSubscription = game.settings.emitter.on(game.settings.events.change, (key) => {
       if (key === "sleep") {
+        this.#sleepSettings = game.settings.get("sleep");
         this.#syncSubscription();
       }
     });
@@ -44,7 +44,7 @@ export class GameSleep {
   #syncSubscription() {
     this.#lastCheckAt = null;
 
-    if (this.#game.settings.get("sleep") == null) {
+    if (this.#sleepSettings == null) {
       this.#subscription?.dispose();
       this.#subscription = null;
 
@@ -64,13 +64,7 @@ export class GameSleep {
     }
 
     this.#subscription = this.#game.canvas.emitter.on(this.#game.canvas.events.beforeRender, ({ now }) => {
-      const opts = this.#game.settings.get("sleep");
-
-      if (opts == null) {
-        return;
-      }
-
-      if (this.#lastCheckAt != null && now - this.#lastCheckAt < this.#checkInterval) {
+      if (this.#lastCheckAt != null && now - this.#lastCheckAt < this.#options.checkInterval) {
         return;
       }
 
@@ -80,7 +74,7 @@ export class GameSleep {
   }
 
   sleepIfFar(go: GameObject) {
-    const opts = this.#game.settings.get("sleep");
+    const opts = this.#sleepSettings;
 
     if (opts == null || go === this.#game.camera.target || !go.sleepable || go.options.sleep === false) {
       return;
@@ -93,7 +87,7 @@ export class GameSleep {
 
   update() {
     const game = this.#game;
-    const opts = game.settings.get("sleep");
+    const opts = this.#sleepSettings;
 
     if (!game.hasWorld || opts == null) {
       return;
@@ -117,7 +111,7 @@ export class GameSleep {
         }
 
         if (go.status.sleeping) {
-          if (!go.isFarFromViewport(opts.distanceScreens * this.#wakeDistanceFactor)) {
+          if (!go.isFarFromViewport(opts.distanceScreens * this.#options.wakeDistanceFactor)) {
             go.status.wake();
           }
 

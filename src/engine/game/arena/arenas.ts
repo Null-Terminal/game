@@ -2,6 +2,9 @@ import { Arena } from "#engine/game/arena/arena";
 import { isPositive } from "#/utils/validators";
 
 import type { World } from "#engine/game/world";
+import type { BaseGameSettings } from "#engine/game";
+import type { Subscription } from "#/event-emitter";
+
 import type * as t from "#engine/game/arena/types";
 
 type PendingCommit = {
@@ -56,6 +59,10 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   readonly #world: World;
+
+  readonly #settingsSubscription: Subscription;
+  #unloadSettings: BaseGameSettings["arenaUnload"];
+
   readonly #refsToPreload: Set<t.ArenaRef>;
   readonly #arenas = new Set<Arena>();
 
@@ -83,6 +90,12 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
 
     this.#world = world;
     this.#refsToPreload = new Set(refsToPreload);
+    this.#unloadSettings = world.game.settings.get("arenaUnload");
+    this.#settingsSubscription = world.game.settings.emitter.on(world.game.settings.events.change, (key) => {
+      if (key === "arenaUnload") {
+        this.#unloadSettings = world.game.settings.get("arenaUnload");
+      }
+    });
   }
 
   [Symbol.iterator](): IterableIterator<Arena> {
@@ -167,7 +180,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   checkAutoUnload(now: number) {
-    const unload = this.#world.game.settings.get("arenaUnload");
+    const unload = this.#unloadSettings;
 
     if (unload == null) {
       return;
@@ -194,7 +207,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       this.#scheduledUnloads.add(arena);
 
       void this.#commitArena(arena, () => {
-        const currentDistance = this.#world.game.settings.get("arenaUnload")?.distanceScreens;
+        const currentDistance = this.#unloadSettings?.distanceScreens;
 
         if (arena.loaded && currentDistance != null && arena.isFarFromViewport(currentDistance)) {
           this.#unloadArena(arena);
@@ -206,6 +219,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   destroy() {
+    this.#settingsSubscription.dispose();
     cancelAnimationFrame(this.#fallbackFrame);
 
     const error = new Error(`${this.constructor.name}: world was destroyed`);
