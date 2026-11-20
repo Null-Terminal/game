@@ -31,15 +31,12 @@ export interface ArenasOptions {
 }
 
 export interface ArenaUnloadOptions {
-  // Расстояние от камеры в размерах экрана, после которого арена может выгрузиться
-  distanceScreens: number;
-
   // Как часто проверять расстояние, в миллисекундах
   checkInterval?: number;
 }
 
 export type ResolvedArenasOptions = Omit<ArenasOptions, "unload"> & {
-  unload?: Required<ArenaUnloadOptions>;
+  unload: Required<ArenaUnloadOptions>;
 };
 
 export type ArenaObjectSnapshot =

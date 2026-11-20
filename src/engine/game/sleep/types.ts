@@ -1,9 +1,6 @@
 export interface GameSleepOptions {
-  // Расстояние до игрока в ширинах и высотах экрана, после которого объект засыпает
-  distanceScreens: number;
-
-  // Объект просыпается ближе этого расстояния; меньший порог предотвращает дрожание на границе
-  wakeDistanceScreens?: number;
+  // Доля расстояния засыпания, при которой объект просыпается
+  wakeDistanceFactor?: number;
 
   // Интервал проверки расстояния в миллисекундах
   checkInterval?: number;

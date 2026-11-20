@@ -1,5 +1,5 @@
 import {
-  Arena, Arenas, Camera, Game, RenderCanvas, World,
+  Arena, Arenas, Camera, Game, GameSettings, RenderCanvas, World,
   type ArenasOptions
 } from "#engine/game";
 import { ColliderObject, GameObject, PhysicsObject } from "#engine/game-objects";
@@ -36,10 +36,14 @@ export class CameraProbe extends PhysicsObject {
   }
 }
 
-export function createArenaScene(arenas?: ArenasOptions) {
+export function createArenaScene(arenas?: ArenasOptions, unloadDistanceScreens?: number) {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
-  const game = Game.camera(new Camera()).create(canvas);
+  const settings = new GameSettings({
+    arenaUnload: unloadDistanceScreens == null ? null : { distanceScreens: unloadDistanceScreens }
+  });
+
+  const game = Game.camera(new Camera()).settings(settings).create(canvas);
 
   return {
     game,

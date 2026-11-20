@@ -1,4 +1,4 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 import { ColliderObject, GameObject } from "#engine/game-objects";
 
 import { sampleFrameIntervals } from "#/benchmarks/frame-sample";
@@ -97,9 +97,9 @@ export async function createOffscreenScene(
 
   const options = mode === "sleep" ?
     { sleep: { distanceScreens: 2 } } :
-    {};
+    { sleep: null };
 
-  const game = Game.camera(new Camera()).create(canvas, options);
+  const game = Game.camera(new Camera()).settings(new GameSettings(options)).create(canvas);
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
   const objects: GameObject[] = [];
 

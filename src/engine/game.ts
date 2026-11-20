@@ -2,7 +2,9 @@ import { cache } from "#decorators/cache";
 import { EventEmitter, handler } from "#/event-emitter";
 
 import { Disposable } from "#engine/disposable";
+import { GameAudio } from "#engine/game/audio";
 import { GameStatus } from "#engine/game/game-status";
+import { GameSettings } from "#engine/game/settings";
 import { GameSleep } from "#engine/game/sleep";
 
 import type { Camera } from "#engine/game/camera";
@@ -12,6 +14,9 @@ import type { GameOptions } from "#engine/game/types";
 
 export type * from "#engine/game/types";
 export type * from "#engine/game/sleep/types";
+
+export { GameSettings } from "#engine/game/settings";
+export type * from "#engine/game/settings";
 
 export { Camera } from "#engine/game/camera";
 export type * from "#engine/game/camera";
@@ -23,17 +28,28 @@ export type * from "#engine/game/world";
 export { RenderCanvas } from "#engine/game/render-canvas";
 export type * from "#engine/game/render-canvas";
 
-export class Game extends Disposable {
+export class Game<T extends object = object> extends Disposable {
   static camera(camera: Camera) {
     return {
-      create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game(canvas, camera, opts)
+      create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game(canvas, camera, new GameSettings({}), opts),
+      settings: <T extends object>(settings: GameSettings<T>) => ({
+        create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game<T>(canvas, camera, settings, opts)
+      })
     };
   }
 
   readonly camera: Camera;
   readonly canvas: RenderCanvas;
+  readonly settings: GameSettings<T>;
   readonly options: GameOptions;
   readonly status = new GameStatus(this);
+
+  @cache
+  get audio() {
+    return this.#audio = new GameAudio(this);
+  }
+
+  #audio: GameAudio | null = null;
 
   @cache
   get sleep() {
@@ -66,11 +82,12 @@ export class Game extends Disposable {
   #world: World | null = null;
   #levelLoader: (() => Promise<World>) | null = null;
 
-  protected constructor(canvas: RenderCanvas, camera: Camera, opts: GameOptions) {
+  protected constructor(canvas: RenderCanvas, camera: Camera, settings: GameSettings<T>, opts: GameOptions) {
     super();
 
     this.camera = camera;
     this.canvas = canvas;
+    this.settings = settings;
     this.options = opts;
     camera.mount(this);
 
@@ -88,6 +105,7 @@ export class Game extends Disposable {
     this.#levelLoader = null;
     this.#world?.destroy();
     this.#world = null;
+    this.#audio?.destroy();
     this.camera.destroy();
     this.canvas.destroy();
     this.emitter.off();

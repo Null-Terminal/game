@@ -22,10 +22,10 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
     const refsToPreload = new Set<t.ArenaRef>();
 
     if (opts?.unload != null) {
-      const { distanceScreens, checkInterval } = opts.unload;
+      const { checkInterval } = opts.unload;
 
-      if (!isPositive(distanceScreens) || (checkInterval != null && !isPositive(checkInterval))) {
-        throw new RangeError(`${this.name}.declare: expected positive distance and interval`);
+      if (checkInterval != null && !isPositive(checkInterval)) {
+        throw new RangeError(`${this.name}.declare: expected positive interval`);
       }
     }
 
@@ -77,18 +77,9 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   ) {
     this.refs = refs;
 
-    if (opts?.unload == null) {
-      this.options = {};
-
-    } else {
-      this.options = {
-        ...opts,
-        unload: {
-          ...opts.unload,
-          checkInterval: opts.unload.checkInterval ?? 500
-        }
-      };
-    }
+    this.options = {
+      unload: { checkInterval: opts?.unload?.checkInterval ?? 500 }
+    };
 
     this.#world = world;
     this.#refsToPreload = new Set(refsToPreload);
@@ -176,13 +167,15 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   checkAutoUnload(now: number) {
-    const unload = this.options.unload;
+    const unload = this.#world.game.settings.get("arenaUnload");
 
     if (unload == null) {
       return;
     }
 
-    if (now - this.#lastAutoUnloadCheckAt < unload.checkInterval) {
+    const { distanceScreens } = unload;
+
+    if (now - this.#lastAutoUnloadCheckAt < this.options.unload.checkInterval) {
       return;
     }
 
@@ -192,7 +185,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       const shouldIgnore =
         !arena.autoUnload ||
         this.#scheduledUnloads.has(arena) ||
-        !arena.isFarFromViewport(unload.distanceScreens);
+        !arena.isFarFromViewport(distanceScreens);
 
       if (shouldIgnore) {
         continue;
@@ -201,7 +194,9 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       this.#scheduledUnloads.add(arena);
 
       void this.#commitArena(arena, () => {
-        if (arena.loaded && arena.isFarFromViewport(unload.distanceScreens)) {
+        const currentDistance = this.#world.game.settings.get("arenaUnload")?.distanceScreens;
+
+        if (arena.loaded && currentDistance != null && arena.isFarFromViewport(currentDistance)) {
           this.#unloadArena(arena);
         }
       })

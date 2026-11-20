@@ -209,11 +209,43 @@ test("loading a ref waits for a queued automatic unload", async ({ page }) => {
   expect(result).toEqual({ sameArena: true, loaded: true });
 });
 
+test("automatic unload follows the current game setting", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(async ({ game, World, Arenas, ArenaProbe, arenaOptions, destroy }) => {
+    const declaration = Arenas.declare({
+      start: () => ({ objects: [[ArenaProbe, { bbox: [1000, 0, 1020, 20] }]] })
+    }, arenaOptions);
+    declaration.preload(declaration.refs.start);
+
+    const world = await game.loadLevel(async () => new World({ persistentObjects: [], arenas: declaration }));
+    const arena = world.arenas.getByRef(declaration.refs.start)!;
+    game.canvas.stop();
+
+    world.arenas.checkAutoUnload(performance.now() + 1000);
+    game.settings.set("arenaUnload", null);
+    world.arenas.flush();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const stayedLoaded = arena.loaded;
+
+    game.settings.set("arenaUnload", { distanceScreens: 1 });
+    world.arenas.checkAutoUnload(performance.now() + 2000);
+    world.arenas.flush();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const unloaded = arena.unloaded;
+
+    destroy();
+    return { stayedLoaded, unloaded };
+  });
+
+  expect(result).toEqual({ stayedLoaded: true, unloaded: true });
+});
+
 async function createScene(page: Page): Promise<JSHandle<fixture.ArenaScene>> {
   await page.goto("/tests/fixture.html");
 
   return page.evaluateHandle(async (url) => {
     const { createArenaScene } = await import(url) as typeof fixture;
-    return createArenaScene({ unload: { distanceScreens: 1, checkInterval: 10 } });
+    return createArenaScene({ unload: { checkInterval: 10 } }, 1);
   }, "/src/engine/game/tests/arena-fixture.ts");
 }

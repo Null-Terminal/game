@@ -25,6 +25,26 @@ test("destroy removes an object before the sleep update", async ({ page }) => {
   expect(result).toEqual({ destroyed: true, inPool: false });
 });
 
+test("changing sleep settings wakes and resleeps distant objects", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ game, probe, destroy }) => {
+    const initial = probe.status.sleeping;
+
+    game.settings.set("sleep", null);
+    const disabled = probe.status.sleeping;
+
+    game.settings.set("sleep", { distanceScreens: 2 });
+    game.sleep.update();
+    const enabled = probe.status.sleeping;
+
+    destroy();
+    return { initial, disabled, enabled };
+  });
+
+  expect(result).toEqual({ initial: true, disabled: false, enabled: true });
+});
+
 test("distant objects start asleep and resume movement, rendering, and collisions nearby", async ({ page }) => {
   const scene = await createScene(page);
 
@@ -218,6 +238,7 @@ test("sleep checks use frame time instead of capped delta", async ({ page }) => 
     const awake = !probe.status.sleeping;
 
     game.camera.x = 0;
+    game.settings.set("audio", { master: 0.8, effects: 1, music: 1 });
     tick(now + 99);
     const awakeBeforeInterval = !probe.status.sleeping;
 

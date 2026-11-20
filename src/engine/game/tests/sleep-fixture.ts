@@ -1,4 +1,4 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 import { BackgroundObject, ColliderObject } from "#engine/game-objects";
 
 class Probe extends ColliderObject {
@@ -13,8 +13,12 @@ class Probe extends ColliderObject {
 export async function createSleepScene() {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 100, height: 100, backend: "2d" });
-  const game = Game.camera(new Camera()).create(canvas, {
-    sleep: { distanceScreens: 2, wakeDistanceScreens: 1, checkInterval: 100 }
+  const settings = new GameSettings({
+    sleep: { distanceScreens: 2 }
+  });
+
+  const game = Game.camera(new Camera()).settings(settings).create(canvas, {
+    sleep: { wakeDistanceFactor: 0.5, checkInterval: 100 }
   });
 
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
