@@ -52,13 +52,13 @@ export async function createMovingPlatformScene({
       const ctx = element.getContext("2d")!;
       const frame = { ctx, delta, now };
 
-      canvas.emitter.emit(canvas.events.beforeRender, frame);
-      canvas.emitter.emit(canvas.events.background, frame);
-      canvas.emitter.emit(canvas.events.scene, frame);
-      canvas.emitter.emit(canvas.events.interact, frame);
-      canvas.emitter.emit(canvas.events.main, frame);
-      canvas.emitter.emit(canvas.events.overlay, frame);
-      canvas.emitter.emit(canvas.events.ui, frame);
+      canvas.events.beforeRender.emit(frame);
+      canvas.events.background.emit(frame);
+      canvas.events.scene.emit(frame);
+      canvas.events.interact.emit(frame);
+      canvas.events.main.emit(frame);
+      canvas.events.overlay.emit(frame);
+      canvas.events.ui.emit(frame);
     },
 
     destroy: () => game.destroy()

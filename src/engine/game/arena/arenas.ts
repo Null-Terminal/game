@@ -91,7 +91,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
     this.#world = world;
     this.#refsToPreload = new Set(refsToPreload);
     this.#unloadSettings = world.game.settings.get("arenaUnload");
-    this.#settingsSubscription = world.game.settings.emitter.on(world.game.settings.events.change, (key) => {
+    this.#settingsSubscription = world.game.settings.events.change.on((key) => {
       if (key === "arenaUnload") {
         this.#unloadSettings = world.game.settings.get("arenaUnload");
       }

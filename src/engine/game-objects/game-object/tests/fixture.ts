@@ -132,7 +132,7 @@ export async function createLifecycleScene() {
 
     tick(delta: number, now: number) {
       const ctx = element.getContext("2d")!;
-      canvas.emitter.emit(canvas.events.beforeRender, { ctx, delta, now });
+      canvas.events.beforeRender.emit({ ctx, delta, now });
     },
 
     destroy() {

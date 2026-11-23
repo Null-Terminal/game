@@ -144,7 +144,7 @@ export async function createBenchmarkScene(
     upperRight: false
   };
 
-  canvas.emitter.on(canvas.events.beforeRender, () => {
+  canvas.events.beforeRender.on(() => {
     if (measuring) {
       renderStart = performance.now();
       stageStart = renderStart;
@@ -152,7 +152,7 @@ export async function createBenchmarkScene(
   });
 
   for (const stage of Object.keys(stageTimes) as (keyof typeof stageTimes)[]) {
-    canvas.emitter.on(canvas.events[stage], () => {
+    canvas.events[stage].on(() => {
       if (measuring) {
         const now = performance.now();
         stageTimes[stage].push(now - stageStart);
@@ -161,7 +161,7 @@ export async function createBenchmarkScene(
     });
   }
 
-  canvas.emitter.on(canvas.events.ui, () => {
+  canvas.events.ui.on(() => {
     if (measuring) {
       renderTimes.push(performance.now() - renderStart);
 

@@ -108,7 +108,7 @@ test("a restored arena continues a route from its saved point", async ({ page })
     const first = world.objects.objects[ArenaProbe.kind]!.buffer.find((go) => go.arena === arena)!;
 
     const ctx = canvas.canvas.getContext("2d")!;
-    const tick = (delta: number) => canvas.emitter.emit(canvas.events.beforeRender, { ctx, delta, now: 0 });
+    const tick = (delta: number) => canvas.events.beforeRender.emit({ ctx, delta, now: 0 });
 
     tick(0.1);
     tick(0.25);

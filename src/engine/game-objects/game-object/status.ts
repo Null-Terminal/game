@@ -72,7 +72,7 @@ export class GameObjectStatus extends ServantObject {
     }
 
     this.#state = state;
-    this.emitter.emit(this.events.pauseChange, this.paused);
+    this.events.pauseChange.emit(this.paused);
   }
 
   @ifAlive
@@ -82,6 +82,6 @@ export class GameObjectStatus extends ServantObject {
     }
 
     this.#sleeping = sleeping;
-    this.emitter.emit(this.events.sleepChange, sleeping);
+    this.events.sleepChange.emit(sleeping);
   }
 }

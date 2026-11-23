@@ -15,7 +15,18 @@ export type ArrayHandlers<P = any> = HandlerBox[] & HandlerMetadata<P>;
 export type OrderedHandlers<P = any> = Set<HandlerBox> & HandlerMetadata<P>;
 export type Handlers<P = any> = ArrayHandlers<P> | OrderedHandlers<P>;
 
-export interface Subscription {
+export type BoundHandlers<E extends Handlers> = E & {
+  on(handler: Handler<E["PayloadType"]>): Subscription;
+  once(handler: Handler<E["PayloadType"]>): Subscription;
+  emit(...payload: E["PayloadType"] extends void ? [value?: E["PayloadType"]] : [value: E["PayloadType"]]): void;
+  flush?: BoundHandlers<Handlers<E["PayloadType"]>>;
+};
+
+type BoundEvents<T extends Record<string, Handlers>> = {
+  readonly [K in keyof T]: BoundHandlers<T[K]>;
+};
+
+export interface Subscription extends Disposable {
   sleep(): void;
   wake(): void;
   dispose(): void;
@@ -42,12 +53,16 @@ export function handler<P>(opts?: HandlerOptions): Handlers<P> {
 }
 
 export class EventEmitter<T extends Record<string, Handlers>> {
-  readonly events: Readonly<T>;
+  readonly events: BoundEvents<T>;
 
   #values: Handlers[] | null = null;
 
   constructor(events: T) {
-    this.events = events;
+    this.events = events as BoundEvents<T>;
+
+    for (const event of Object.values(events)) {
+      this.#bind(event);
+    }
   }
 
   on<E extends Handlers>(event: E, handler: Handler<E["PayloadType"]>): Subscription {
@@ -63,6 +78,15 @@ export class EventEmitter<T extends Record<string, Handlers>> {
 
     let disposed = false;
 
+    const dispose = () => {
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.#remove(event, box);
+    };
+
     return {
       sleep: () => {
         box.sleeping = true;
@@ -72,14 +96,8 @@ export class EventEmitter<T extends Record<string, Handlers>> {
         box.sleeping = false;
       },
 
-      dispose: () => {
-        if (disposed) {
-          return;
-        }
-
-        disposed = true;
-        this.#remove(event, box);
-      }
+      dispose,
+      [Symbol.dispose]: dispose
     };
   }
 
@@ -95,21 +113,17 @@ export class EventEmitter<T extends Record<string, Handlers>> {
   off<E extends Handlers>(event?: E) {
     if (event == null) {
       this.#values ??= Object.values(this.events);
-
-      this.#values.forEach((value) => {
-        if (value instanceof Set) {
-          value.clear();
-
-        } else {
-          value.length = 0;
-        }
-      });
+      this.#values.forEach((value) => this.off(value));
 
     } else if (event instanceof Set) {
       event.clear();
 
     } else {
       event.length = 0;
+    }
+
+    if (event?.flush != null) {
+      this.off(event.flush);
     }
   }
 
@@ -159,5 +173,17 @@ export class EventEmitter<T extends Record<string, Handlers>> {
     }
 
     box.ptr = -1;
+  }
+
+  #bind<P>(event: Handlers<P>) {
+    Object.defineProperties(event, {
+      on: { value: (listener: Handler<P>) => this.on(event, listener) },
+      once: { value: (listener: Handler<P>) => this.once(event, listener) },
+      emit: { value: (payload: P) => this.emit(event, payload) }
+    });
+
+    if (event.flush != null) {
+      this.#bind(event.flush);
+    }
   }
 }

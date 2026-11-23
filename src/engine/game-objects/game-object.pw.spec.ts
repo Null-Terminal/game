@@ -128,7 +128,7 @@ test("inspection shows the top object or every overlapping object in draw order"
     }
 
     const context = canvas.canvas.getContext("2d")!;
-    canvas.emitter.emit(canvas.events.main, { ctx: context, now: 1, delta: 0 });
+    canvas.events.main.emit({ ctx: context, now: 1, delta: 0 });
     second.status.pause();
 
     const tables: unknown[] = [];
@@ -179,7 +179,7 @@ test("inspection keeps the animation shown in the last rendered frame", async ({
     });
 
     const ctx = canvas.canvas.getContext("2d")!;
-    canvas.emitter.emit(canvas.events.main, { ctx, now: 1, delta: 0 });
+    canvas.events.main.emit({ ctx, now: 1, delta: 0 });
 
     object.play(function second() {
       return { draw() {} };
@@ -214,7 +214,7 @@ test("animation listeners do not survive pool reuse", async ({ page }) => {
     const first = createAnimatedProbe();
     const event = first.object.animation.events.test;
 
-    first.object.animation.on(event, () => {});
+    event.on(() => {});
     const subscribed = event instanceof Set ? event.size : event.length;
 
     pool.delete(...first.pointer);
@@ -277,7 +277,7 @@ test("play preserves auxiliary render listeners until destroy", async ({ page })
     const subscribed = canvas.events.main.size;
 
     const ctx = canvas.canvas.getContext("2d")!;
-    canvas.emitter.emit(canvas.events.main, { ctx, now: 1, delta: 0.016 });
+    canvas.events.main.emit({ ctx, now: 1, delta: 0.016 });
 
     object.destroy();
 
@@ -312,10 +312,10 @@ test("switching playback keeps its render position and restarts elapsed time", a
       }
     }));
 
-    canvas.emitter.on(canvas.events.main, () => calls.push("later"));
+    canvas.events.main.on(() => calls.push("later"));
 
     const emit = (now: number) => {
-      canvas.emitter.emit(canvas.events.main, { ctx, now, delta: 1 });
+      canvas.events.main.emit({ ctx, now, delta: 1 });
     };
 
     emit(1);

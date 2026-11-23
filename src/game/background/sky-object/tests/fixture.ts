@@ -59,7 +59,7 @@ export async function createSkyScene(preset: "storm" | "dusk" = "storm"): Promis
 
     render(now) {
       canvas.clear();
-      canvas.emitter.emit(canvas.events.background, { ctx, now, delta: 0.016 });
+      canvas.events.background.emit({ ctx, now, delta: 0.016 });
     },
 
     pixel(x, y) {

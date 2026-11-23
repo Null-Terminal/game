@@ -76,11 +76,9 @@ export class GameObjectSound extends ServantObject {
     }
 
     const { go } = this;
-    const { emitter, events } = go.status;
-
-    const pause = emitter.on(events.pauseChange, () => this.#sync());
-    const sleep = emitter.on(events.sleepChange, () => this.#sync());
-    const canvasPause = go.canvas.emitter.on(go.canvas.events.pauseChange, () => this.#sync());
+    const pause = go.status.events.pauseChange.on(() => this.#sync());
+    const sleep = go.status.events.sleepChange.on(() => this.#sync());
+    const canvasPause = go.canvas.events.pauseChange.on(() => this.#sync());
 
     this.#cleanup = () => {
       this.#cleanup = null;

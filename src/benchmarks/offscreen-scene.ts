@@ -76,7 +76,7 @@ export async function createOffscreenScene(
 
   const renderTimes: number[] = [];
 
-  canvas.emitter.on(canvas.events.beforeRender, ({ now }) => {
+  canvas.events.beforeRender.on(({ now }) => {
     if (measuring) {
       renderStart = performance.now();
 
@@ -89,7 +89,7 @@ export async function createOffscreenScene(
     }
   });
 
-  canvas.emitter.on(canvas.events.ui, () => {
+  canvas.events.ui.on(() => {
     if (measuring) {
       renderTimes.push(performance.now() - renderStart);
     }

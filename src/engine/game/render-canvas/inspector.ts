@@ -26,7 +26,7 @@ export class RenderCanvasInspector {
   constructor(canvas: RenderCanvas) {
     const entries = this.#entries;
 
-    const clear = canvas.emitter.on(canvas.events.beforeRender, () => {
+    const clear = canvas.events.beforeRender.on(() => {
       entries.length = 0;
     });
 

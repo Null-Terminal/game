@@ -7,12 +7,12 @@ describe("EventEmitter", () => {
     const emitter = new EventEmitter({ frame: handler<void>() });
     const calls: string[] = [];
 
-    emitter.on(emitter.events.frame, () => calls.push("first"));
-    const middle = emitter.on(emitter.events.frame, () => calls.push("middle"));
-    emitter.on(emitter.events.frame, () => calls.push("last"));
+    emitter.events.frame.on(() => calls.push("first"));
+    const middle = emitter.events.frame.on(() => calls.push("middle"));
+    emitter.events.frame.on(() => calls.push("last"));
 
     middle.dispose();
-    emitter.emit(emitter.events.frame, undefined);
+    emitter.events.frame.emit();
 
     expect(calls).toEqual(["first", "last"]);
   });
@@ -21,15 +21,15 @@ describe("EventEmitter", () => {
     const emitter = new EventEmitter({ frame: handler<void>({ ordered: true }) });
     const calls: string[] = [];
 
-    emitter.on(emitter.events.frame, () => calls.push("first"));
-    const middle = emitter.on(emitter.events.frame, () => calls.push("middle"));
-    emitter.on(emitter.events.frame, () => calls.push("last"));
+    emitter.events.frame.on(() => calls.push("first"));
+    const middle = emitter.events.frame.on(() => calls.push("middle"));
+    emitter.events.frame.on(() => calls.push("last"));
 
     middle.sleep();
-    emitter.emit(emitter.events.frame, undefined);
+    emitter.events.frame.emit();
 
     middle.wake();
-    emitter.emit(emitter.events.frame, undefined);
+    emitter.events.frame.emit();
 
     expect(calls).toEqual(["first", "last", "first", "middle", "last"]);
   });
@@ -38,12 +38,42 @@ describe("EventEmitter", () => {
     const emitter = new EventEmitter({ frame: handler<void>() });
     const calls: string[] = [];
 
-    emitter.once(emitter.events.frame, () => calls.push("once"));
-    emitter.on(emitter.events.frame, () => calls.push("later"));
+    emitter.events.frame.once(() => calls.push("once"));
+    emitter.events.frame.on(() => calls.push("later"));
 
-    emitter.emit(emitter.events.frame, undefined);
-    emitter.emit(emitter.events.frame, undefined);
+    emitter.events.frame.emit();
+    emitter.events.frame.emit();
 
     expect(calls).toEqual(["once", "later", "later"]);
+  });
+
+  it("binds flush subscriptions and clears them with the emitter", () => {
+    const emitter = new EventEmitter({ frame: handler<void>({ ordered: true, withFlush: true }) });
+    const calls: string[] = [];
+
+    emitter.events.frame.on(() => calls.push("frame"));
+    emitter.events.frame.flush!.on(() => calls.push("flush"));
+
+    emitter.events.frame.emit();
+    emitter.events.frame.flush!.emit();
+    emitter.off();
+    emitter.events.frame.emit();
+
+    expect(calls).toEqual(["frame", "flush", "flush"]);
+  });
+
+  it("disposes a subscription at the end of a using scope", () => {
+    const emitter = new EventEmitter({ frame: handler<void>() });
+    let calls = 0;
+
+    {
+      using subscription = emitter.events.frame.on(() => calls++);
+      emitter.events.frame.emit();
+      expect(calls).toBe(1);
+      expect(subscription[Symbol.dispose]).toBe(subscription.dispose);
+    }
+
+    emitter.events.frame.emit();
+    expect(calls).toBe(1);
   });
 });

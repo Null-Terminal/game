@@ -52,7 +52,7 @@ export async function createBackgroundScene(opts: BackgroundSceneOptions): Promi
 
     render() {
       canvas.clear();
-      canvas.emitter.emit(canvas.events.background, { ctx, delta: 0.016, now: 16 });
+      canvas.events.background.emit({ ctx, delta: 0.016, now: 16 });
     },
 
     pixel(x, y) {

@@ -52,7 +52,7 @@ export class GameStatus {
     game.canvas.pause();
 
     try {
-      game.emitter.emit(events.levelLoading, null);
+      events.levelLoading.emit(null);
 
       let world: World;
 
@@ -60,11 +60,11 @@ export class GameStatus {
         world = await load();
 
       } catch (err) {
-        game.emitter.emit(events.levelLoadFailed, err);
+        events.levelLoadFailed.emit(err);
         throw err;
       }
 
-      game.emitter.emit(events.levelLoaded, world);
+      events.levelLoaded.emit(world);
       return world;
 
     } finally {

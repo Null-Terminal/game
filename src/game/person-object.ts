@@ -80,7 +80,7 @@ export class PersonObject extends PhysicsObject {
     this.#initControls();
     this.initPhysics(this.#initPhysics, this.#initEffects);
 
-    const subscription = this.canvas.emitter.on(this.canvas.events.ui, ({ ctx }) => {
+    const subscription = this.canvas.events.ui.on(({ ctx }) => {
       this.#renderStats(ctx);
     });
 

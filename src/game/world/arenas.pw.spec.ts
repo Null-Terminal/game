@@ -50,7 +50,7 @@ test("the shaft remains visible above the elevator after the background arena lo
     const pixel = () => Array.from(ctx.getImageData(200, 200, 1, 1).data);
     const render = () => {
       canvas.clear();
-      canvas.emitter.emit(canvas.events.background, { ctx, delta: 0.016, now: 16 });
+      canvas.events.background.emit({ ctx, delta: 0.016, now: 16 });
     };
 
     render();

@@ -65,7 +65,7 @@ export class GameSettings<T extends object = object> {
       });
     }
 
-    this.emitter.emit(this.events.change, key);
+    this.events.change.emit(key);
   }
 
   #validateSettings(settings: BaseGameSettings) {

@@ -27,7 +27,7 @@ export class GameAudio {
       this.#music.gain.value = music;
     };
 
-    this.#subscription = game.settings.emitter.on(game.settings.events.change, (key) => {
+    this.#subscription = game.settings.events.change.on((key) => {
       if (key === "audio") {
         sync();
       }

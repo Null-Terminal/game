@@ -45,7 +45,7 @@ export async function createFlowScene(): Promise<FlowScene> {
 
     renderAt(now) {
       canvas.clear();
-      canvas.emitter.emit(canvas.events.background, { ctx, now, delta: 0.016 });
+      canvas.events.background.emit({ ctx, now, delta: 0.016 });
     },
 
     colorAt(x, y) {

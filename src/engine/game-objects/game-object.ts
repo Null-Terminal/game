@@ -407,8 +407,8 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
         this.render.drawBitmap(bitmapFrame);
 
-        if (playback.shouldEmitEvent && animation.name in this.animation.events) {
-          this.animation.emit(this.animation.events[animation.name]!, playback.sprite.spriteId);
+        if (playback.shouldEmitEvent) {
+          this.animation.events[animation.name]?.emit(playback.sprite.spriteId);
         }
       },
 

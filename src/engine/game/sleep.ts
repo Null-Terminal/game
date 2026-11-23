@@ -31,7 +31,7 @@ export class GameSleep {
     this.#options = { wakeDistanceFactor, checkInterval };
     this.#sleepSettings = game.settings.get("sleep");
 
-    this.#settingsSubscription = game.settings.emitter.on(game.settings.events.change, (key) => {
+    this.#settingsSubscription = game.settings.events.change.on((key) => {
       if (key === "sleep") {
         this.#sleepSettings = game.settings.get("sleep");
         this.#syncSubscription();
@@ -63,7 +63,7 @@ export class GameSleep {
       return;
     }
 
-    this.#subscription = this.#game.canvas.emitter.on(this.#game.canvas.events.beforeRender, ({ now }) => {
+    this.#subscription = this.#game.canvas.events.beforeRender.on(({ now }) => {
       if (this.#lastCheckAt != null && now - this.#lastCheckAt < this.#options.checkInterval) {
         return;
       }

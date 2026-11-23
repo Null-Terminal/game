@@ -1,4 +1,4 @@
-import type { Handlers } from "#/event-emitter";
+import type { BoundHandlers, Handlers } from "#/event-emitter";
 
 import { AnimationLayer, LoadedAnimation, type SpriteAnchorX, type SpriteAnchorY } from "#engine/animation";
 import type { RenderPayload } from "#engine/game";
@@ -93,7 +93,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   }
 
   @ifAlive
-  on<E extends Handlers<RenderPayload>>(
+  on<E extends BoundHandlers<Handlers<RenderPayload>>>(
     event: E,
     listener: (payload: E["PayloadType"], elapsed: number) => void
   ): Destructor {
@@ -111,7 +111,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       listener(frame, elapsed);
     };
 
-    const subscription = go.canvas.emitter.on(event, handle);
+    const subscription = event.on(handle);
 
     const syncSubscription = (sleeping: boolean) => {
       if (sleeping) {
@@ -123,9 +123,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       }
     };
 
-    const { emitter, events } = go.status;
-
-    const statusSubscription = emitter.on(events.sleepChange, syncSubscription);
+    const statusSubscription = go.status.events.sleepChange.on(syncSubscription);
     syncSubscription(go.status.sleeping);
 
     const stop = () => {

@@ -112,11 +112,9 @@ export class Game<T extends object = object> extends Disposable {
   }
 
   onLevelLoad(loading: () => void, loaded: (world: World) => void, error?: (error: unknown) => void) {
-    const { emitter, events } = this;
-
-    const offLoading = emitter.on(events.levelLoading, loading);
-    const offLoaded = emitter.on(events.levelLoaded, loaded);
-    const offError = error == null ? null : emitter.on(events.levelLoadFailed, error);
+    const offLoading = this.events.levelLoading.on(loading);
+    const offLoaded = this.events.levelLoaded.on(loaded);
+    const offError = error == null ? null : this.events.levelLoadFailed.on(error);
 
     return () => {
       offLoading.dispose();

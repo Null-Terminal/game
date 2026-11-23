@@ -74,16 +74,16 @@ test("distant objects start asleep and resume movement, rendering, and collision
 
     const ctx = canvas.canvas.getContext("2d")!;
     const frame = { ctx, now: 16, delta: 0.016 };
-    canvas.emitter.emit(canvas.events.beforeRender, frame);
-    canvas.emitter.emit(canvas.events.scene, frame);
+    canvas.events.beforeRender.emit(frame);
+    canvas.events.scene.emit(frame);
 
     const resumed = { x: probe.x, renderTicks: probe.renderTicks };
 
     game.camera.x = 0;
     game.sleep.update();
 
-    canvas.emitter.emit(canvas.events.beforeRender, { ...frame, now: 32 });
-    canvas.emitter.emit(canvas.events.scene, { ...frame, now: 32 });
+    canvas.events.beforeRender.emit({ ...frame, now: 32 });
+    canvas.events.scene.emit({ ...frame, now: 32 });
 
     const frozen = { x: probe.x, renderTicks: probe.renderTicks };
     destroy();
@@ -213,7 +213,7 @@ test("waking a background restores its original drawing order", async ({ page })
     game.sleep.update();
 
     const ctx = canvas.canvas.getContext("2d")!;
-    canvas.emitter.emit(canvas.events.background, { ctx, now: 16, delta: 0.016 });
+    canvas.events.background.emit({ ctx, now: 16, delta: 0.016 });
 
     destroy();
 
@@ -230,7 +230,7 @@ test("sleep checks use frame time instead of capped delta", async ({ page }) => 
     const ctx = canvas.canvas.getContext("2d")!;
     const now = performance.now() + 1000;
     const tick = (time: number) => {
-      canvas.emitter.emit(canvas.events.beforeRender, { ctx, now: time, delta: 0.001 });
+      canvas.events.beforeRender.emit({ ctx, now: time, delta: 0.001 });
     };
 
     game.camera.x = 300;

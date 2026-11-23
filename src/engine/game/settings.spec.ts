@@ -96,7 +96,7 @@ describe("GameSettings", () => {
   it("emits changed keys through the shared emitter", () => {
     const settings = new GameSettings({ fog: true });
     const changes: PropertyKey[] = [];
-    const subscription = settings.emitter.on(settings.events.change, (key) => changes.push(key));
+    const subscription = settings.events.change.on((key) => changes.push(key));
 
     settings.set("fog", false);
     subscription.dispose();

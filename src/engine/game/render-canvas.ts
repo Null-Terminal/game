@@ -128,7 +128,7 @@ export class RenderCanvas extends Disposable {
     }
 
     this.#paused = true;
-    this.emitter.emit(this.events.pauseChange, true);
+    this.events.pauseChange.emit(true);
   }
 
   resume() {
@@ -137,7 +137,7 @@ export class RenderCanvas extends Disposable {
     }
 
     this.#paused = false;
-    this.emitter.emit(this.events.pauseChange, false);
+    this.events.pauseChange.emit(false);
   }
 
   togglePause() {
@@ -192,13 +192,13 @@ export class RenderCanvas extends Disposable {
       lastRedraw = now;
       payload.now = now;
 
-      this.emitter.emit(this.events.beforeRender, payload);
-      this.emitter.emit(this.events.background, payload);
-      this.emitter.emit(this.events.scene, payload);
-      this.emitter.emit(this.events.interact, payload);
-      this.emitter.emit(this.events.main, payload);
-      this.emitter.emit(this.events.overlay, payload);
-      this.emitter.emit(this.events.ui, payload);
+      this.events.beforeRender.emit(payload);
+      this.events.background.emit(payload);
+      this.events.scene.emit(payload);
+      this.events.interact.emit(payload);
+      this.events.main.emit(payload);
+      this.events.overlay.emit(payload);
+      this.events.ui.emit(payload);
 
       if (this.options.showFPS) {
         this.drawFPS();

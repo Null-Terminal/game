@@ -54,13 +54,13 @@ export async function createObjectCountScene(
   let renderStart = 0;
   const renderTimes: number[] = [];
 
-  canvas.emitter.on(canvas.events.beforeRender, () => {
+  canvas.events.beforeRender.on(() => {
     if (measuring) {
       renderStart = performance.now();
     }
   });
 
-  canvas.emitter.on(canvas.events.ui, () => {
+  canvas.events.ui.on(() => {
     if (measuring) {
       renderTimes.push(performance.now() - renderStart);
     }

@@ -13,8 +13,7 @@ export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> ext
   constructor() {
     super();
 
-    const { emitter, events } = this.status;
-    emitter.on(events.sleepChange, (sleeping) => this.collision.setSleeping(sleeping));
+    this.status.events.sleepChange.on((sleeping) => this.collision.setSleeping(sleeping));
   }
 
   init() {}

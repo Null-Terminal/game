@@ -61,7 +61,7 @@ export class Camera extends Disposable {
 
     const { canvas } = game;
 
-    const subscription = canvas.emitter.on(canvas.events.background, () => {
+    const subscription = canvas.events.background.on(() => {
       this.update();
     });
 
