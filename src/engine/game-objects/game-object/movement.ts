@@ -8,6 +8,11 @@ export type * from "#engine/game-objects/game-object/movement/types";
 export class Movement extends ServantObject {
   #cancelMovementHandler: Destructor | null = null;
   #progress: t.MovementSnapshot | null = null;
+  #paused = false;
+
+  get paused() {
+    return this.#paused;
+  }
 
   constructor(go: GameObject) {
     super(go);
@@ -52,10 +57,23 @@ export class Movement extends ServantObject {
     throw new TypeError(`${this.constructor.name}.follow: unknown movement`);
   }
 
+  pause() {
+    this.#paused = true;
+  }
+
+  resume() {
+    this.#paused = false;
+  }
+
+  togglePause() {
+    this.#paused = !this.#paused;
+  }
+
   reset() {
     this.#cancelMovementHandler?.();
     this.#cancelMovementHandler = null;
     this.#progress = null;
+    this.#paused = false;
   }
 
   #followPath(path: t.MovePath, { tolerance = 5, speed = 100 }: Pick<t.PathMovement, "tolerance" | "speed">) {
@@ -109,11 +127,6 @@ export class Movement extends ServantObject {
     this.#progress = state;
 
     this.#drive((delta) => {
-      if (go.status.paused) {
-        go.move(0, 0);
-        return;
-      }
-
       state.elapsed += delta;
 
       if (speed != null) {
@@ -179,7 +192,9 @@ export class Movement extends ServantObject {
     const go = this.go;
 
     this.#cancelMovementHandler = go.render.on(go.canvas.events.beforeRender, ({ delta }) => {
-      step(delta);
+      if (!this.#paused) {
+        step(delta);
+      }
     });
   }
 

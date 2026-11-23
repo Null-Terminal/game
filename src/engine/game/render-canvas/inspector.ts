@@ -81,10 +81,6 @@ export class RenderCanvasInspector {
 
     const states: string[] = [];
 
-    if (go.status.paused) {
-      states.push("paused");
-    }
-
     if (go.status.sleeping) {
       states.push("sleeping");
     }

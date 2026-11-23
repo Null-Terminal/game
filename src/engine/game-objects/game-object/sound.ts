@@ -76,14 +76,12 @@ export class GameObjectSound extends ServantObject {
     }
 
     const { go } = this;
-    const pause = go.status.events.pauseChange.on(() => this.#sync());
     const sleep = go.status.events.sleepChange.on(() => this.#sync());
     const canvasPause = go.canvas.events.pauseChange.on(() => this.#sync());
 
     this.#cleanup = () => {
       this.#cleanup = null;
 
-      pause.dispose();
       sleep.dispose();
       canvasPause.dispose();
 
@@ -95,10 +93,10 @@ export class GameObjectSound extends ServantObject {
 
   #sync() {
     const { go } = this;
-    const { paused, sleeping } = go.status;
+    const { sleeping } = go.status;
 
     for (const [sound, playing] of this.#playing) {
-      if (paused || sleeping || go.canvas.paused) {
+      if (sleeping || go.canvas.paused) {
         if (playing != null) {
           this.#stopSource(sound, playing);
         }

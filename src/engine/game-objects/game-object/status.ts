@@ -4,52 +4,21 @@ import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
 
-enum State {
-  Active,
-  Paused,
-}
-
 export class GameObjectStatus extends ServantObject {
-  static readonly State = State;
-
   readonly emitter = new EventEmitter({
-    pauseChange: handler<boolean>(),
     sleepChange: handler<boolean>()
   });
 
   readonly events = this.emitter.events;
 
-  #state = State.Active;
   #sleeping = false;
 
   constructor(go: GameObject) {
     super(go);
   }
 
-  get active() {
-    return this.#state === State.Active && !this.#sleeping;
-  }
-
-  get paused() {
-    return this.#state === State.Paused;
-  }
-
   get sleeping() {
     return this.#sleeping;
-  }
-
-  pause() {
-    this.#set(State.Paused);
-  }
-
-  resume() {
-    if (this.paused) {
-      this.#set(State.Active);
-    }
-  }
-
-  togglePause() {
-    this.#set(this.paused ? State.Active : State.Paused);
   }
 
   sleep() {
@@ -61,18 +30,7 @@ export class GameObjectStatus extends ServantObject {
   }
 
   reset() {
-    this.#state = State.Active;
     this.#sleeping = false;
-  }
-
-  @ifAlive
-  #set(state: State) {
-    if (this.#state === state) {
-      return;
-    }
-
-    this.#state = state;
-    this.events.pauseChange.emit(this.paused);
   }
 
   @ifAlive

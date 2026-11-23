@@ -96,37 +96,34 @@ test("distant objects start asleep and resume movement, rendering, and collision
   expect(result.frozen).toEqual(result.resumed);
 });
 
-test("distance wakeup preserves a manually paused object", async ({ page }) => {
+test("distance wakeup preserves paused movement", async ({ page }) => {
   const scene = await createScene(page);
 
-  const result = await scene.evaluate(({ game, world, probe, destroy }) => {
-    probe.status.pause();
-    game.sleep.update();
+  const result = await scene.evaluate(({ game, canvas, probe, destroy }) => {
+    probe.movement.pause();
+    const initialX = probe.x;
 
     game.camera.x = 300;
     game.sleep.update();
 
-    const stillPaused = {
-      sleeping: probe.status.sleeping,
-      paused: probe.status.paused,
-      collides: world.hasCollision(350, 0, 360, 10)
-    };
+    const ctx = canvas.canvas.getContext("2d")!;
+    canvas.events.beforeRender.emit({ ctx, now: 100, delta: 1 });
+    const pausedX = probe.x;
 
-    probe.status.resume();
+    probe.movement.resume();
+    canvas.events.beforeRender.emit({ ctx, now: 200, delta: 1 });
+    const resumedX = probe.x;
 
-    const resumed = {
-      sleeping: probe.status.sleeping,
-      paused: probe.status.paused,
-      collides: world.hasCollision(350, 0, 360, 10)
-    };
+    const sleeping = probe.status.sleeping;
 
     destroy();
 
-    return { stillPaused, resumed };
+    return { initialX, pausedX, resumedX, sleeping };
   });
 
-  expect(result.stillPaused).toEqual({ sleeping: false, paused: true, collides: true });
-  expect(result.resumed).toEqual({ sleeping: false, paused: false, collides: true });
+  expect(result.pausedX).toBe(result.initialX);
+  expect(result.resumedX).toBeGreaterThan(result.pausedX);
+  expect(result.sleeping).toBe(false);
 });
 
 test("the camera target stays awake even outside the viewport", async ({ page }) => {

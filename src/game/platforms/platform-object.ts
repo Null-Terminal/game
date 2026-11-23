@@ -36,7 +36,7 @@ export class PlatformObject<T extends PlatformOptions = PlatformOptions> extends
   @ifAlive
   override visit(go: GameObject) {
     if (go instanceof ControlObject) {
-      this.status.togglePause();
+      this.movement.togglePause();
     }
   }
 }

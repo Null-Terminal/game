@@ -52,7 +52,7 @@ test("following a new route replaces the previous one", async ({ page }) => {
   expect(positions).toEqual({ firstRoute: 20, newRoute: 205 });
 });
 
-test("a custom route does not advance while its object is paused", async ({ page }) => {
+test("a custom route does not advance while movement is paused", async ({ page }) => {
   const scene = await createScene(page);
 
   const positions = await scene.evaluate(({ createProbe, tick, destroy }) => {
@@ -62,11 +62,11 @@ test("a custom route does not advance while its object is paused", async ({ page
     tick(0.5, 500);
     const beforePause = object.x;
 
-    object.status.pause();
+    object.movement.pause();
     tick(1, 1500);
     const duringPause = object.x;
 
-    object.status.resume();
+    object.movement.resume();
     tick(0.5, 2000);
     const afterResume = object.x;
 
@@ -79,6 +79,35 @@ test("a custom route does not advance while its object is paused", async ({ page
     beforePause: 10,
     duringPause: 10,
     afterResume: 20
+  });
+});
+
+test("pausing a path preserves its progress", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const positions = await scene.evaluate(({ createProbe, tick, destroy }) => {
+    const { object } = createProbe();
+    object.movement.follow({ path: [[100, 0], [100, 100]], speed: 100 });
+
+    tick(0.5, 500);
+    const beforePause = [object.x, object.y];
+
+    object.movement.pause();
+    tick(1, 1500);
+    const duringPause = [object.x, object.y];
+
+    object.movement.resume();
+    tick(0.5, 2000);
+    const afterResume = [object.x, object.y];
+
+    destroy();
+    return { beforePause, duringPause, afterResume };
+  });
+
+  expect(positions).toEqual({
+    beforePause: [50, 0],
+    duringPause: [50, 0],
+    afterResume: [100, 0]
   });
 });
 

@@ -129,7 +129,6 @@ test("inspection shows the top object or every overlapping object in draw order"
 
     const context = canvas.canvas.getContext("2d")!;
     canvas.events.main.emit({ ctx: context, now: 1, delta: 0 });
-    second.status.pause();
 
     const tables: unknown[] = [];
     const original = console.table;
@@ -159,7 +158,7 @@ test("inspection shows the top object or every overlapping object in draw order"
   });
 
   expect(result).toMatchObject([
-    [{ type: "Probe", name: "front", animation: "still", status: "paused", layer: "main", drawOrder: 2 }],
+    [{ type: "Probe", name: "front", animation: "still", status: "active", layer: "main", drawOrder: 2 }],
     [
       { name: "behind", drawOrder: 1 },
       { name: "front", drawOrder: 2 }
@@ -340,7 +339,7 @@ test("switching playback keeps its render position and restarts elapsed time", a
   });
 });
 
-test("object sound follows object and canvas pauses, then stops on destroy", async ({ page }) => {
+test("object sound follows object sleep and canvas pause, then stops on destroy", async ({ page }) => {
   const scene = await createScene(page);
 
   const result = await scene.evaluate(({
@@ -375,26 +374,24 @@ test("object sound follows object and canvas pauses, then stops on destroy", asy
     try {
       const { object } = createProbe();
       const animation = createSoundAnimation(buffer);
-      const pauseListeners = () => [object.status.events.pauseChange.size, canvas.events.pauseChange.size];
+      const soundListeners = () => [object.status.events.sleepChange.size, canvas.events.pauseChange.size];
       const originalSound = object.sound;
 
       originalSound.play(animation.sounds.default);
       originalSound.ensurePlaying(animation.sounds.default);
-      const subscribed = pauseListeners();
+      const subscribed = soundListeners();
 
       originalSound.reset();
-      const manuallyReset = pauseListeners();
+      const manuallyReset = soundListeners();
       originalSound.play(animation.sounds.default);
-      const rebound = pauseListeners();
+      const rebound = soundListeners();
 
-      object.status.pause();
-      object.status.resume();
       object.status.sleep();
       object.status.wake();
       canvas.pause();
       canvas.resume();
       object.destroy();
-      const released = pauseListeners();
+      const released = soundListeners();
       let deadPlayRejected = false;
 
       try {
@@ -407,7 +404,7 @@ test("object sound follows object and canvas pauses, then stops on destroy", asy
       const reused = createProbe().object;
       const reusedSound = reused.sound;
       reusedSound.play(animation.sounds.default);
-      const resubscribed = pauseListeners();
+      const resubscribed = soundListeners();
       reused.destroy();
 
       let failure = "";
@@ -430,7 +427,7 @@ test("object sound follows object and canvas pauses, then stops on destroy", asy
         rebound,
         released,
         resubscribed,
-        cleared: pauseListeners(),
+        cleared: soundListeners(),
         sources: sources.length,
         looped: sources.every((source) => source.loop),
         starts,
@@ -455,10 +452,10 @@ test("object sound follows object and canvas pauses, then stops on destroy", asy
     released: [0, 0],
     resubscribed: [1, 1],
     cleared: [0, 0],
-    sources: 7,
+    sources: 6,
     looped: true,
-    starts: 7,
-    stops: 7
+    starts: 6,
+    stops: 6
   });
 });
 

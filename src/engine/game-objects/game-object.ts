@@ -326,10 +326,8 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
     this.prevX = this.x;
     this.prevY = this.y;
 
-    if (!this.status.paused) {
-      this.x = this.x + dx;
-      this.y = this.y + dy;
-    }
+    this.x = this.x + dx;
+    this.y = this.y + dy;
 
     // У подклассов коды могут отличаться
     return 0;

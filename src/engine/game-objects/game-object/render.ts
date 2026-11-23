@@ -103,7 +103,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     let lastNow = 0;
 
     const handle = (frame: RenderPayload) => {
-      if (lastNow !== 0 && !go.status.paused) {
+      if (lastNow !== 0) {
         elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
       }
 

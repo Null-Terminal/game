@@ -93,10 +93,6 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
     this.prevX = this.x;
     this.prevY = this.y;
 
-    if (this.status.paused) {
-      return CollisionStatus.NoCollision;
-    }
-
     let moveStatus = this.#updateRiding(dy);
 
     if (dy < 0 && moveStatus & CollisionStatus.BottomCollision) {

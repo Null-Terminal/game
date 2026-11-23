@@ -139,7 +139,7 @@ export async function createOffscreenScene(
       objects.push(object);
 
       if (mode === "paused") {
-        object.status.pause();
+        object.movement.pause();
       }
     }
   }
