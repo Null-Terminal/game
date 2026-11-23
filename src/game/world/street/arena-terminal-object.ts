@@ -1,8 +1,8 @@
 import { World, type Arena, type ArenaDefinition } from "#engine/game";
 import type { GameObject } from "#engine/game-objects";
 
-import { barrel } from "#/sprites/platforms/barrel";
-import { scaffoldPlank } from "#/sprites/platforms/scaffold-plank";
+import { barrel } from "#game/sprites/platforms/barrel";
+import { scaffoldPlank } from "#game/sprites/platforms/scaffold-plank";
 
 import { ControlObject } from "#game/control-object";
 import { PlatformObject } from "#game/platforms/platform-object";

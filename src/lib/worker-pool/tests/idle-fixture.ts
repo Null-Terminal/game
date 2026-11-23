@@ -1,5 +1,5 @@
-import { WorkerClient, WorkerPool } from "#/utils/worker-pool";
-import { createEchoWorkerUrl, type EchoRequest } from "#/utils/worker-pool/tests/echo-worker";
+import { WorkerClient, WorkerPool } from "#lib/worker-pool";
+import { createEchoWorkerUrl, type EchoRequest } from "#lib/worker-pool/tests/echo-worker";
 import { WebGLCanvasContext } from "#engine/rendering/webgl/context";
 import { loadSprite } from "#engine/animation/load-sprite";
 
@@ -167,7 +167,7 @@ export async function useTransferredBitmapAfterRetirement() {
 
 export async function useRealSpriteWithPersistentWorker() {
   const image = await loadSprite(
-    "/src/sprites/backgrounds/buildings/ruins/city-ruined-residence.webp",
+    "/src/game/sprites/backgrounds/buildings/ruins/city-ruined-residence.webp",
     { removeBackground: true }
   );
 

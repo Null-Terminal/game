@@ -1,6 +1,6 @@
-import { cast } from "#/tstools";
+import { cast } from "#/utils/cast";
 
-import type { PromiseStore } from "#/storage/types";
+import type { PromiseStore } from "#lib/storage/types";
 
 export function requestPromise<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {

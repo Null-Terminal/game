@@ -1,6 +1,6 @@
-import type { BinType } from "#/bindata/bintype/types";
+import type { BinType } from "#lib/bindata/bintype/types";
 
-export type { BinType } from "#/bindata/bintype/types";
+export type { BinType } from "#lib/bindata/bintype/types";
 
 export function bintype<const N extends string, const S extends number>(
   name: N,

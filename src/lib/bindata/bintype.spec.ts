@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { alias, bintype, f32, u16 } from "#/bindata";
+import { alias, bintype, f32, u16 } from "#lib/bindata";
 
 describe("binary types", () => {
   it("keeps the storage type when assigning a field name", () => {

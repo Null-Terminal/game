@@ -1,7 +1,7 @@
 import { Camera, Game, RenderCanvas, World, type WorldObjects } from "#engine/game";
 import { BackgroundObject } from "#engine/game-objects";
 
-import { scaffoldFrame } from "#/sprites/platforms/scaffold-frame";
+import { scaffoldFrame } from "#game/sprites/platforms/scaffold-frame";
 
 import { sampleFrameIntervals } from "#/benchmarks/frame-sample";
 

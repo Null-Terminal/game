@@ -9,8 +9,8 @@ import type { BBoxTuple } from "#engine/rtree";
 
 import { PersonObject } from "#game/person-object";
 
-import { acid } from "#/sprites/hazards/acid";
-import { water } from "#/sprites/hazards/water";
+import { acid } from "#game/sprites/hazards/acid";
+import { water } from "#game/sprites/hazards/water";
 
 export type LiquidKind = keyof typeof LiquidObject.kinds;
 

@@ -1,5 +1,5 @@
 import { loadAnimation } from "#engine/animation";
 
-export const acid = await loadAnimation(import("#/sprites/hazards/acid.webp"), {
-  animation: import("#/sprites/hazards/acid.animation.json")
+export const acid = await loadAnimation(import("#game/sprites/hazards/acid.webp"), {
+  animation: import("#game/sprites/hazards/acid.animation.json")
 });

@@ -1,4 +1,4 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";

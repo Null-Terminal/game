@@ -1,4 +1,4 @@
-import { alias, array, tuple, usize2, u8 } from "#/bindata";
+import { alias, array, tuple, usize2, u8 } from "#lib/bindata";
 
 import { BinView } from "#engine/rtree/binview";
 

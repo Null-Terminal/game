@@ -1,12 +1,12 @@
 import { foldDeps } from "#/utils/fold-deps";
 
 const _ = await foldDeps({
-  accessButton: import("#/sprites/interactables/button-access"),
-  emergencyButton: import("#/sprites/interactables/button-emergency"),
-  floorLever: import("#/sprites/interactables/lever-floor"),
-  wallLever: import("#/sprites/interactables/lever-wall"),
-  aiTerminal: import("#/sprites/interactables/terminal-ai"),
-  resistanceTerminal: import("#/sprites/interactables/terminal-resistance")
+  accessButton: import("#game/sprites/interactables/button-access"),
+  emergencyButton: import("#game/sprites/interactables/button-emergency"),
+  floorLever: import("#game/sprites/interactables/lever-floor"),
+  wallLever: import("#game/sprites/interactables/lever-wall"),
+  aiTerminal: import("#game/sprites/interactables/terminal-ai"),
+  resistanceTerminal: import("#game/sprites/interactables/terminal-resistance")
 });
 
 export const controlKinds = {

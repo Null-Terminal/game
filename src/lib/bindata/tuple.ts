@@ -1,9 +1,9 @@
-import { cast } from "#/tstools";
+import { cast } from "#/utils/cast";
 
-import type { BinType } from "#/bindata/bintype";
-import type { Tuple, IndexedBinType } from "#/bindata/tuple/types";
+import type { BinType } from "#lib/bindata/bintype";
+import type { Tuple, IndexedBinType } from "#lib/bindata/tuple/types";
 
-export type { Tuple, IndexedBinType } from "#/bindata/tuple/types";
+export type { Tuple, IndexedBinType } from "#lib/bindata/tuple/types";
 
 export function tuple<const N extends string, const E extends BinType[]>(
   name: N,

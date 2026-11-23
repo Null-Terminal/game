@@ -1,6 +1,6 @@
 import { loadAnimation } from "#engine/animation";
 
-export const curbRubble = await loadAnimation(import("#/sprites/terrain/curb-rubble.webp"), {
+export const curbRubble = await loadAnimation(import("#game/sprites/terrain/curb-rubble.webp"), {
   sprite: { removeBackground: true, tolerance: 30 },
-  animation: import("#/sprites/terrain/curb-rubble.animation.json")
+  animation: import("#game/sprites/terrain/curb-rubble.animation.json")
 });

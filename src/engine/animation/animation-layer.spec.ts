@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 import { AnimationLayer, LoadedAnimation } from "#engine/animation";
 
 describe("AnimationLayer collision bounds", () => {

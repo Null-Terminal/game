@@ -1,4 +1,4 @@
-import type { WorkerClient } from "#/utils/worker-pool";
+import type { WorkerClient } from "#lib/worker-pool";
 
 export interface WorkerRequest<T> {
   id: number;

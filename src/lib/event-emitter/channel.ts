@@ -1,4 +1,4 @@
-import type { EventOptions, Handler, Subscription } from "#/event-emitter/types";
+import type { EventOptions, Handler, Subscription } from "#lib/event-emitter/types";
 
 interface HandlerBox<P> {
   handler: Handler<P>;

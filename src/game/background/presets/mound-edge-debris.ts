@@ -1,9 +1,9 @@
 import { foldDeps } from "#/utils/fold-deps";
 
 const _ = await foldDeps({
-  moundTireA: import("#/sprites/terrain/mound-tire-a"),
-  moundRubble: import("#/sprites/terrain/mound-rubble"),
-  moundTireB: import("#/sprites/terrain/mound-tire-b")
+  moundTireA: import("#game/sprites/terrain/mound-tire-a"),
+  moundRubble: import("#game/sprites/terrain/mound-rubble"),
+  moundTireB: import("#game/sprites/terrain/mound-tire-b")
 });
 
 export const moundEdgeDebris = [

@@ -1,4 +1,4 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 import { Disposable } from "#engine/disposable";
 
 const kinds = new Map<number, string>();

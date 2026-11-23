@@ -3,7 +3,7 @@ import { sampleWindRange } from "#game/background/wind-debris-object/utils";
 import { WindParticle } from "#game/background/wind-debris-object/particles/particle";
 import type { TumbleweedOptions, WindParticleSpawnParams } from "#game/background/wind-debris-object/types";
 
-import { tumbleweed } from "#/sprites/backgrounds/particles/tumbleweed";
+import { tumbleweed } from "#game/sprites/backgrounds/particles/tumbleweed";
 
 export class TumbleweedParticle extends WindParticle {
   readonly settings: TumbleweedOptions;

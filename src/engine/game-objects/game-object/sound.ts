@@ -1,4 +1,4 @@
-import { getAudioContext, type LoadedSound } from "#/audio";
+import { getAudioContext, type LoadedSound } from "#engine/audio";
 import { isInRange } from "#/utils/validators";
 
 import { ifAlive } from "#engine/game-objects/decorators";

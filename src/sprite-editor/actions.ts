@@ -1,6 +1,6 @@
-import { loadText } from "#/file-loader";
+import { loadText } from "#sprite-editor/file-loader";
 
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { alias, array, tuple, u16 } from "#/bindata";
+import { alias, array, tuple, u16 } from "#lib/bindata";
 
 describe("binary arrays", () => {
   it("multiplies element size by count at runtime and in the type", () => {

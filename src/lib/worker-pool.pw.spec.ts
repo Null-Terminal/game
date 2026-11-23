@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-const fixtureUrl = "/src/utils/worker-pool/tests/fixture.ts";
-const idleFixtureUrl = "/src/utils/worker-pool/tests/idle-fixture.ts";
+const fixtureUrl = "/src/lib/worker-pool/tests/fixture.ts";
+const idleFixtureUrl = "/src/lib/worker-pool/tests/idle-fixture.ts";
 
 test("reuses an idle worker and creates another for concurrent tasks", async ({ page }) => {
   await page.goto("/tests/fixture.html");

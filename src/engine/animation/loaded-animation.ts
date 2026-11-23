@@ -1,7 +1,7 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 
-import type { AnimationDefinition } from "#/animation-definition";
-import type { LoadedSound } from "#/audio";
+import type { AnimationDefinition } from "#lib/animation-definition";
+import type { LoadedSound } from "#engine/audio";
 import type { FrameEffects } from "#engine/animation/types";
 
 const MAX_REPEAT_PATTERN_SIZE = 1024;

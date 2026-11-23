@@ -1,4 +1,4 @@
-import { scaffoldPlank } from "#/sprites/platforms/scaffold-plank";
+import { scaffoldPlank } from "#game/sprites/platforms/scaffold-plank";
 
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
 

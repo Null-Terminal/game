@@ -1,4 +1,4 @@
-import { cast } from "#/tstools";
+import { cast } from "#/utils/cast";
 import { LoadedAnimation } from "#engine/animation";
 import { Disposable } from "#engine/disposable";
 

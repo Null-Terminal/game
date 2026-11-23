@@ -1,4 +1,4 @@
-import { alias, tuple, f32 } from "#/bindata";
+import { alias, tuple, f32 } from "#lib/bindata";
 
 import { BinView } from "#engine/rtree/binview";
 import type { Ptr32 } from "#engine/rtree/types";

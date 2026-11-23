@@ -1,6 +1,6 @@
 import { isPositive } from "#/utils/validators";
 
-import type { Subscription } from "#/event-emitter";
+import type { Subscription } from "#lib/event-emitter";
 import type { Game, SleepSettings } from "#engine/game";
 import type { GameObject } from "#engine/game-objects";
 import type { GameSleepOptions } from "#engine/game/sleep/types";

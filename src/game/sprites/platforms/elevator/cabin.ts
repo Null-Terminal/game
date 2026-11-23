@@ -3,19 +3,19 @@ import { loadAnimation } from "#engine/animation";
 const spriteOptions = { removeBackground: true, tolerance: 30 };
 
 const [rear, front, ceiling] = await Promise.all([
-  loadAnimation(import("#/sprites/platforms/elevator/rear.webp"), {
+  loadAnimation(import("#game/sprites/platforms/elevator/rear.webp"), {
     sprite: spriteOptions,
-    animation: import("#/sprites/platforms/elevator/rear.animation.json")
+    animation: import("#game/sprites/platforms/elevator/rear.animation.json")
   }),
 
-  loadAnimation(import("#/sprites/platforms/elevator/front.webp"), {
+  loadAnimation(import("#game/sprites/platforms/elevator/front.webp"), {
     sprite: spriteOptions,
-    animation: import("#/sprites/platforms/elevator/front.animation.json")
+    animation: import("#game/sprites/platforms/elevator/front.animation.json")
   }),
 
-  loadAnimation(import("#/sprites/platforms/elevator/ceiling.webp"), {
+  loadAnimation(import("#game/sprites/platforms/elevator/ceiling.webp"), {
     sprite: spriteOptions,
-    animation: import("#/sprites/platforms/elevator/ceiling.animation.json")
+    animation: import("#game/sprites/platforms/elevator/ceiling.animation.json")
   })
 ]);
 

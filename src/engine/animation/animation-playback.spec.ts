@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AnimationDefinition, type AnimationOrder } from "#/animation-definition";
-import { cast } from "#/tstools";
+import { AnimationDefinition, type AnimationOrder } from "#lib/animation-definition";
+import { cast } from "#/utils/cast";
 
 import { AnimationPlayback, LoadedAnimation } from "#engine/animation";
 

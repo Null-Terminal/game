@@ -1,4 +1,4 @@
-import { alias, tuple, usize2 } from "#/bindata";
+import { alias, tuple, usize2 } from "#lib/bindata";
 
 import { RTreeNode } from "#engine/rtree/node";
 import { nanToInfinity } from "#engine/rtree/utils";

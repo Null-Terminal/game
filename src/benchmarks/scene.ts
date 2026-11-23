@@ -7,8 +7,8 @@ import { SkyObject } from "#game/background/sky-object";
 import { PersonObject } from "#game/person-object";
 import { PlatformObject } from "#game/platforms/platform-object";
 
-import { barrel } from "#/sprites/platforms/barrel";
-import { hoverDisc } from "#/sprites/platforms/hover-disc";
+import { barrel } from "#game/sprites/platforms/barrel";
+import { hoverDisc } from "#game/sprites/platforms/hover-disc";
 
 export const SCENE_VERSION = "demo-stress-v4";
 export const SCENE_VIEWPORT = { width: 1280, height: 720 } as const;

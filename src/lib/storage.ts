@@ -1,7 +1,7 @@
-import { promiseStore, requestPromise, transactionPromise } from "#/storage/promises";
-import type { Storage } from "#/storage/types";
+import { promiseStore, requestPromise, transactionPromise } from "#lib/storage/promises";
+import type { Storage } from "#lib/storage/types";
 
-export type { Storage } from "#/storage/types";
+export type { Storage } from "#lib/storage/types";
 
 export class IndexedDBStorage<S extends string> implements Storage<S> {
   readonly #databaseName: string;

@@ -3,7 +3,7 @@ import { isPositive } from "#/utils/validators";
 
 import type { World } from "#engine/game/world";
 import type { BaseGameSettings } from "#engine/game";
-import type { Subscription } from "#/event-emitter";
+import type { Subscription } from "#lib/event-emitter";
 
 import type * as t from "#engine/game/arena/types";
 

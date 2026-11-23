@@ -9,8 +9,8 @@ const deps = {
   pickup: import("#game/pickup-object"),
   platform: import("#game/platforms/platform-object"),
 
-  scaffoldFrame: import("#/sprites/platforms/scaffold-frame"),
-  scaffoldPlank: import("#/sprites/platforms/scaffold-plank")
+  scaffoldFrame: import("#game/sprites/platforms/scaffold-frame"),
+  scaffoldPlank: import("#game/sprites/platforms/scaffold-plank")
 };
 
 export async function createUpper(): Promise<WorldObjects> {

@@ -1,4 +1,4 @@
-import { IndexedDBStorage, type Storage } from "#/storage";
+import { IndexedDBStorage, type Storage } from "#lib/storage";
 
 export type GameStoreName = "settings" | "saves";
 export type GameStorage = Storage<GameStoreName>;

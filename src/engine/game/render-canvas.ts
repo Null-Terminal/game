@@ -1,5 +1,5 @@
-import { cache } from "#decorators/cache";
-import { EventEmitter, handler } from "#/event-emitter";
+import { cache } from "#/utils/decorators/cache";
+import { EventEmitter, handler } from "#lib/event-emitter";
 
 import { Disposable } from "#engine/disposable";
 import { RenderCanvasInspector } from "#engine/game/render-canvas/inspector";

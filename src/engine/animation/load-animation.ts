@@ -1,6 +1,6 @@
-import { AnimationDefinition, type Animation } from "#/animation-definition";
+import { AnimationDefinition, type Animation } from "#lib/animation-definition";
 
-import { loadSound } from "#/audio";
+import { loadSound } from "#engine/audio";
 import { isInRange } from "#/utils/validators";
 import { LoadedAnimation } from "#engine/animation/loaded-animation";
 import { loadSprite } from "#engine/animation/load-sprite";

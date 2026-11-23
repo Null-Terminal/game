@@ -1,4 +1,4 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 
 import { GameObject, type AnimationInstance } from "#engine/game-objects";
 

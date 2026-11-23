@@ -2,7 +2,7 @@
 
 import { bakeSprite } from "#engine/animation/bake-sprite";
 import type { SpriteLoadData } from "#engine/animation/types";
-import type { WorkerRequest, WorkerResponse } from "#/utils/worker-pool";
+import type { WorkerRequest, WorkerResponse } from "#lib/worker-pool";
 
 const scope = self as DedicatedWorkerGlobalScope;
 

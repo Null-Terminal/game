@@ -21,9 +21,9 @@ const deps = {
   moundEdgeDebris: import("#game/background/presets/mound-edge-debris"),
   curbDebris: import("#game/background/presets/curb-debris"),
 
-  asphalt: import("#/sprites/terrain/asphalt"),
-  roadsideGround: import("#/sprites/terrain/roadside-ground"),
-  sidewalk: import("#/sprites/terrain/sidewalk")
+  asphalt: import("#game/sprites/terrain/asphalt"),
+  roadsideGround: import("#game/sprites/terrain/roadside-ground"),
+  sidewalk: import("#game/sprites/terrain/sidewalk")
 };
 
 const floors = [[-Infinity, Infinity]] as const;

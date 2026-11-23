@@ -1,5 +1,5 @@
-import { EventEmitter, handler } from "#/event-emitter";
-import { cast } from "#/tstools";
+import { EventEmitter, handler } from "#lib/event-emitter";
+import { cast } from "#/utils/cast";
 import { isInRange, isPositive } from "#/utils/validators";
 
 import type { BaseGameSettings, SettingsValues } from "#engine/game/settings/types";

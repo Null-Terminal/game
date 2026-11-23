@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { World } from "#engine/game";
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 import { LoadedAnimation } from "#engine/animation";
 import type { GameObject } from "#engine/game-objects";
 

@@ -1,8 +1,8 @@
 import { isPositive } from "#/utils/validators";
 
-import type { WorkerClass, WorkerJob, WorkerPoolOptions, WorkerRequest, WorkerResponse, WorkerSlot } from "#/utils/worker-pool/types";
+import type { WorkerClass, WorkerJob, WorkerPoolOptions, WorkerRequest, WorkerResponse, WorkerSlot } from "#lib/worker-pool/types";
 
-export type { WorkerPoolOptions, WorkerRequest, WorkerResponse } from "#/utils/worker-pool/types";
+export type { WorkerPoolOptions, WorkerRequest, WorkerResponse } from "#lib/worker-pool/types";
 
 const DEFAULT_IDLE_TIMEOUT = 30_000;
 

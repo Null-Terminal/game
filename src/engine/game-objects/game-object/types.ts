@@ -1,5 +1,5 @@
-import type { LoadedSound } from "#/audio";
-import type { EventChannel } from "#/event-emitter";
+import type { LoadedSound } from "#engine/audio";
+import type { EventChannel } from "#lib/event-emitter";
 
 import type { FrameEffects, LoadedAnimation } from "#engine/animation";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";

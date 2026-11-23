@@ -1,8 +1,8 @@
-import { bintype } from "#/bindata/bintype";
+import { bintype } from "#lib/bindata/bintype";
 
-export { array, type Array } from "#/bindata/array";
-export { tuple, type Tuple } from "#/bindata/tuple";
-export { bintype, alias, type BinType } from "#/bindata/bintype";
+export { array, type Array } from "#lib/bindata/array";
+export { tuple, type Tuple } from "#lib/bindata/tuple";
+export { bintype, alias, type BinType } from "#lib/bindata/bintype";
 
 export const bool = bintype("bool", 1);
 

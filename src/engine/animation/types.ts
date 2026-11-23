@@ -1,5 +1,5 @@
-import type { Animation, AnimationSound } from "#/animation-definition";
-import type { LoadedSound } from "#/audio";
+import type { Animation, AnimationSound } from "#lib/animation-definition";
+import type { LoadedSound } from "#engine/audio";
 
 export type AnimationSounds<T extends Animation> =
   T extends { params: { sounds: infer S extends Record<string, AnimationSound> } } ?

@@ -1,4 +1,4 @@
-import type { EventChannel } from "#/event-emitter";
+import type { EventChannel } from "#lib/event-emitter";
 
 import { AnimationLayer, LoadedAnimation, type SpriteAnchorX, type SpriteAnchorY } from "#engine/animation";
 import type { RenderPayload } from "#engine/game";

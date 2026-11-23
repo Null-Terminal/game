@@ -1,6 +1,6 @@
-import { getAudioContext } from "#/audio";
+import { getAudioContext } from "#engine/audio";
 
-import type { Subscription } from "#/event-emitter";
+import type { Subscription } from "#lib/event-emitter";
 import type { Game } from "#engine/game";
 
 export class GameAudio {

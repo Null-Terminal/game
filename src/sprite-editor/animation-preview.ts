@@ -1,4 +1,4 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 import { mergeSprites } from "#sprite-editor/merge-sprites";
 
 import styles from "#sprite-editor/animation-preview/styles.css?raw";

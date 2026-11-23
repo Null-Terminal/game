@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AnimationDefinition, type SpriteDescriptor } from "#/animation-definition";
+import { AnimationDefinition, type SpriteDescriptor } from "#lib/animation-definition";
 
 const frames: SpriteDescriptor[] = [
   { x: 0, y: 0, width: 32, height: 24, duration: 80, spriteId: "idle" },

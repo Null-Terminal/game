@@ -3,9 +3,9 @@ import { ElevatorPanelObject } from "#game/platforms/elevator-object/panel-objec
 import { foldDeps } from "#/utils/fold-deps";
 
 const _ = await foldDeps({
-  cabin: import("#/sprites/platforms/elevator/cabin"),
-  floor: import("#/sprites/platforms/elevator/floor"),
-  panel: import("#/sprites/platforms/elevator/panel")
+  cabin: import("#game/sprites/platforms/elevator/cabin"),
+  floor: import("#game/sprites/platforms/elevator/floor"),
+  panel: import("#game/sprites/platforms/elevator/panel")
 });
 
 export const industrialElevator = {

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { alias, f32, tuple, u8, u16 } from "#/bindata";
+import { alias, f32, tuple, u8, u16 } from "#lib/bindata";
 
 describe("binary tuples", () => {
   it("assigns named fields and offsets in bytes and typed-array units", () => {

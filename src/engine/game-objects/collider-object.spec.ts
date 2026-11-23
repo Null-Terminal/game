@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AnimationDefinition } from "#/animation-definition";
-import { EventEmitter, handler } from "#/event-emitter";
+import { AnimationDefinition } from "#lib/animation-definition";
+import { EventEmitter, handler } from "#lib/event-emitter";
 
 import { LoadedAnimation } from "#engine/animation";
 import { World, type Game } from "#engine/game";

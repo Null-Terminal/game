@@ -1,5 +1,5 @@
 import { SpriteEditor } from "#/sprite-editor";
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 
 import { AnimationParametersForm } from "#sprite-editor/animation-parameters-form";
 

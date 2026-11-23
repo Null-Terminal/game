@@ -1,4 +1,4 @@
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 
 import { LoadedAnimation } from "#engine/animation";
 

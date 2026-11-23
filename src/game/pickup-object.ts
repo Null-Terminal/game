@@ -7,8 +7,8 @@ import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#e
 
 import { PersonObject } from "#game/person-object";
 
-import { fuelCanister } from "#/sprites/interactables/fuel-canister";
-import { medkit } from "#/sprites/interactables/medkit";
+import { fuelCanister } from "#game/sprites/interactables/fuel-canister";
+import { medkit } from "#game/sprites/interactables/medkit";
 
 export type PickupKind = keyof typeof PickupObject.kinds;
 export type PickupOptions = GameObjectOptions<DefaultGameObjectOptions & { kind: PickupKind }>;

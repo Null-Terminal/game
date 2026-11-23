@@ -1,9 +1,9 @@
-import { cast } from "#/tstools";
+import { cast } from "#/utils/cast";
 
-import type { BinType } from "#/bindata/bintype";
-import type { Array } from "#/bindata/array/types";
+import type { BinType } from "#lib/bindata/bintype";
+import type { Array } from "#lib/bindata/array/types";
 
-export type { Array } from "#/bindata/array/types";
+export type { Array } from "#lib/bindata/array/types";
 
 export function array<const N extends string, const L extends number, E extends BinType>(
   name: N,

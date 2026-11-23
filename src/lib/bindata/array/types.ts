@@ -1,4 +1,4 @@
-import type { BinType } from "#/bindata/bintype";
+import type { BinType } from "#lib/bindata/bintype";
 
 export interface Array<
   Name extends string = string,

@@ -1,5 +1,5 @@
-import { WorkerClient, WorkerPool } from "#/utils/worker-pool";
-import { createEchoWorkerUrl, type EchoRequest } from "#/utils/worker-pool/tests/echo-worker";
+import { WorkerClient, WorkerPool } from "#lib/worker-pool";
+import { createEchoWorkerUrl, type EchoRequest } from "#lib/worker-pool/tests/echo-worker";
 
 export async function reuseWorker() {
   const url = createEchoWorkerUrl();

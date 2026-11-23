@@ -1,5 +1,5 @@
-import type { EventChannel } from "#/event-emitter/channel";
-import type { Handler, Subscription } from "#/event-emitter/types";
+import type { EventChannel } from "#lib/event-emitter/channel";
+import type { Handler, Subscription } from "#lib/event-emitter/types";
 
 export class EventEmitter<T extends Record<string, EventChannel<any>>> {
   readonly events: Readonly<T>;

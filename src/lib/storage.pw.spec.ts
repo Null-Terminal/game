@@ -4,7 +4,7 @@ test("storage keeps collections separate", async ({ page }) => {
   await page.goto("/tests/fixture.html");
 
   const result = await page.evaluate(async () => {
-    const modulePath = "/src/storage.ts";
+    const modulePath = "/src/lib/storage.ts";
     const { IndexedDBStorage } = await import(modulePath);
     const storage = new IndexedDBStorage(`storage-test-${crypto.randomUUID()}`, 1, ["first", "second"]);
 
@@ -49,7 +49,7 @@ test("disposing while opening prevents further operations", async ({ page }) => 
   await page.goto("/tests/fixture.html");
 
   const rejected = await page.evaluate(async () => {
-    const modulePath = "/src/storage.ts";
+    const modulePath = "/src/lib/storage.ts";
     const { IndexedDBStorage } = await import(modulePath);
     const storage = new IndexedDBStorage(`storage-test-${crypto.randomUUID()}`, 1, ["items"]);
     const opening = storage.get("items", "first");

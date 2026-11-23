@@ -1,5 +1,5 @@
-import { EventEmitter, handler } from "#/event-emitter";
-import { cache } from "#decorators/cache";
+import { EventEmitter, handler } from "#lib/event-emitter";
+import { cache } from "#/utils/decorators/cache";
 import { AnimationPlayback, LoadedAnimation } from "#engine/animation";
 
 import type { Game, WorldObject } from "#engine/game";

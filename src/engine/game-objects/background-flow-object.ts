@@ -1,4 +1,4 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 import { AnimationPlayback, type LoadedAnimation } from "#engine/animation";
 
 import { ifAlive } from "#engine/game-objects/decorators";

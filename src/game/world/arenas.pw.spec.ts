@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import type * as ShaftModule from "#/sprites/platforms/elevator/shaft";
+import type * as ShaftModule from "#game/sprites/platforms/elevator/shaft";
 
 import type * as GameModule from "#engine/game";
 
@@ -66,7 +66,7 @@ test("the shaft remains visible above the elevator after the background arena lo
   }, {
     gameUrl: "/src/engine/game.ts",
     worldUrl: "/src/game/world.ts",
-    shaftUrl: "/src/sprites/platforms/elevator/shaft.ts"
+    shaftUrl: "/src/game/sprites/platforms/elevator/shaft.ts"
   });
 
   expect(visible).not.toEqual(hidden);

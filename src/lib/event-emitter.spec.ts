@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EventEmitter, handler } from "#/event-emitter";
+import { EventEmitter, handler } from "#lib/event-emitter";
 
 describe("EventEmitter", () => {
   it("removes an unordered listener by moving the last one into its place", () => {

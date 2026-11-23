@@ -1,4 +1,4 @@
-export { EventChannel, handler } from "#/event-emitter/channel";
-export { EventEmitter } from "#/event-emitter/emitter";
+export { EventChannel, handler } from "#lib/event-emitter/channel";
+export { EventEmitter } from "#lib/event-emitter/emitter";
 
-export type { EventOptions, Handler, Subscription } from "#/event-emitter/types";
+export type { EventOptions, Handler, Subscription } from "#lib/event-emitter/types";

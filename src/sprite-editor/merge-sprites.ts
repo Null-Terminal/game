@@ -1,4 +1,4 @@
-import { AnimationDefinition, type RawAnimationParameters } from "#/animation-definition";
+import { AnimationDefinition, type RawAnimationParameters } from "#lib/animation-definition";
 
 import type { Sprite } from "#sprite-editor/sprite";
 

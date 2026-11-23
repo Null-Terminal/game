@@ -1,8 +1,8 @@
-import type { TexturePacker } from "#/animation-definition/types";
-import type { Animation, AnimationParameters, SpriteDescriptor, SpriteRegion } from "#/animation-definition/types";
+import type { TexturePacker } from "#lib/animation-definition/types";
+import type { Animation, AnimationParameters, SpriteDescriptor, SpriteRegion } from "#lib/animation-definition/types";
 import { isInRange } from "#/utils/validators";
 
-export type * from "#/animation-definition/types";
+export type * from "#lib/animation-definition/types";
 
 export class AnimationDefinition {
   static fromJSON(json: string): AnimationDefinition {

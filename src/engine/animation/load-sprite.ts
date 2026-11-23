@@ -1,4 +1,4 @@
-import { WorkerClient, WorkerPool } from "#/utils/worker-pool";
+import { WorkerClient, WorkerPool } from "#lib/worker-pool";
 
 import { bakeSprite } from "#engine/animation/bake-sprite";
 import type { LoadSpriteOptions, SpriteLoadData } from "#engine/animation/types";

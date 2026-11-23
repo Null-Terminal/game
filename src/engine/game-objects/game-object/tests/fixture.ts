@@ -1,5 +1,5 @@
-import { AnimationDefinition } from "#/animation-definition";
-import { getAudioContext, type LoadedSound } from "#/audio";
+import { AnimationDefinition } from "#lib/animation-definition";
+import { getAudioContext, type LoadedSound } from "#engine/audio";
 
 import { LoadedAnimation } from "#engine/animation";
 import { Camera, Game, RenderCanvas, World } from "#engine/game";

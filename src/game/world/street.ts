@@ -15,13 +15,13 @@ const deps = {
   fallingPlatform: import("#game/platforms/falling-platform-object"),
   platform: import("#game/platforms/platform-object"),
 
-  terminalStand: import("#/sprites/interactables/terminal-stand"),
+  terminalStand: import("#game/sprites/interactables/terminal-stand"),
 
-  barrel: import("#/sprites/platforms/barrel"),
-  elevatorShaft: import("#/sprites/platforms/elevator/shaft"),
-  hoverDisc: import("#/sprites/platforms/hover-disc"),
-  scaffoldFrame: import("#/sprites/platforms/scaffold-frame"),
-  scaffoldPlank: import("#/sprites/platforms/scaffold-plank")
+  barrel: import("#game/sprites/platforms/barrel"),
+  elevatorShaft: import("#game/sprites/platforms/elevator/shaft"),
+  hoverDisc: import("#game/sprites/platforms/hover-disc"),
+  scaffoldFrame: import("#game/sprites/platforms/scaffold-frame"),
+  scaffoldPlank: import("#game/sprites/platforms/scaffold-plank")
 };
 
 export async function createStreet(): Promise<WorldObjects> {
