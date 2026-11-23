@@ -215,18 +215,16 @@ test("animation listeners do not survive pool reuse", async ({ page }) => {
     const event = first.object.animation.events.test;
 
     event.on(() => {});
-    const subscribed = event instanceof Set ? event.size : event.length;
+    const subscribed = event.size;
 
     pool.delete(...first.pointer);
 
     const second = createAnimatedProbe();
     const result = {
       subscribed,
-      removed: event instanceof Set ? event.size : event.length,
+      removed: event.size,
       reused: second.object === first.object,
-      afterReuse: second.object.animation.events.test instanceof Set ?
-        second.object.animation.events.test.size :
-        second.object.animation.events.test.length
+      afterReuse: second.object.animation.events.test.size
     };
 
     destroy();
@@ -377,7 +375,7 @@ test("object sound follows object and canvas pauses, then stops on destroy", asy
     try {
       const { object } = createProbe();
       const animation = createSoundAnimation(buffer);
-      const pauseListeners = () => [object.status.events.pauseChange.length, canvas.events.pauseChange.length];
+      const pauseListeners = () => [object.status.events.pauseChange.size, canvas.events.pauseChange.size];
       const originalSound = object.sound;
 
       originalSound.play(animation.sounds.default);

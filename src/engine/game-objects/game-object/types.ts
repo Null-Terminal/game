@@ -1,5 +1,5 @@
 import type { LoadedSound } from "#/audio";
-import type { Handlers } from "#/event-emitter";
+import type { EventChannel } from "#/event-emitter";
 
 import type { FrameEffects, LoadedAnimation } from "#engine/animation";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
@@ -58,7 +58,7 @@ export type AnimationSource = (go: GameObject) => AnimationInstance;
 export type PlayableAnimation = LoadedAnimation | AnimationSource;
 
 export type Animations = Record<string, PlayableAnimation>;
-export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
+export type AnimationEvents<T extends Animations> = { [K in keyof T]: EventChannel<string> };
 
 export type AbstractGameObjectCtor = abstract new (...args: any[]) => GameObject;
 

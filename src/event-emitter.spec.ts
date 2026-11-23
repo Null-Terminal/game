@@ -76,4 +76,21 @@ describe("EventEmitter", () => {
     emitter.events.frame.emit();
     expect(calls).toBe(1);
   });
+
+  it("shares subscriptions between event methods and EventEmitter methods", () => {
+    const frame = handler<number>();
+    const emitter = new EventEmitter({ frame });
+    const calls: number[] = [];
+
+    frame.on((value) => calls.push(value));
+    emitter.on(frame, (value) => calls.push(value * 10));
+    emitter.once(frame, (value) => calls.push(value * 100));
+
+    emitter.emit(frame, 2);
+    frame.emit(3);
+    emitter.off(frame);
+    frame.emit(4);
+
+    expect(calls).toEqual([2, 20, 200, 3, 30]);
+  });
 });

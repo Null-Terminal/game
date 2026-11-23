@@ -1,4 +1,4 @@
-import type { BoundHandlers, Handlers } from "#/event-emitter";
+import type { EventChannel } from "#/event-emitter";
 
 import { AnimationLayer, LoadedAnimation, type SpriteAnchorX, type SpriteAnchorY } from "#engine/animation";
 import type { RenderPayload } from "#engine/game";
@@ -93,16 +93,16 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   }
 
   @ifAlive
-  on<E extends BoundHandlers<Handlers<RenderPayload>>>(
-    event: E,
-    listener: (payload: E["PayloadType"], elapsed: number) => void
+  on(
+    event: EventChannel<RenderPayload>,
+    listener: (payload: RenderPayload, elapsed: number) => void
   ): Destructor {
     const { go } = this;
 
     let elapsed = 0;
     let lastNow = 0;
 
-    const handle = (frame: E["PayloadType"]) => {
+    const handle = (frame: RenderPayload) => {
       if (lastNow !== 0 && !go.status.paused) {
         elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
       }

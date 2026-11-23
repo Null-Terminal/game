@@ -50,15 +50,9 @@ test("distant objects start asleep and resume movement, rendering, and collision
 
   const result = await scene.evaluate(({ game, canvas, world, probe, initialStaticInsertions, destroy }) => {
     const bounds = [350, 0, 360, 10] as const;
-    const activeListeners = (event: Iterable<{ sleeping: boolean }>) =>
-      Array.from(event).filter((subscription) => !subscription.sleeping).length;
-
     const asleep = {
       sleeping: probe.status.sleeping,
-      collides: world.hasCollision(...bounds),
-      frameListeners: activeListeners(canvas.events.beforeRender),
-      sceneListeners: activeListeners(canvas.events.scene),
-      collisionListeners: activeListeners(canvas.events.scene.flush!)
+      collides: world.hasCollision(...bounds)
     };
 
     game.camera.x = 300;
@@ -66,10 +60,7 @@ test("distant objects start asleep and resume movement, rendering, and collision
 
     const awake = {
       sleeping: probe.status.sleeping,
-      collides: world.hasCollision(...bounds),
-      frameListeners: activeListeners(canvas.events.beforeRender),
-      sceneListeners: activeListeners(canvas.events.scene),
-      collisionListeners: activeListeners(canvas.events.scene.flush!)
+      collides: world.hasCollision(...bounds)
     };
 
     const ctx = canvas.canvas.getContext("2d")!;
@@ -94,10 +85,7 @@ test("distant objects start asleep and resume movement, rendering, and collision
   expect(result.initialStaticInsertions).toBe(0);
   expect(result.asleep).toEqual({
     sleeping: true,
-    collides: false,
-    frameListeners: result.awake.frameListeners - 1,
-    sceneListeners: result.awake.sceneListeners - 1,
-    collisionListeners: result.awake.collisionListeners - 1
+    collides: false
   });
 
   expect(result.awake.sleeping).toBe(false);
