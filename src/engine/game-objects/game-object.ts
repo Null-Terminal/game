@@ -146,8 +146,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
-    super();
-    this.destroyed = true;
+    super(true);
     registerPositionState(this);
   }
 
@@ -183,7 +182,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
   @ifDead
   create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
-    this.destroyed = false;
+    this.revive();
     this.status.reset();
 
     this.game = game;

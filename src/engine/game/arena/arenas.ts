@@ -1,5 +1,6 @@
 import { Arena } from "#engine/game/arena/arena";
 import { isPositive } from "#/utils/validators";
+import { Destroyable } from "#lib/destroyable";
 
 import type { World } from "#engine/game/world";
 import type { BaseGameSettings } from "#engine/game";
@@ -12,7 +13,7 @@ type PendingCommit = {
   reject(reason?: unknown): void;
 };
 
-export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.ArenaSource>> implements Iterable<Arena> {
+export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.ArenaSource>> extends Destroyable implements Iterable<Arena> {
   static declare<const T extends Record<string, t.ArenaSource>>(
     sources: T,
     opts?: t.ArenasOptions
@@ -82,6 +83,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
     refsToPreload: Set<t.ArenaRef>,
     opts?: t.ArenasOptions
   ) {
+    super();
     this.refs = refs;
 
     this.options = {
@@ -96,6 +98,8 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
         this.#unloadSettings = world.game.settings.get("arenaUnload");
       }
     });
+
+    this.onDestroy(() => this.#cleanup());
   }
 
   [Symbol.iterator](): IterableIterator<Arena> {
@@ -218,7 +222,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
     }
   }
 
-  destroy() {
+  #cleanup() {
     this.#settingsSubscription.dispose();
     cancelAnimationFrame(this.#fallbackFrame);
 

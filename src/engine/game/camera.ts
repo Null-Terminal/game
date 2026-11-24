@@ -1,4 +1,4 @@
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
 import { isInRange } from "#/utils/validators";
 
 import type { Game } from "#engine/game";
@@ -8,7 +8,7 @@ import type { CameraDeadZone, CameraOptions } from "#engine/game/camera/types";
 
 export type * from "#engine/game/camera/types";
 
-export class Camera extends Disposable {
+export class Camera extends Destroyable {
   static readonly DEFAULT_SMOOTHNESS = 0.3;
 
   static readonly DEFAULT_DEAD_ZONE: CameraDeadZone = {
@@ -65,7 +65,7 @@ export class Camera extends Disposable {
       this.update();
     });
 
-    this.onDestroy(() => subscription.dispose());
+    this.onDestroy(subscription);
   }
 
   bindTo(target: PhysicsObject): Destructor {

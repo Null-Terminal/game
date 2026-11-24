@@ -1,4 +1,5 @@
 import { isPositive } from "#/utils/validators";
+import { Destroyable } from "#lib/destroyable";
 
 import type { WorkerClass, WorkerJob, WorkerPoolOptions, WorkerRequest, WorkerResponse, WorkerSlot } from "#lib/worker-pool/types";
 
@@ -12,16 +13,17 @@ export abstract class WorkerClient<Request, Result> {
   abstract readonly worker: Worker;
 }
 
-export class WorkerPool {
+export class WorkerPool extends Destroyable {
   readonly #slots: WorkerSlot[] = [];
   readonly #queue: WorkerJob[] = [];
   readonly #maxWorkers: number;
   readonly #idleTimeout: number | null;
 
   #nextId = 0;
-  #destroyed = false;
 
   constructor(maxWorkers: number, opts: WorkerPoolOptions = {}) {
+    super();
+
     if (!Number.isInteger(maxWorkers) || maxWorkers < 1) {
       throw new RangeError("Worker count must be a positive integer");
     }
@@ -35,6 +37,22 @@ export class WorkerPool {
     const cores = typeof navigator === "undefined" ? maxWorkers : navigator.hardwareConcurrency;
     this.#maxWorkers = Math.min(maxWorkers, Number.isInteger(cores) && cores > 0 ? cores : maxWorkers);
     this.#idleTimeout = idleTimeout;
+
+    this.onDestroy(() => {
+      for (const job of this.#queue) {
+        job.reject(new Error("Worker pool is destroyed"));
+      }
+
+      this.#queue.length = 0;
+
+      for (const slot of this.#slots) {
+        slot.job?.reject(new Error("Worker pool is destroyed"));
+        this.#clearIdleTimer(slot);
+        slot.worker.terminate();
+      }
+
+      this.#slots.length = 0;
+    });
   }
 
   run<Request, Result>(
@@ -42,7 +60,7 @@ export class WorkerPool {
     payload: Request,
     transfer: Transferable[] = []
   ): Promise<Result> {
-    if (this.#destroyed) {
+    if (this.destroyed) {
       return Promise.reject(new Error("Worker pool is destroyed"));
     }
 
@@ -58,24 +76,6 @@ export class WorkerPool {
 
       this.#dispatch();
     });
-  }
-
-  destroy() {
-    this.#destroyed = true;
-
-    for (const job of this.#queue) {
-      job.reject(new Error("Worker pool is destroyed"));
-    }
-
-    this.#queue.length = 0;
-
-    for (const slot of this.#slots) {
-      slot.job?.reject(new Error("Worker pool is destroyed"));
-      this.#clearIdleTimer(slot);
-      slot.worker.terminate();
-    }
-
-    this.#slots.length = 0;
   }
 
   #dispatch() {
@@ -187,7 +187,7 @@ export class WorkerPool {
   }
 
   #scheduleIdle(slot: WorkerSlot) {
-    if (this.#idleTimeout === null || this.#destroyed || slot.job != null || !this.#slots.includes(slot)) {
+    if (this.#idleTimeout === null || this.destroyed || slot.job != null || !this.#slots.includes(slot)) {
       return;
     }
 

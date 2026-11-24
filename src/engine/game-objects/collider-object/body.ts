@@ -74,6 +74,8 @@ export class CollisionBody extends ServantObject<ColliderObject> {
       throw new RangeError(`${go.name}.create: collision needs width and height`);
     }
 
+    this.revive();
+
     this.#lastX = go.x;
     this.#lastY = go.y;
 
@@ -172,7 +174,12 @@ export class CollisionBody extends ServantObject<ColliderObject> {
     }
   }
 
-  destroy() {
+  override destroy() {
+    if (this.destroyed) {
+      return;
+    }
+
+    super.destroy();
     this.#removeStatic();
     this.#shapes.length = 0;
     this.#entries.length = 0;

@@ -1,3 +1,4 @@
+import { Destroyable } from "#lib/destroyable";
 import type { World, WorldObject } from "#engine/game/world";
 
 import type { GameObject } from "#engine/game-objects";
@@ -16,7 +17,7 @@ enum State {
   Destroyed,
 }
 
-export class Arena {
+export class Arena extends Destroyable {
   static readonly State = State;
 
   static ref<T extends ArenaSource>(source: T, name?: string): ArenaRef<T> {
@@ -29,19 +30,15 @@ export class Arena {
   readonly definition: ArenaDefinition;
 
   get state() {
-    return this.#state;
+    return this.destroyed ? State.Destroyed : this.#state;
   }
 
   get loaded() {
-    return this.#state === State.Loaded;
+    return !this.destroyed && this.#state === State.Loaded;
   }
 
   get unloaded() {
-    return this.#state === State.Unloaded;
-  }
-
-  get destroyed() {
-    return this.#state === State.Destroyed;
+    return !this.destroyed && this.#state === State.Unloaded;
   }
 
   get size() {
@@ -57,6 +54,8 @@ export class Arena {
   #snapshot: ArenaSnapshot;
 
   constructor(world: World, definition: ArenaDefinition, snapshot: ArenaSnapshot = { version: 1, objects: {} }) {
+    super();
+
     if (snapshot.version !== 1) {
       throw new RangeError(`${this.constructor.name}: unsupported snapshot version`);
     }
@@ -64,6 +63,16 @@ export class Arena {
     this.world = world;
     this.definition = definition;
     this.#snapshot = structuredClone(snapshot);
+
+    this.onDestroy(() => {
+      this.#snapshot = { version: 1, objects: {} };
+
+      try {
+        this.#destroyObjects();
+      } finally {
+        this.#stateSlots.clear();
+      }
+    });
   }
 
   isFarFromViewport(distanceScreens: number): boolean {
@@ -156,22 +165,6 @@ export class Arena {
 
     this.#snapshot = this.serialize();
     this.#state = State.Unloaded;
-
-    try {
-      this.#destroyObjects();
-
-    } finally {
-      this.#stateSlots.clear();
-    }
-  }
-
-  destroy() {
-    if (this.destroyed) {
-      return;
-    }
-
-    this.#state = State.Destroyed;
-    this.#snapshot = { version: 1, objects: {} };
 
     try {
       this.#destroyObjects();

@@ -2,7 +2,7 @@ import type { WebGLCanvasContext } from "#engine/rendering/webgl/context";
 
 export type RenderContext = CanvasRenderingContext2D | WebGLCanvasContext;
 
-export interface RenderStrategy {
+export interface RenderStrategy extends Disposable {
   readonly context: RenderContext;
   readonly textureStats?: WebGLCanvasContext["textureStats"];
   destroy(): void;

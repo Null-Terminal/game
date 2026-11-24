@@ -1,22 +1,19 @@
-export abstract class Handlers<Parent> {
+import { Destroyable } from "#lib/destroyable";
+
+export abstract class Handlers<Parent> extends Destroyable {
   protected readonly parent: Parent;
 
   readonly attr: string = "action";
 
-  #destroyed = false;
-
   protected constructor(parent: Parent) {
+    super();
     this.parent = parent;
 
     queueMicrotask(() => {
-      if (!this.#destroyed) {
+      if (!this.destroyed) {
         this.initHandlers();
       }
     });
-  }
-
-  destroy() {
-    this.#destroyed = true;
   }
 
   protected abstract initHandlers(): void;

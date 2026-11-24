@@ -1,6 +1,6 @@
 import { cast } from "#/utils/cast";
 import { LoadedAnimation } from "#engine/animation";
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
 
 import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
@@ -16,7 +16,7 @@ export type * from "#engine/game/arena";
 
 export { Arena, Arenas } from "#engine/game/arena";
 
-export class World extends Disposable {
+export class World extends Destroyable {
   static of<const T extends [new (...args: any[]) => GameObject, object?][]>(entries: {
     [I in keyof T]: T[I] extends [
         infer C extends new (...args: any[]) => GameObject,
@@ -73,7 +73,7 @@ export class World extends Disposable {
       this.arenas.checkAutoUnload(now);
     });
 
-    this.onDestroy(() => subscription.dispose());
+    this.onDestroy(subscription);
 
     for (const [go, opts] of this.options.persistentObjects) {
       this.createObject(go, opts);

@@ -1,7 +1,7 @@
 import { cache } from "#/utils/decorators/cache";
 import { EventEmitter, handler } from "#lib/event-emitter";
 
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
 import { RenderCanvasInspector } from "#engine/game/render-canvas/inspector";
 import { Canvas2DStrategy, WebGLStrategy, WebGLUnavailableError } from "#engine/rendering";
 
@@ -10,7 +10,7 @@ import type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-can
 
 export type * from "#engine/game/render-canvas/types";
 
-export class RenderCanvas extends Disposable {
+export class RenderCanvas extends Destroyable {
   readonly canvas: HTMLCanvasElement;
   readonly options: Required<RenderCanvasOptions>;
 

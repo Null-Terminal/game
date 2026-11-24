@@ -1,15 +1,17 @@
 import { getAudioContext } from "#engine/audio";
+import { Destroyable } from "#lib/destroyable";
 
 import type { Subscription } from "#lib/event-emitter";
 import type { Game } from "#engine/game";
 
-export class GameAudio {
+export class GameAudio extends Destroyable {
   readonly #master: GainNode;
   readonly #effects: GainNode;
   readonly #music: GainNode;
   readonly #subscription: Subscription;
 
   constructor(game: Game) {
+    super();
     const context = getAudioContext();
 
     this.#master = context.createGain();
@@ -34,16 +36,17 @@ export class GameAudio {
     });
 
     sync();
+
+    this.onDestroy(() => {
+      this.#subscription.dispose();
+      this.#effects.disconnect();
+      this.#music.disconnect();
+      this.#master.disconnect();
+    });
   }
 
   output(category: "effects" | "music" = "effects"): AudioNode {
     return category === "music" ? this.#music : this.#effects;
   }
 
-  destroy() {
-    this.#subscription.dispose();
-    this.#effects.disconnect();
-    this.#music.disconnect();
-    this.#master.disconnect();
-  }
 }

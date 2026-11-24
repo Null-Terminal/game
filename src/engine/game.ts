@@ -1,7 +1,7 @@
 import { cache } from "#/utils/decorators/cache";
 import { EventEmitter, handler } from "#lib/event-emitter";
 
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
 import { GameAudio } from "#engine/game/audio";
 import { GameStatus } from "#engine/game/game-status";
 import { GameSettings } from "#engine/game/settings";
@@ -28,7 +28,7 @@ export type * from "#engine/game/world";
 export { RenderCanvas } from "#engine/game/render-canvas";
 export type * from "#engine/game/render-canvas";
 
-export class Game<T extends object = object> extends Disposable {
+export class Game<T extends object = object> extends Destroyable {
   static camera(camera: Camera) {
     return {
       create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game(canvas, camera, new GameSettings({}), opts),

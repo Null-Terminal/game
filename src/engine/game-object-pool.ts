@@ -1,3 +1,4 @@
+import { Destroyable } from "#lib/destroyable";
 import type { CreateParameters, GameObject, StateValue } from "#engine/game-objects";
 
 import { Arena } from "#engine/game/arena";
@@ -7,12 +8,24 @@ import type * as t from "#engine/game-object-pool/types";
 
 export type * from "#engine/game-object-pool/types";
 
-export class GameObjectPool {
+export class GameObjectPool extends Destroyable {
   readonly objects: Record<number, t.GameObjectStore> = {};
   readonly #world: World;
 
   constructor(world: World) {
+    super();
+
     this.#world = world;
+
+    this.onDestroy(() => {
+      for (const [kind, store] of Object.entries(this.objects)) {
+        while (store.length > 0) {
+          this.delete(Number(kind), store.length - 1);
+        }
+
+        store.buffer.length = 0;
+      }
+    });
   }
 
   has(kind: number, index: number) {
@@ -136,13 +149,4 @@ export class GameObjectPool {
     store.length = last;
   }
 
-  destroy() {
-    for (const [kind, store] of Object.entries(this.objects)) {
-      while (store.length > 0) {
-        this.delete(Number(kind), store.length - 1);
-      }
-
-      store.buffer.length = 0;
-    }
-  }
 }

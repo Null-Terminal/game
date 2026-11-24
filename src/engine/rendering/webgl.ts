@@ -1,9 +1,10 @@
+import { Destroyable } from "#lib/destroyable";
 import { WebGLCanvasContext } from "#engine/rendering/webgl/context";
 import type { RenderStrategy } from "#engine/rendering/types";
 
 export { WebGLUnavailableError } from "#engine/rendering/webgl/context";
 
-export class WebGLStrategy implements RenderStrategy {
+export class WebGLStrategy extends Destroyable implements RenderStrategy {
   readonly context: WebGLCanvasContext;
 
   get textureStats() {
@@ -11,10 +12,8 @@ export class WebGLStrategy implements RenderStrategy {
   }
 
   constructor(canvas: HTMLCanvasElement) {
+    super();
     this.context = new WebGLCanvasContext(canvas);
-  }
-
-  destroy() {
-    this.context.destroy();
+    this.onDestroy(this.context);
   }
 }

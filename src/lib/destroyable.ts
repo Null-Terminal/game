@@ -1,4 +1,6 @@
-export abstract class Disposable {
+type Cleanup = Destructor | Disposable;
+
+export abstract class Destroyable implements Disposable {
   get abortSignal() {
     return this.#abortController.signal;
   }
@@ -7,32 +9,22 @@ export abstract class Disposable {
     return this.#destroyed;
   }
 
-  protected set destroyed(value: boolean) {
-    this.#destroyed = value;
-  }
-
   #destroyed = false;
 
   readonly #destructors: Destructor[] = [];
   #abortController = new AbortController();
 
-  onDestroy<T extends Destructor>(destructor: T): T {
-    this.#destructors.push(destructor);
-    return destructor;
+  constructor(destroyed = false) {
+    this.#destroyed = destroyed;
   }
 
-  nextTick(cb: () => void): Destructor {
-    let executed = false;
+  protected revive() {
+    this.#destroyed = false;
+  }
 
-    queueMicrotask(() => {
-      if (!executed) {
-        cb();
-      }
-    });
-
-    return this.onDestroy(() => {
-      executed = true;
-    });
+  onDestroy<T extends Cleanup>(cleanup: T): T {
+    this.#destructors.push(typeof cleanup === "function" ? cleanup : () => cleanup[Symbol.dispose]());
+    return cleanup;
   }
 
   destroy() {
@@ -40,7 +32,7 @@ export abstract class Disposable {
       return;
     }
 
-    this.destroyed = true;
+    this.#destroyed = true;
 
     const destructors = this.#destructors.splice(0);
     const errors: unknown[] = [];

@@ -25,6 +25,46 @@ test("reusing an object resets its position and size", async ({ page }) => {
   expect(result).toEqual({ reused: true, geometry: [0, 0, 0, 0] });
 });
 
+test("pool reuse starts a fresh destruction lifecycle", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ pool, createProbe, destroy }) => {
+    const first = createProbe();
+    const firstSignal = first.object.abortSignal;
+    let cleanups = 0;
+
+    first.object.onDestroy(() => cleanups++);
+    pool.delete(...first.pointer);
+
+    const second = createProbe();
+    const secondSignal = second.object.abortSignal;
+    const afterReuse = cleanups;
+    const signalRenewed = firstSignal !== secondSignal && firstSignal.aborted && !secondSignal.aborted;
+
+    second.object.onDestroy(() => cleanups++);
+    pool.delete(...second.pointer);
+
+    const result = {
+      reused: second.object === first.object,
+      afterReuse,
+      signalRenewed,
+      cleanups,
+      secondSignalAborted: secondSignal.aborted
+    };
+
+    destroy();
+    return result;
+  });
+
+  expect(result).toEqual({
+    reused: true,
+    afterReuse: 1,
+    signalRenewed: true,
+    cleanups: 2,
+    secondSignalAborted: true
+  });
+});
+
 test("destroying an object removes its movement subscription", async ({ page }) => {
   const scene = await createScene(page);
 

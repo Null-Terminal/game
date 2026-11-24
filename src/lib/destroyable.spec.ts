@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
 
-class Resource extends Disposable {}
+class Resource extends Destroyable {}
 
-describe("Disposable", () => {
+describe("Destroyable", () => {
   it("runs destructors in reverse registration order only once", () => {
     const resource = new Resource();
     const order: string[] = [];
@@ -17,6 +17,19 @@ describe("Disposable", () => {
 
     expect(order).toEqual(["second", "first"]);
     expect(resource.destroyed).toBe(true);
+  });
+
+  it("disposes registered objects", () => {
+    const resource = new Resource();
+    const dispose = vi.fn();
+    const subscription = { [Symbol.dispose]: dispose };
+
+    expect(resource.onDestroy(subscription)).toBe(subscription);
+
+    resource.destroy();
+    resource.destroy();
+
+    expect(dispose).toHaveBeenCalledTimes(1);
   });
 
   it("aborts the current signal when destroyed", () => {
@@ -72,17 +85,4 @@ describe("Disposable", () => {
     expect(() => resource.destroy()).toThrow(failure);
   });
 
-  it("runs a next-tick callback unless the resource was destroyed first", async () => {
-    const live = new Resource();
-    const destroyed = new Resource();
-    const callback = vi.fn();
-
-    live.nextTick(callback);
-    destroyed.nextTick(callback);
-    destroyed.destroy();
-
-    await Promise.resolve();
-
-    expect(callback).toHaveBeenCalledTimes(1);
-  });
 });

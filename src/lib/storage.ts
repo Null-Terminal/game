@@ -1,24 +1,30 @@
 import { promiseStore, requestPromise, transactionPromise } from "#lib/storage/promises";
+import { Destroyable } from "#lib/destroyable";
 import type { Storage } from "#lib/storage/types";
 
 export type { Storage } from "#lib/storage/types";
 
-export class IndexedDBStorage<S extends string> implements Storage<S> {
+export class IndexedDBStorage<S extends string> extends Destroyable implements Storage<S> {
   readonly #databaseName: string;
   readonly #version: number;
   readonly #stores: readonly S[];
 
   #database: Promise<IDBDatabase> | null = null;
-  #destroyed = false;
-
-  get destroyed() {
-    return this.#destroyed;
-  }
-
   constructor(databaseName: string, version: number, stores: readonly S[]) {
+    super();
+
     this.#databaseName = databaseName;
     this.#version = version;
     this.#stores = stores;
+
+    this.onDestroy(() => {
+      const pending = this.#database;
+      this.#database = null;
+
+      if (pending != null) {
+        void pending.then((database) => database.close(), () => {});
+      }
+    });
   }
 
   async get<T>(store: S, key: IDBValidKey): Promise<T | undefined> {
@@ -53,33 +59,14 @@ export class IndexedDBStorage<S extends string> implements Storage<S> {
     return promiseStore(database.transaction(store, "readonly").objectStore(store)).getAllKeys();
   }
 
-  destroy() {
-    if (this.#destroyed) {
-      return;
-    }
-
-    this.#destroyed = true;
-
-    const pending = this.#database;
-    this.#database = null;
-
-    if (pending != null) {
-      void pending.then((database) => database.close(), () => {});
-    }
-  }
-
-  [Symbol.dispose]() {
-    this.destroy();
-  }
-
   async #getDatabase(): Promise<IDBDatabase> {
-    if (this.#destroyed) {
+    if (this.destroyed) {
       throw new Error(`${this.constructor.name}: storage was destroyed`);
     }
 
     const database = await this.#open();
 
-    if (this.#destroyed) {
+    if (this.destroyed) {
       throw new Error(`${this.constructor.name}: storage was destroyed`);
     }
 

@@ -1,3 +1,4 @@
+import { Destroyable } from "#lib/destroyable";
 import type { Sprite } from "#sprite-editor/sprite";
 
 export interface PointerPosition {
@@ -5,7 +6,7 @@ export interface PointerPosition {
   y: number;
 }
 
-export class SpriteDragger {
+export class SpriteDragger extends Destroyable {
   readonly #sprite: Sprite;
 
   #offsetX = 0;
@@ -13,15 +14,17 @@ export class SpriteDragger {
   #dragging = false;
 
   constructor(sprite: Sprite) {
+    super();
+
     this.#sprite = sprite;
     this.#makeSpriteDraggable();
-  }
 
-  destroy() {
-    this.#sprite.removeEventListener("keydown", this.#onArrowNavigation);
-    this.#sprite.canvas.removeEventListener("pointerdown", this.#onDragSprite);
-    window.removeEventListener("pointermove", this.#onDraggingSprite);
-    window.removeEventListener("pointerup", this.#onDropSprite);
+    this.onDestroy(() => {
+      this.#sprite.removeEventListener("keydown", this.#onArrowNavigation);
+      this.#sprite.canvas.removeEventListener("pointerdown", this.#onDragSprite);
+      window.removeEventListener("pointermove", this.#onDraggingSprite);
+      window.removeEventListener("pointerup", this.#onDropSprite);
+    });
   }
 
   #makeSpriteDraggable() {

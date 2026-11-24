@@ -1,11 +1,12 @@
 import { isPositive } from "#/utils/validators";
+import { Destroyable } from "#lib/destroyable";
 
 import type { Subscription } from "#lib/event-emitter";
 import type { Game, SleepSettings } from "#engine/game";
 import type { GameObject } from "#engine/game-objects";
 import type { GameSleepOptions } from "#engine/game/sleep/types";
 
-export class GameSleep {
+export class GameSleep extends Destroyable {
   readonly #game: Game;
 
   readonly #options: Required<GameSleepOptions>;
@@ -17,6 +18,7 @@ export class GameSleep {
   #lastCheckAt: number | null = null;
 
   constructor(game: Game) {
+    super();
     this.#game = game;
 
     const {
@@ -39,6 +41,11 @@ export class GameSleep {
     });
 
     this.#syncSubscription();
+
+    this.onDestroy(() => {
+      this.#settingsSubscription.dispose();
+      this.#subscription?.dispose();
+    });
   }
 
   #syncSubscription() {
@@ -122,8 +129,4 @@ export class GameSleep {
     }
   }
 
-  destroy() {
-    this.#settingsSubscription.dispose();
-    this.#subscription?.dispose();
-  }
 }

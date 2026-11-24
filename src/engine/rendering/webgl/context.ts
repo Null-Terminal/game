@@ -1,3 +1,4 @@
+import { Destroyable } from "#lib/destroyable";
 import { CanvasRasterCache } from "#engine/rendering/webgl/raster-cache";
 import { createWebGLProgram, type Uniforms } from "#engine/rendering/webgl/program";
 import { WebGLTextureCache } from "#engine/rendering/webgl/texture-cache";
@@ -5,7 +6,7 @@ import type { ContextState, Matrix, Rect, RGBAColor } from "#engine/rendering/we
 
 export class WebGLUnavailableError extends Error {}
 
-export class WebGLCanvasContext {
+export class WebGLCanvasContext extends Destroyable {
   readonly canvas: HTMLCanvasElement;
 
   globalAlpha = 1;
@@ -56,6 +57,8 @@ export class WebGLCanvasContext {
   };
 
   constructor(canvas: HTMLCanvasElement) {
+    super();
+
     this.canvas = canvas;
 
     const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, premultipliedAlpha: true });
@@ -71,6 +74,15 @@ export class WebGLCanvasContext {
 
     canvas.addEventListener("webglcontextlost", this.#onContextLost);
     canvas.addEventListener("webglcontextrestored", this.#onContextRestored);
+
+    this.onDestroy(() => {
+      this.canvas.removeEventListener("webglcontextlost", this.#onContextLost);
+      this.canvas.removeEventListener("webglcontextrestored", this.#onContextRestored);
+      this.#raster.destroy();
+      this.#textures.clear();
+      this.#gl.deleteProgram(this.#program);
+      this.#gl.deleteBuffer(this.#buffer);
+    });
   }
 
   save() {
@@ -206,15 +218,6 @@ export class WebGLCanvasContext {
   fillText(text: string, x: number, y: number) {
     const { image, ascent } = this.#raster.textImage(text, this.font, this.fillStyle);
     this.drawImage(image, x - 1, y - ascent - 1);
-  }
-
-  destroy() {
-    this.canvas.removeEventListener("webglcontextlost", this.#onContextLost);
-    this.canvas.removeEventListener("webglcontextrestored", this.#onContextRestored);
-    this.#raster.destroy();
-    this.#textures.clear();
-    this.#gl.deleteProgram(this.#program);
-    this.#gl.deleteBuffer(this.#buffer);
   }
 
   clearTextures() {

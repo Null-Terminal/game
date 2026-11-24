@@ -1,3 +1,4 @@
+import { Destroyable } from "#lib/destroyable";
 import type { RGBAColor } from "#engine/rendering/webgl/types";
 
 interface TextEntry {
@@ -7,7 +8,7 @@ interface TextEntry {
 
 const MAX_TEXT_ENTRIES = 128;
 
-export class CanvasRasterCache {
+export class CanvasRasterCache extends Destroyable {
   readonly #canvas = document.createElement("canvas");
   readonly #ctx = this.#canvas.getContext("2d", { willReadFrequently: true })!;
 
@@ -16,7 +17,19 @@ export class CanvasRasterCache {
   readonly #text = new Map<string, TextEntry>();
 
   constructor(releaseTexture: (image: ImageBitmap) => void) {
+    super();
+
     this.#releaseTexture = releaseTexture;
+
+    this.onDestroy(() => {
+      for (const { image } of this.#text.values()) {
+        this.#releaseTexture(image);
+        image.close();
+      }
+
+      this.#text.clear();
+      this.#colors.clear();
+    });
   }
 
   color(value: string): RGBAColor {
@@ -81,13 +94,4 @@ export class CanvasRasterCache {
     return entry;
   }
 
-  destroy() {
-    for (const { image } of this.#text.values()) {
-      this.#releaseTexture(image);
-      image.close();
-    }
-
-    this.#text.clear();
-    this.#colors.clear();
-  }
 }
