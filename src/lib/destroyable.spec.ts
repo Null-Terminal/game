@@ -32,6 +32,14 @@ describe("Destroyable", () => {
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
+  it("ignores null and undefined cleanups", () => {
+    const resource = new Resource();
+
+    expect(resource.onDestroy(null)).toBeNull();
+    expect(resource.onDestroy(undefined)).toBeUndefined();
+    expect(() => resource.destroy()).not.toThrow();
+  });
+
   it("aborts the current signal when destroyed", () => {
     const resource = new Resource();
     const signal = resource.abortSignal;

@@ -22,7 +22,11 @@ export abstract class Destroyable implements Disposable {
     this.#destroyed = false;
   }
 
-  onDestroy<T extends Cleanup>(cleanup: T): T {
+  onDestroy<T extends Cleanup | null | undefined>(cleanup: T): T {
+    if (cleanup == null) {
+      return cleanup;
+    }
+
     this.#destructors.push(typeof cleanup === "function" ? cleanup : () => cleanup[Symbol.dispose]());
     return cleanup;
   }
