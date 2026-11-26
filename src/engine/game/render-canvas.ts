@@ -4,8 +4,8 @@ import { EventEmitter, handler } from "#lib/event-emitter";
 import { Destroyable } from "#lib/destroyable";
 import { RenderCanvasInspector } from "#engine/game/render-canvas/inspector";
 import { Canvas2DStrategy, WebGLStrategy, WebGLUnavailableError } from "#engine/rendering";
-
 import type { RenderContext, RenderStrategy } from "#engine/rendering";
+
 import type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas/types";
 
 export type * from "#engine/game/render-canvas/types";

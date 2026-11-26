@@ -13,14 +13,13 @@ import { KindedObject } from "#engine/game-objects/kinded-object";
 
 import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
 import { Movement } from "#engine/game-objects/game-object/movement";
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectRender, type BitmapRenderPayload } from "#engine/game-objects/game-object/render";
 import { GameObjectSound } from "#engine/game-objects/game-object/sound";
 import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 import { GameObjectState, type StateValue } from "#engine/game-objects/game-object/state";
 import { registerPositionState } from "#engine/game-objects/game-object/state/position";
 
 import type * as go from "#engine/game-objects/game-object/types";
-import type { BitmapRenderPayload } from "#engine/game-objects/game-object/render";
 
 export type * from "#engine/game-objects/game-object/types";
 

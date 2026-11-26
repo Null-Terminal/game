@@ -1,8 +1,8 @@
 import { GameObjectRender } from "#engine/game-objects/game-object";
+import type { BitmapRenderPayload, ObjectRenderPayload } from "#engine/game-objects/game-object";
 import { getBackgroundScrollFactor } from "#engine/game-objects/background-object/scroll-factor";
 
 import type { RenderContext } from "#engine/rendering";
-import type { BitmapRenderPayload, ObjectRenderPayload } from "#engine/game-objects/game-object";
 
 import type { BackgroundObject } from "#engine/game-objects/background-object";
 

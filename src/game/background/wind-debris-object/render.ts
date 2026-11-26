@@ -1,7 +1,6 @@
 import { SeededRandom } from "#/utils/seeded-random";
 
-import { GameObjectRender } from "#engine/game-objects";
-import type { AnimationInstance, ObjectRenderPayload } from "#engine/game-objects";
+import { GameObjectRender, type AnimationInstance, type ObjectRenderPayload } from "#engine/game-objects";
 
 import type { WindDebrisObject } from "#game/background/wind-debris-object";
 import { NewspaperParticle } from "#game/background/wind-debris-object/particles/newspaper";

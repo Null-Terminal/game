@@ -1,9 +1,8 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { Game } from "#engine/game";
+import { Game, type Camera, type RenderCanvas } from "#engine/game";
 import { GameSettings } from "#engine/game/settings";
 
-import type { Camera, RenderCanvas } from "#engine/game";
 import type { GameStorage, GameStoreName } from "#engine/storage";
 
 function checkBuilderTypes(camera: Camera, canvas: RenderCanvas) {
