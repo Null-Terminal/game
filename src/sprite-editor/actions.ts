@@ -5,10 +5,10 @@ import type { SpriteEditor } from "#/sprite-editor";
 
 import { Sprite } from "#sprite-editor/sprite";
 import { mergeSprites } from "#sprite-editor/merge-sprites";
-import { Handlers } from "#sprite-editor/handlers";
+import { DomActionHandlers } from "#lib/dom-action-handlers";
 import type { AnimationParametersForm } from "#sprite-editor/animation-parameters-form";
 
-export class ActionHandlers extends Handlers<SpriteEditor> {
+export class ActionHandlers extends DomActionHandlers<SpriteEditor> {
   readonly #animationParameters: AnimationParametersForm;
 
   constructor(parent: SpriteEditor, animationParameters: AnimationParametersForm) {

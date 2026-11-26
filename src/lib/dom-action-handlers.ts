@@ -1,6 +1,6 @@
 import { Destroyable } from "#lib/destroyable";
 
-export abstract class Handlers<Parent> extends Destroyable {
+export abstract class DomActionHandlers<Parent> extends Destroyable {
   protected readonly parent: Parent;
 
   readonly attr: string = "action";

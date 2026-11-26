@@ -1,8 +1,8 @@
-import { Handlers } from "#sprite-editor/handlers";
+import { DomActionHandlers } from "#lib/dom-action-handlers";
 
 import type { AnimationPreview } from "#sprite-editor/animation-preview";
 
-export class ActionHandlers extends Handlers<AnimationPreview> {
+export class ActionHandlers extends DomActionHandlers<AnimationPreview> {
   constructor(parent: AnimationPreview) {
     super(parent);
   }

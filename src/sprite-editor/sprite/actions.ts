@@ -1,8 +1,8 @@
-import { Handlers } from "#sprite-editor/handlers";
+import { DomActionHandlers } from "#lib/dom-action-handlers";
 
 import type { Sprite } from "#sprite-editor/sprite";
 
-export class ActionHandlers extends Handlers<Sprite> {
+export class ActionHandlers extends DomActionHandlers<Sprite> {
   constructor(parent: Sprite) {
     super(parent);
   }
