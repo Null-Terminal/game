@@ -42,6 +42,24 @@ test("fog inspection follows the parallax band, including camera movement", asyn
   expect(result.rows).toMatchObject([{ type: "FogObject", screenBounds: "0, 75, 320, 185" }]);
 });
 
+test("dynamic effects setting hides fog", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ fog, render, destroy }) => {
+    render(16);
+    const visible = fog.render.visibleBounds != null;
+
+    fog.game.settings.set("dynamicEffects", false);
+    render(32);
+    const hidden = fog.render.visibleBounds == null;
+
+    destroy();
+    return { visible, hidden };
+  });
+
+  expect(result).toEqual({ visible: true, hidden: true });
+});
+
 const fixtureUrl = "/src/game/background/fog-object/tests/fixture.ts";
 
 async function createScene(page: Page): Promise<JSHandle<fixture.FogScene>> {

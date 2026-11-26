@@ -1,13 +1,13 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
+
 import type { StateValue } from "#engine/game-objects";
-
 import { InteractObject, ifAlive } from "#engine/game-objects";
-
 import type { DefaultGameObjectOptions, GameObject } from "#engine/game-objects";
+
 import type { BBoxTuple } from "#engine/rtree";
 
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
 
 import { acid } from "#game/sprites/hazards/acid";
 import { water } from "#game/sprites/hazards/water";

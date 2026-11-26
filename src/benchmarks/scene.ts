@@ -4,7 +4,7 @@ import { BackgroundFlowObject, BackgroundObject } from "#engine/game-objects";
 import { createDemoWorld } from "#game/world";
 import { FogObject } from "#game/background/fog-object";
 import { SkyObject } from "#game/background/sky-object";
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
 import { PlatformObject } from "#game/platforms/platform-object";
 
 import { barrel } from "#game/sprites/platforms/barrel";

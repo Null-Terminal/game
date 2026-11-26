@@ -1,13 +1,15 @@
-import { Arenas, Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Arenas, Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
+import { GameInput } from "#game/input";
+import { defaultProjectSettings, type ProjectGame } from "#game/settings";
 
-import { ControlObject, type ControlKind } from "#game/control-object";
-import { LiquidObject, type LiquidKind } from "#game/liquid-object";
-import { PersonObject } from "#game/person-object";
-import { PickupObject, type PickupKind } from "#game/pickup-object";
+import { ControlObject, type ControlKind } from "#game/interactables/control-object";
+import { LiquidObject, type LiquidKind } from "#game/liquids/liquid-object";
+import { PersonObject } from "#game/characters/person-object";
+import { PickupObject, type PickupKind } from "#game/interactables/pickup-object";
 import { ArenaBoundaryObject, ArenaTerminalObject } from "#game/world";
 
 export interface InteractionScene {
-  game: Game;
+  game: ProjectGame;
   canvas: RenderCanvas;
   player: PersonObject;
   World: typeof World;
@@ -26,7 +28,8 @@ export interface InteractionScene {
 export async function createInteractionScene(): Promise<InteractionScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 640, height: 480, backend: "2d" });
-  const game = Game.camera(new Camera()).create(canvas);
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings))
+    .input((game) => new GameInput(game)).create(canvas);
 
   const arenas = Arenas.declare({ base: () => ({ objects: [] }) });
   arenas.preload(arenas.refs.base);

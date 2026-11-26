@@ -1,7 +1,9 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 
-import { PersonObject } from "#game/person-object";
+import { GameInput } from "#game/input";
+import { PersonObject } from "#game/characters/person-object";
 import { PlatformObject } from "#game/platforms/platform-object";
+import { defaultProjectSettings } from "#game/settings";
 
 export interface MovingPlatformScene {
   player: PersonObject;
@@ -27,7 +29,8 @@ export async function createMovingPlatformScene({
   const canvas = new RenderCanvas(element, { width: 640, height: 480, backend: "2d" });
   canvas.stop();
 
-  const game = Game.camera(new Camera()).create(canvas);
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings))
+    .input((game) => new GameInput(game)).create(canvas);
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const platformPointer = world.createObject(PlatformObject, { bbox: [100, 230, 260, 250] });
@@ -42,7 +45,11 @@ export async function createMovingPlatformScene({
 
   platform.movement.follow({ at: (time) => [100, 230 - platformSpeed * time] });
   player.updateStats(() => ({ jetpack: jetpackSpeed }));
-  player.actions.jetpack = jetpack ? 1 : 0;
+  if (jetpack) {
+    player.input.press("test:jetpack", "jetpack");
+  } else {
+    player.input.release("test:jetpack");
+  }
 
   return {
     player,

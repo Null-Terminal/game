@@ -6,11 +6,13 @@ import { SkyObjectDebug } from "#game/background/sky-object/debug";
 import { overcastSky, stormSky } from "#game/background/sky-object/presets";
 import { SkyObjectRender } from "#game/background/sky-object/render";
 import type { SkyOptions, SkySceneOptions } from "#game/background/sky-object/types";
+import type { ProjectGame } from "#game/settings";
 
 export type * from "#game/background/sky-object/types";
 export { duskSky } from "#game/background/sky-object/presets";
 
 export class SkyObject extends GameObject<SkyOptions> {
+  declare game: ProjectGame;
   static override readonly animations = {
     sky: (go: GameObject) => SkyObject.#createPlayback(go),
     storm: (go: GameObject) => SkyObject.#createPlayback(go, stormSky),

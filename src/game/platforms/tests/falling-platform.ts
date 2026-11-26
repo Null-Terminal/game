@@ -1,8 +1,10 @@
 import { scaffoldPlank } from "#game/sprites/platforms/scaffold-plank";
 
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 
-import { PersonObject } from "#game/person-object";
+import { GameInput } from "#game/input";
+import { PersonObject } from "#game/characters/person-object";
+import { defaultProjectSettings } from "#game/settings";
 import { FallingPlatformObject } from "#game/platforms/falling-platform-object";
 import { PlatformObject } from "#game/platforms/platform-object";
 
@@ -11,7 +13,8 @@ export async function createFallingPlatformScene() {
   const canvas = new RenderCanvas(element, { width: 900, height: 500, backend: "2d" });
   canvas.stop();
 
-  const game = Game.camera(new Camera()).create(canvas);
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings))
+    .input((game) => new GameInput(game)).create(canvas);
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const leftPointer = world.createObject(PlatformObject, { show: scaffoldPlank.intact, x: 0, y: 200 });

@@ -1,7 +1,7 @@
 import { InteractObject, type GameObject, type GameObjectOptions } from "#engine/game-objects";
 import type { World } from "#engine/game";
 
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
 
 type ArenaBoundaryOptions = GameObjectOptions<{
   axis: "x" | "y";

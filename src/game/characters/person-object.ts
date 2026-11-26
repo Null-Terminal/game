@@ -5,8 +5,11 @@ import type { RenderContext } from "#engine/rendering";
 import { fly, flyEnd } from "#game/sprites/character/fly";
 import { run, jump } from "#game/sprites/character/run";
 import { stay } from "#game/sprites/character/stay";
+import type { ProjectGame } from "#game/settings";
 
 export class PersonObject extends PhysicsObject {
+  declare game: ProjectGame;
+
   static override readonly animations = { stay, run, jump, fly, flyEnd };
   override readonly animations = PersonObject.animations;
 
@@ -50,50 +53,35 @@ export class PersonObject extends PhysicsObject {
   #fallPeak = 0;
   #forgiveFall = true;
   #grounded = false;
-  #usePressed = false;
 
-  readonly actions = {
-    left: 0,
-    right: 0,
-    jump: 0,
-    jetpack: 0,
-    use: 0
-  };
+  get input() {
+    return this.game.input;
+  }
 
-  readonly controls: Record<string, keyof PersonObject["actions"]> = {
-    ArrowLeft: "left",
-    ArrowRight: "right",
-    Space: "jump",
-    ArrowUp: "jetpack",
-    KeyE: "use",
-  };
+  get actions() {
+    return this.input.held;
+  }
 
   init() {
     this.#fallPeak = 0;
     this.#grounded = false;
     this.#forgiveFall = true;
-    this.#usePressed = false;
 
     this.onDestroy(this.game.camera.bindTo(this));
     this.play(this.animations.stay);
 
-    this.#initControls();
+    void this.input;
     this.initPhysics(this.#initPhysics, this.#initEffects);
 
     const subscription = this.canvas.events.ui.on(({ ctx }) => {
       this.#renderStats(ctx);
     });
 
-    this.onDestroy(() => subscription.dispose());
+    this.onDestroy(subscription);
   }
 
   consumeUse() {
-    if (!this.#usePressed) {
-      return false;
-    }
-
-    this.#usePressed = false;
-    return true;
+    return this.input.consumePress("use");
   }
 
   #initPhysics = ({ delta }: RenderPayload) => {
@@ -102,25 +90,34 @@ export class PersonObject extends PhysicsObject {
     // Горизонтальное движение
     stats.vx = stats.speed;
 
-    if (actions.left) {
+    if (actions.has("left")) {
       this.effects.flipX = true;
       stats.vx *= -1;
 
-    } else if (actions.right) {
+    } else if (actions.has("right")) {
       this.effects.flipX = false;
 
     } else {
       stats.vx = 0;
     }
 
-    if (actions.jump === 1 && stats.onGround) {
+    if (this.input.consumePress("jump") && stats.onGround) {
       stats.vy += stats.jump;
       stats.onGround = false;
       this.ensurePlaying(this.animations.jump);
 
-    } else if (actions.jetpack && stats.fuel > 0) {
+    } else if (actions.has("jetpack") && stats.fuel > 0) {
       if (!stats.usingJetpack) {
         this.#fallPeak = this.y;
+        const intensity = Math.max(0, Math.min(1, this.game.settings.get("vibrationIntensity")));
+
+        if (intensity > 0) {
+          this.input.gamepad.playEffect("dual-rumble", {
+            duration: 200,
+            strongMagnitude: 0.15 * intensity,
+            weakMagnitude: 0.6 * intensity
+          });
+        }
       }
 
       stats.vy = Math.max(stats.jetpack, stats.vy + stats.jetpack * delta);
@@ -129,7 +126,6 @@ export class PersonObject extends PhysicsObject {
       stats.usingJetpack = true;
 
       this.updateStats(({ fuel }) => ({ fuel: fuel - stats.fuelPerTick }));
-      actions.jump = 0;
 
       this.ensurePlaying(this.animations.fly);
 
@@ -141,7 +137,7 @@ export class PersonObject extends PhysicsObject {
     }
 
     if (stats.onGround) {
-      if (actions.left || actions.right) {
+      if (actions.has("left") || actions.has("right")) {
         this.ensurePlaying(this.animations.run);
 
       } else {
@@ -180,45 +176,6 @@ export class PersonObject extends PhysicsObject {
     }
 
     this.updateStats(({ hp }) => ({ hp: hp - extra * this.stats.fallDamage }));
-  }
-
-  #initControls() {
-    const { actions, controls } = this;
-
-    window.addEventListener("keydown", (e) => {
-      const key = e.code;
-
-      if (key in controls) {
-        e.preventDefault();
-        const control = controls[key]!;
-
-        if (control in actions) {
-          if (control === "use" && !e.repeat && actions.use === 0) {
-            this.#usePressed = true;
-          }
-
-          actions[control] = Math.min(2, actions[control] + 1);
-        }
-      }
-    }, { signal: this.abortSignal });
-
-    window.addEventListener("keyup", (e) => {
-      const key = e.code;
-
-      if (key in controls) {
-        e.preventDefault();
-
-        const control = controls[key]!;
-
-        if (control in actions) {
-          actions[control] = 0;
-
-          if (control === "use") {
-            this.#usePressed = false;
-          }
-        }
-      }
-    }, { signal: this.abortSignal });
   }
 
   #renderStats(ctx: RenderContext) {

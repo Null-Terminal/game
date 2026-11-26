@@ -28,19 +28,30 @@ export type * from "#engine/game/world";
 export { RenderCanvas } from "#engine/game/render-canvas";
 export type * from "#engine/game/render-canvas";
 
-export class Game<T extends object = object> extends Destroyable {
+export class Game<T extends object = object, I extends Disposable | undefined = Disposable | undefined> extends Destroyable {
   static camera(camera: Camera) {
     return {
-      create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game(canvas, camera, new GameSettings({}), opts),
+      create: (canvas: RenderCanvas, opts: GameOptions = {}) =>
+        new Game<object, undefined>(canvas, camera, new GameSettings({}), opts),
+
       settings: <T extends object>(settings: GameSettings<T>) => ({
-        create: (canvas: RenderCanvas, opts: GameOptions = {}) => new Game<T>(canvas, camera, settings, opts)
+        create: (canvas: RenderCanvas, opts: GameOptions = {}) =>
+          new Game<T, undefined>(canvas, camera, settings, opts),
+
+        input: <I extends Disposable>(factory: (game: Game<T>) => I) => ({
+          create: (canvas: RenderCanvas, opts: GameOptions = {}) =>
+            new Game<T, I>(canvas, camera, settings, opts, factory)
+        })
       })
     };
   }
 
   readonly camera: Camera;
   readonly canvas: RenderCanvas;
+
+  readonly input: I;
   readonly settings: GameSettings<T>;
+
   readonly options: GameOptions;
   readonly status = new GameStatus(this);
 
@@ -82,21 +93,25 @@ export class Game<T extends object = object> extends Destroyable {
   #world: World | null = null;
   #levelLoader: (() => Promise<World>) | null = null;
 
-  protected constructor(canvas: RenderCanvas, camera: Camera, settings: GameSettings<T>, opts: GameOptions) {
+  protected constructor(
+    canvas: RenderCanvas,
+    camera: Camera,
+    settings: GameSettings<T>,
+    opts: GameOptions,
+    inputFactory?: (game: Game<T>) => I
+  ) {
     super();
 
     this.camera = camera;
     this.canvas = canvas;
     this.settings = settings;
     this.options = opts;
+    this.input = this.onDestroy(inputFactory?.(this) as I);
     camera.mount(this);
 
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Escape") {
-        e.preventDefault();
-        this.status.togglePause();
-      }
-    }, { signal: this.abortSignal });
+    if (opts.startPaused) {
+      this.status.pause();
+    }
   }
 
   override destroy() {

@@ -1,0 +1,51 @@
+<div class="groups">
+  <section>
+    <h2>Звук</h2>
+    <label for="master">Общая громкость <output id="master-value" for="master"></output></label>
+    <input id="master" type="range" min="0" max="1" step="0.05" data-action="setAudio">
+
+    <label for="effects">Эффекты <output id="effects-value" for="effects"></output></label>
+    <input id="effects" type="range" min="0" max="1" step="0.05" data-action="setAudio">
+
+    <label for="music">Музыка <output id="music-value" for="music"></output></label>
+    <input id="music" type="range" min="0" max="1" step="0.05" data-action="setAudio">
+  </section>
+
+  <section>
+    <h2>Изображение и мир</h2>
+    <label class="toggle"><input id="dynamic-effects" type="checkbox" data-action="setDynamicEffects"> Динамические эффекты</label>
+    <label class="toggle"><input id="sleep" type="checkbox" data-action="setSleep"> Усыплять далёкие объекты</label>
+    <label for="sleep-distance">Дистанция сна, в экранах</label>
+    <input id="sleep-distance" type="number" min="0.1" step="0.1" data-action="setSleepDistance">
+
+    <label class="toggle"><input id="arena-unload" type="checkbox" data-action="setArenaUnload"> Выгружать далёкие арены</label>
+    <label for="arena-distance">Дистанция выгрузки, в экранах</label>
+    <input id="arena-distance" type="number" min="0.1" step="0.05" data-action="setArenaDistance">
+  </section>
+
+  <section>
+    <h2>Клавиатура</h2>
+    <p class="hint">Нажмите на назначенную клавишу, затем выберите новую. Esc отменяет выбор.</p>
+    <div class="binding"><span>Влево</span><button type="button" data-action="captureKeyboard" data-keyboard-control="left"></button></div>
+    <div class="binding"><span>Вправо</span><button type="button" data-action="captureKeyboard" data-keyboard-control="right"></button></div>
+    <div class="binding"><span>Прыжок</span><button type="button" data-action="captureKeyboard" data-keyboard-control="jump"></button></div>
+    <div class="binding"><span>Джетпак</span><button type="button" data-action="captureKeyboard" data-keyboard-control="jetpack"></button></div>
+    <div class="binding"><span>Использовать</span><button type="button" data-action="captureKeyboard" data-keyboard-control="use"></button></div>
+    <div class="binding"><span>Пауза</span><button type="button" data-action="captureKeyboard" data-keyboard-control="pause"></button></div>
+  </section>
+
+  <section>
+    <h2>Геймпад</h2>
+    <label for="vibration-intensity">Интенсивность вибрации <output id="vibration-intensity-value" for="vibration-intensity"></output></label>
+    <input id="vibration-intensity" type="range" min="0" max="1" step="0.05" value="0" data-action="setVibrationIntensity" disabled>
+    <p class="hint">Добавьте кнопку или направление стика. Сначала отпустите кнопки геймпада, затем нажмите нужную.</p>
+    <div class="binding"><span>Влево</span><div class="binding-values"><span data-gamepad-values="left"></span><button type="button" data-action="captureGamepad" data-gamepad-add="left">Добавить</button></div></div>
+    <div class="binding"><span>Вправо</span><div class="binding-values"><span data-gamepad-values="right"></span><button type="button" data-action="captureGamepad" data-gamepad-add="right">Добавить</button></div></div>
+    <div class="binding"><span>Прыжок</span><div class="binding-values"><span data-gamepad-values="jump"></span><button type="button" data-action="captureGamepad" data-gamepad-add="jump">Добавить</button></div></div>
+    <div class="binding"><span>Джетпак</span><div class="binding-values"><span data-gamepad-values="jetpack"></span><button type="button" data-action="captureGamepad" data-gamepad-add="jetpack">Добавить</button></div></div>
+    <div class="binding"><span>Использовать</span><div class="binding-values"><span data-gamepad-values="use"></span><button type="button" data-action="captureGamepad" data-gamepad-add="use">Добавить</button></div></div>
+    <div class="binding"><span>Пауза</span><div class="binding-values"><span data-gamepad-values="pause"></span><button type="button" data-action="captureGamepad" data-gamepad-add="pause">Добавить</button></div></div>
+    <button id="reset-controls" type="button" data-action="resetControls">Сбросить управление</button>
+    <p id="controls-error" class="error" role="alert"></p>
+  </section>
+</div>

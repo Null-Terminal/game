@@ -1,6 +1,7 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 
 import { SkyObject, duskSky } from "#game/background/sky-object";
+import { defaultProjectSettings } from "#game/settings";
 
 export interface SkyScene {
   sky: SkyObject;
@@ -19,7 +20,7 @@ export interface WebGLSkyScene {
 export async function createWebGLSkyScene(): Promise<WebGLSkyScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "webgl" });
-  const game = Game.camera(new Camera()).create(canvas);
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings)).create(canvas);
   const world = await game.loadLevel(async () => new World({
     persistentObjects: World.of([[SkyObject, { show: "storm", debug: { bounds: true, inspect: true } }]])
   }));
@@ -38,7 +39,7 @@ export async function createSkyScene(preset: "storm" | "dusk" = "storm"): Promis
   const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
   canvas.stop();
 
-  const game = Game.camera(new Camera()).create(canvas);
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings)).create(canvas);
   const world = await game.loadLevel(async () => new World({
     persistentObjects: World.of([[SkyObject, preset === "dusk" ? { ...duskSky } : { show: "storm" }]])
   }));

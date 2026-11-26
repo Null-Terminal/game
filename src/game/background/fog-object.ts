@@ -5,10 +5,12 @@ import { GameObject, type AnimationInstance } from "#engine/game-objects";
 import { FogObjectDebug } from "#game/background/fog-object/debug";
 import { FogObjectRender } from "#game/background/fog-object/render";
 import type { FogAppearanceOptions, FogObjectOptions } from "#game/background/fog-object/types";
+import type { ProjectGame } from "#game/settings";
 
 export type * from "#game/background/fog-object/types";
 
 export class FogObject extends GameObject<FogObjectOptions> {
+  declare game: ProjectGame;
   static readonly #haze: FogAppearanceOptions = {
     texture: { density: 12, seed: 0x4e2d9a71 },
     opacity: 0.25,

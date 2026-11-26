@@ -1,9 +1,8 @@
 import type { LoadedAnimation } from "#engine/animation";
 
-import { InteractObject, ifAlive } from "#engine/game-objects";
-import type { GameObject, GameObjectOptions } from "#engine/game-objects";
+import { InteractObject, ifAlive, type GameObject, type GameObjectOptions } from "#engine/game-objects";
 
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
 import type { ElevatorObject } from "#game/platforms/elevator-object";
 
 export type ElevatorPanelOptions = GameObjectOptions<{

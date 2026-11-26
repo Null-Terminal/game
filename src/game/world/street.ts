@@ -6,10 +6,10 @@ const deps = {
   game: import("#engine/game"),
   objects: import("#engine/game-objects"),
 
-  control: import("#game/control-object"),
+  control: import("#game/interactables/control-object"),
   arenaTerminal: import("#game/world/street/arena-terminal-object"),
-  liquid: import("#game/liquid-object"),
-  pickup: import("#game/pickup-object"),
+  liquid: import("#game/liquids/liquid-object"),
+  pickup: import("#game/interactables/pickup-object"),
 
   elevator: import("#game/platforms/elevator-object"),
   fallingPlatform: import("#game/platforms/falling-platform-object"),

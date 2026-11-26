@@ -1,6 +1,6 @@
 import { GameObjectRender } from "#engine/game-objects";
-
 import type { AnimationInstance, DebugBounds, ObjectRenderPayload } from "#engine/game-objects";
+
 import type { RenderContext } from "#engine/rendering";
 
 import type { SkyObject } from "#game/background/sky-object";
@@ -31,6 +31,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
   #moonBuilder: Moon | null = null;
   #lightning: Lightning | null = null;
   #lightningBounds: LightningBounds | null = null;
+  #effectsEnabled = true;
 
   get lightningBounds(): LightningBounds | null {
     return this.#lightningBounds;
@@ -127,6 +128,7 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     this.#lightning?.clear();
     this.#lightning = null;
     this.#lightningBounds = null;
+    this.#effectsEnabled = true;
     this.#celestialScrollX = 0;
     this.#cloudScrollX = 0;
   }
@@ -147,8 +149,10 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
     const { ctx, elapsed } = frame;
     const { width, height } = this.go.canvas;
     const collectBounds = this.go.options.debug != null && this.go.debug.enabled;
+    const effectsEnabled = this.go.game.settings.get("dynamicEffects") !== false;
+    const sizeChanged = this.#builtWidth !== width || this.#builtHeight !== height;
 
-    if (this.#builtWidth !== width || this.#builtHeight !== height) {
+    if (sizeChanged) {
       this.go.syncSize();
       this.#closeImages();
 
@@ -156,14 +160,33 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
       const stripWidth = Math.max(2048, width);
       this.#sky = this.#duskBuilder?.build(width, height) ?? null;
       this.#stars = this.#starsBuilder?.build(stripWidth, height) ?? null;
-      this.#clouds = this.#cloudsBuilder?.build(stripWidth, height, collectBounds) ?? null;
+      this.#clouds = effectsEnabled ? this.#cloudsBuilder?.build(stripWidth, height, collectBounds) ?? null : null;
       this.#moon = this.#moonBuilder?.build(width, height) ?? null;
-      this.#lightning?.resize(width, height);
+      if (effectsEnabled) {
+        this.#lightning?.resize(width, height);
+      }
       this.#builtWidth = width;
       this.#builtHeight = height;
     }
 
-    if (collectBounds && this.#clouds?.clusters == null && this.#cloudsBuilder != null) {
+    if (this.#effectsEnabled !== effectsEnabled) {
+      if (effectsEnabled) {
+        if (!sizeChanged) {
+          this.#clouds = this.#cloudsBuilder?.build(Math.max(2048, width), height, collectBounds) ?? null;
+          this.#lightning?.resize(width, height);
+        }
+
+      } else {
+        this.#clouds?.image.close();
+        this.#clouds = null;
+        this.#lightning?.clear();
+        this.#lightningBounds = null;
+      }
+
+      this.#effectsEnabled = effectsEnabled;
+    }
+
+    if (effectsEnabled && collectBounds && this.#clouds?.clusters == null && this.#cloudsBuilder != null) {
       this.#clouds?.image.close();
       this.#clouds = this.#cloudsBuilder.build(Math.max(2048, width), height, true);
     }
@@ -196,7 +219,9 @@ export class SkyObjectRender extends GameObjectRender<SkyObject> {
       this.#drawRepeatedStrip(ctx, this.#clouds.image, cloudScrollX, width, this.#clouds.top);
     }
 
-    this.#lightningBounds = this.#lightning?.draw(ctx, elapsed, width, height, collectBounds) ?? null;
+    this.#lightningBounds = effectsEnabled
+      ? this.#lightning?.draw(ctx, elapsed, width, height, collectBounds) ?? null
+      : null;
 
     // Тёмный силуэт следует за камерой по вертикали
     const groundLine = Math.round(height - 140 + frame.getScrollOffsetY());

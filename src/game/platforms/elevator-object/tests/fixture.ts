@@ -1,8 +1,10 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 import type { MovementOptions } from "#engine/game-objects";
 
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
+import { GameInput } from "#game/input";
 import { ElevatorObject, ElevatorPanelObject, industrialElevator } from "#game/platforms/elevator-object";
+import { defaultProjectSettings } from "#game/settings";
 
 export interface ElevatorSceneOptions {
   rider: "floor" | "roof";
@@ -26,7 +28,8 @@ export async function createElevatorScene(opts: ElevatorSceneOptions): Promise<E
     backend: "2d"
   });
 
-  const game = Game.camera(new Camera({ limit: { y: 0 } })).create(canvas);
+  const game = Game.camera(new Camera({ limit: { y: 0 } })).settings(new GameSettings(defaultProjectSettings))
+    .input((game) => new GameInput(game)).create(canvas);
 
   const world = await game.loadLevel(async () => new World({
     persistentObjects: World.of([

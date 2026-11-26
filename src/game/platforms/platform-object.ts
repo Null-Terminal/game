@@ -1,11 +1,11 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
-import type { StateValue } from "#engine/game-objects";
 
+import type { StateValue } from "#engine/game-objects";
 import { ColliderObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
 
-import { ControlObject } from "#game/control-object";
+import { ControlObject } from "#game/interactables/control-object";
 
 export type PlatformOptions = GameObjectOptions<DefaultGameObjectOptions & {
   maxStepHeight?: number;

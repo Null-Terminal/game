@@ -1,6 +1,6 @@
 import { GameObjectRender } from "#engine/game-objects";
-
 import type { AnimationInstance, DebugBounds, ObjectRenderPayload } from "#engine/game-objects";
+
 import type { RenderContext } from "#engine/rendering";
 
 import type { FogObject } from "#game/background/fog-object";
@@ -38,6 +38,10 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
 
   #drawFog(frame: ObjectRenderPayload) {
     this.#visibleBounds = null;
+
+    if (this.go.game.settings.get("dynamicEffects") === false) {
+      return;
+    }
 
     const { ctx, elapsed } = frame;
     const { width: viewWidth, height: viewHeight } = this.go.canvas;

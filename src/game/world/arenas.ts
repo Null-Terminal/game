@@ -1,5 +1,4 @@
-import { Arenas, World } from "#engine/game";
-import type { ArenaDefinition, WorldObjects } from "#engine/game";
+import { Arenas, World, type ArenaDefinition, type WorldObjects } from "#engine/game";
 
 import { ArenaBoundaryObject } from "#game/world/arena-boundary-object";
 import { createDemoParts } from "#game/world/parts";
@@ -19,7 +18,7 @@ export function createDemoArenas(showSeams = false, debug = false) {
     street: streetSource,
     upper: upperSource,
     background: async () => ({ objects: (await parts).background, autoUnload: false })
-  }, { unload: { distanceScreens: 0.75 } });
+  });
 
   arenas.preload(arenas.refs.background, arenas.refs.street);
 

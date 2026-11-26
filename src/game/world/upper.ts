@@ -6,7 +6,7 @@ const deps = {
   game: import("#engine/game"),
   objects: import("#engine/game-objects"),
 
-  pickup: import("#game/pickup-object"),
+  pickup: import("#game/interactables/pickup-object"),
   platform: import("#game/platforms/platform-object"),
 
   scaffoldFrame: import("#game/sprites/platforms/scaffold-frame"),

@@ -4,9 +4,9 @@ import type { GameObject } from "#engine/game-objects";
 import { barrel } from "#game/sprites/platforms/barrel";
 import { scaffoldPlank } from "#game/sprites/platforms/scaffold-plank";
 
-import { ControlObject } from "#game/control-object";
+import { ControlObject } from "#game/interactables/control-object";
 import { PlatformObject } from "#game/platforms/platform-object";
-import { PickupObject } from "#game/pickup-object";
+import { PickupObject } from "#game/interactables/pickup-object";
 
 function createTerminalArena(): ArenaDefinition {
   return {

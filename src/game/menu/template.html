@@ -1,0 +1,28 @@
+<div class="backdrop" role="dialog" aria-modal="true" aria-label="Меню игры">
+  <section id="menu-screen" class="panel">
+    <p class="eyebrow">NULL TERMINAL</p>
+    <h1>Меню игры</h1>
+    <p class="subtitle">Исследуйте мир и найдите путь дальше.</p>
+
+    <div class="actions">
+      <button id="start" type="button" class="primary" data-action="playGame">Начать игру</button>
+      <button id="settings" type="button" data-action="openSettings">Настройки</button>
+    </div>
+
+    <p id="error" class="error" role="alert"></p>
+    <p id="gamepad-status" class="hint" aria-live="polite"></p>
+    <p class="hint">Во время игры нажмите Esc, чтобы открыть меню.</p>
+  </section>
+
+  <section id="settings-screen" class="panel settings-panel" hidden>
+    <div class="heading">
+      <div>
+        <p class="eyebrow">NULL TERMINAL</p>
+        <h1>Настройки</h1>
+      </div>
+      <button id="back" type="button" data-action="closeSettings">Назад</button>
+    </div>
+
+    <game-settings-panel></game-settings-panel>
+  </section>
+</div>

@@ -1,13 +1,13 @@
 import type { LoadedAnimation } from "#engine/animation";
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
-import type { StateValue } from "#engine/game-objects";
 
+import type { StateValue } from "#engine/game-objects";
 import { CollisionStatus, ColliderObject, ifAlive } from "#engine/game-objects";
 import type { GameObject } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects";
 
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
 
 export interface DefaultFallingPlatformObjectOptions extends DefaultGameObjectOptions {
   show: LoadedAnimation;

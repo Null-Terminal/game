@@ -2,6 +2,24 @@ import { expect, test, type JSHandle, type Page } from "@playwright/test";
 
 import type * as fixture from "#engine/game/tests/fixture";
 
+test("game can start paused and stays paused after loading a level", async ({ page }) => {
+  const scene = await createScene(page, true);
+
+  const result = await scene.evaluate(async ({ game, canvas, createWorld, destroy }) => {
+    const initiallyPaused = game.status.paused && canvas.paused;
+    await game.loadLevel(async () => createWorld());
+    const pausedAfterLoad = game.status.paused && canvas.paused;
+
+    game.status.resume();
+    const resumed = game.status.playing && !canvas.paused;
+
+    destroy();
+    return { initiallyPaused, pausedAfterLoad, resumed };
+  });
+
+  expect(result).toEqual({ initiallyPaused: true, pausedAfterLoad: true, resumed: true });
+});
+
 test("level loading pauses the canvas and reports its lifecycle", async ({ page }) => {
   const scene = await createScene(page);
 
@@ -147,11 +165,11 @@ test("restart loads a fresh world without reloading the page", async ({ page }) 
 
 const fixtureUrl = "/src/engine/game/tests/fixture.ts";
 
-async function createScene(page: Page): Promise<JSHandle<fixture.LevelScene>> {
+async function createScene(page: Page, startPaused = false): Promise<JSHandle<fixture.LevelScene>> {
   await page.goto("/tests/fixture.html");
 
-  return page.evaluateHandle(async (url) => {
+  return page.evaluateHandle(async ({ url, startPaused }) => {
     const { createLevelScene } = await import(url) as typeof fixture;
-    return createLevelScene();
-  }, fixtureUrl);
+    return createLevelScene(startPaused);
+  }, { url: fixtureUrl, startPaused });
 }
