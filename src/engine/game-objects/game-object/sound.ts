@@ -46,7 +46,7 @@ export class GameObjectSound extends ServantObject {
     this.stop(sound);
 
     this.#playing.set(sound, null);
-    this.#sync();
+    this.#syncPlayback();
   }
 
   @ifAlive
@@ -77,8 +77,8 @@ export class GameObjectSound extends ServantObject {
     }
 
     const { go } = this;
-    const sleep = go.status.events.sleepChange.on(() => this.#sync());
-    const canvasPause = go.canvas.events.pauseChange.on(() => this.#sync());
+    const sleep = go.status.events.sleepChange.on(() => this.#syncPlayback());
+    const canvasPause = go.canvas.events.pauseChange.on(() => this.#syncPlayback());
 
     this.#cleanup = () => {
       this.#cleanup = null;
@@ -92,7 +92,7 @@ export class GameObjectSound extends ServantObject {
     };
   }
 
-  #sync() {
+  #syncPlayback() {
     const { go } = this;
     const { sleeping } = go.status;
 
