@@ -33,11 +33,8 @@ export class GameObjectPool extends Destroyable {
   }
 
   get(kind: number, index: number): GameObject | undefined {
-    if (!this.has(kind, index)) {
-      return undefined;
-    }
-
-    return this.objects[kind]!.buffer[index];
+    const store = this.objects[kind];
+    return store != null && index < store.length ? store.buffer[index] : undefined;
   }
 
   add<T extends typeof GameObject, A extends CreateParameters<T>>(
