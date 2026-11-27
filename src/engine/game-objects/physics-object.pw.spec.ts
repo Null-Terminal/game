@@ -98,7 +98,7 @@ test("movement stops at left and upper obstacle edges", async ({ page }) => {
     const object = createProbe();
 
     const left = object.move(-10, 0);
-    const x = object.x;
+    const { x } = object;
 
     object.x = 0;
 

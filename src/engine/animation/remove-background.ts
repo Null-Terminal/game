@@ -2,7 +2,7 @@ export function removeCanvasBackground(canvas: OffscreenCanvas, color: string | 
   const ctx = canvas.getContext("2d")!;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const { data } = imageData;
 
   if (data.length < 4) {
     return;

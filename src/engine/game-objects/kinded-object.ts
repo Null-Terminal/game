@@ -6,7 +6,7 @@ const kinds = new Map<number, string>();
 export abstract class KindedObject extends Destroyable {
   @cache
   static get kind() {
-    const name = this.name;
+    const { name } = this;
 
     let hash = 0;
 

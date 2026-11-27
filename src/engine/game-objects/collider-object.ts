@@ -12,7 +12,6 @@ export class ColliderObject<T extends GameObjectOptions = GameObjectOptions> ext
 
   constructor() {
     super();
-
     this.status.events.sleepChange.on((sleeping) => this.collision.setSleeping(sleeping));
   }
 

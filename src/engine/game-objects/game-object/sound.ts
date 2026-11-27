@@ -44,6 +44,7 @@ export class GameObjectSound extends ServantObject {
 
     this.#ensureSubscribed();
     this.stop(sound);
+
     this.#playing.set(sound, null);
     this.#sync();
   }
@@ -115,14 +116,15 @@ export class GameObjectSound extends ServantObject {
     const context = getAudioContext();
     const source = context.createBufferSource();
     const gain = context.createGain();
-    const playing = { source, gain };
 
-    source.buffer = sound.buffer;
     source.loop = sound.loop;
-    gain.gain.value = sound.volume * this.#volume;
-
+    source.buffer = sound.buffer;
     source.connect(gain);
+
+    gain.gain.value = sound.volume * this.#volume;
     gain.connect(this.go.game.audio.output(sound.category));
+
+    const playing = { source, gain };
 
     source.onended = () => {
       source.disconnect();

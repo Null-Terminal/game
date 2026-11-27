@@ -20,19 +20,31 @@ export interface Effects extends FrameEffects {
 }
 
 export interface DefaultGameObjectOptions {
+  // Имя для отладки
   name?: string;
 
   // Стабильный ID, если порядок создания объекта может меняться
   stateKey?: string;
 
+  // Начальная анимация или её имя
   show?: string | PlayableAnimation;
+
+  // Настройки движения при создании объекта
   movement?: MovementOptions;
+
+  // Может ли объект уходить в сон при удалении от viewport
   sleep?: boolean;
 
+  // Дочерние объекты, которые создаются вместе с этим объектом
   accept?: WithMap | null;
+
+  // Родительский объект в композиции
   acceptor?: GameObject | null;
 
+  // Эффекты отрисовки и скорость анимации
   effects?: Effects;
+
+  // Настройки отладочного отображения
   debug?: GameObjectDebugOptions;
 }
 

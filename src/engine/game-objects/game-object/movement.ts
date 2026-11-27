@@ -6,13 +6,13 @@ import type * as t from "#engine/game-objects/game-object/movement/types";
 export type * from "#engine/game-objects/game-object/movement/types";
 
 export class Movement extends ServantObject {
-  #paused = false;
-  #progress: t.MovementSnapshot | null = null;
-  #cancelMovementHandler: Destructor | null = null;
-
   get paused() {
     return this.#paused;
   }
+
+  #paused = false;
+  #progress: t.MovementSnapshot | null = null;
+  #cancelMovementHandler: Destructor | null = null;
 
   constructor(go: GameObject) {
     super(go);
@@ -81,7 +81,7 @@ export class Movement extends ServantObject {
       return;
     }
 
-    const go = this.go;
+    const { go } = this;
 
     const state: Extract<t.MovementSnapshot, { kind: "path" }> = {
       kind: "path",
@@ -116,7 +116,7 @@ export class Movement extends ServantObject {
   }
 
   #followAt(at: (distance: number) => t.MovePoint, speed?: t.MoveSpeed) {
-    const go = this.go;
+    const { go } = this;
 
     const state: Extract<t.MovementSnapshot, { kind: "curve" }> = {
       kind: "curve",
@@ -159,7 +159,7 @@ export class Movement extends ServantObject {
       return;
     }
 
-    const go = this.go;
+    const { go } = this;
     const [originX, originY] = origin ?? [go.x, go.y];
 
     this.#followAt((t) => {
@@ -189,7 +189,7 @@ export class Movement extends ServantObject {
   }
 
   #drive(step: (delta: number) => void) {
-    const go = this.go;
+    const { go } = this;
 
     this.#cancelMovementHandler = go.render.on(go.canvas.events.beforeRender, ({ delta }) => {
       if (!this.#paused) {

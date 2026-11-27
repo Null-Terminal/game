@@ -12,12 +12,14 @@ import type { CollisionStatus } from "#engine/game-objects/collision-status";
 import { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
 
-import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
-import { Movement } from "#engine/game-objects/game-object/movement";
-import { GameObjectRender, type BitmapRenderPayload } from "#engine/game-objects/game-object/render";
-import { GameObjectSound } from "#engine/game-objects/game-object/sound";
-import { GameObjectStatus } from "#engine/game-objects/game-object/status";
 import { GameObjectState, type StateValue } from "#engine/game-objects/game-object/state";
+import { GameObjectStatus } from "#engine/game-objects/game-object/status";
+
+import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import { GameObjectSound } from "#engine/game-objects/game-object/sound";
+import { GameObjectRender, type BitmapRenderPayload } from "#engine/game-objects/game-object/render";
+import { Movement } from "#engine/game-objects/game-object/movement";
+
 import { registerPositionState } from "#engine/game-objects/game-object/state/position";
 
 import type * as go from "#engine/game-objects/game-object/types";
@@ -47,6 +49,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   @cache
   static get animationEntries() {
     const entries = Object.entries(this.animations);
+
     entries.forEach(([name, value]) => {
       if (value instanceof LoadedAnimation) {
         value.name = name;
@@ -64,12 +67,14 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   });
 
   game!: Game;
+  poolPointer!: PoolPointer;
+
   world!: World;
   arena: Arena | null = null;
-  poolPointer!: PoolPointer;
 
   options!: T;
   effects!: go.Effects & Required<Pick<go.Effects, "speed" | "scale">>;
+
   bbox: BBoxTuple | null = null;
 
   x = 0;
@@ -78,8 +83,8 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   y = 0;
   prevY = 0;
 
-  readonly status = new GameObjectStatus(this);
   readonly state: GameObjectState = new GameObjectState(this);
+  readonly status = new GameObjectStatus(this);
 
   @cache
   get render(): GameObjectRender {
@@ -140,9 +145,9 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   #width = 0;
   #height = 0;
 
+  #sound: GameObjectSound | null = null;
   #render: GameObjectRender | null = null;
   #movement: Movement | null = null;
-  #sound: GameObjectSound | null = null;
 
   // Конструктор не инициализирует экземпляр объекта, для этого нужно вызвать create
   constructor() {
@@ -230,7 +235,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
 
   allows(go: GameObject, kind: "stepUp", height: number): boolean | null;
   allows(go: GameObject, kind: string, opts?: unknown): boolean | null;
-  allows(_go: GameObject, _kind: string, _options?: unknown): boolean | null {
+  allows(_go: GameObject, _kind: string, _opts?: unknown): boolean | null {
     return null;
   }
 

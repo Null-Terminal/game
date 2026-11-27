@@ -67,7 +67,7 @@ export class GameObjectPool extends Destroyable {
     const arena = hasArena ? arenaOrSnapshot : null;
 
     const state = hasArena ? snapshot : arenaOrSnapshot;
-    const kind = GObject.kind;
+    const { kind } = GObject;
 
     const init = kind in this.objects;
     const store = init ? this.objects[kind]! : { length: 0, buffer: [] };
@@ -148,5 +148,4 @@ export class GameObjectPool extends Destroyable {
 
     store.length = last;
   }
-
 }

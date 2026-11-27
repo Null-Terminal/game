@@ -114,7 +114,7 @@ test("distance wakeup preserves paused movement", async ({ page }) => {
     canvas.events.beforeRender.emit({ ctx, now: 200, delta: 1 });
     const resumedX = probe.x;
 
-    const sleeping = probe.status.sleeping;
+    const { sleeping } = probe.status;
 
     destroy();
 
@@ -133,7 +133,7 @@ test("the camera target stays awake even outside the viewport", async ({ page })
     const unbind = game.camera.bindTo(probe);
     game.sleep.update();
 
-    const sleeping = probe.status.sleeping;
+    const { sleeping } = probe.status;
     const collides = world.hasCollision(350, 0, 360, 10);
 
     unbind();

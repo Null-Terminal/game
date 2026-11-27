@@ -32,7 +32,7 @@ export class FailingSoundProbe extends Probe {
   static animation: LoadedAnimation<{ default: LoadedSound }> | null = null;
 
   override init() {
-    const animation = FailingSoundProbe.animation;
+    const { animation } = FailingSoundProbe;
 
     if (animation == null) {
       throw new Error("Missing test sound");

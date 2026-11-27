@@ -31,6 +31,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   constructor(go: T) {
     super(go);
 
+    // Переиспользуем объект между кадрами, чтобы снизить нагрузку на сборщик мусора
     this.#payload = {
       ctx: null as RenderContext | null,
       now: 0,
@@ -153,6 +154,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     this.#onRedrawStop = onStop ?? null;
 
     const payload = this.#payload;
+
     this.#redrawSubscription ??= this.on(go.redrawEvent, (frame, elapsed) => {
       if (this.#redraw == null) {
         return;
@@ -161,6 +163,7 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
+
       this.#redrawElapsedStart ??= elapsed;
       payload.elapsed = elapsed - this.#redrawElapsedStart;
 

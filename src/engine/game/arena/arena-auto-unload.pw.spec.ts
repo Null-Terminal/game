@@ -233,7 +233,7 @@ test("automatic unload follows the current game setting", async ({ page }) => {
     world.arenas.checkAutoUnload(performance.now() + 2000);
     world.arenas.flush();
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    const unloaded = arena.unloaded;
+    const { unloaded } = arena;
 
     destroy();
     return { stayedLoaded, unloaded };

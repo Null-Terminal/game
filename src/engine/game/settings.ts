@@ -75,13 +75,13 @@ export class GameSettings<T extends object = object> {
       }
     }
 
-    const sleep = settings.sleep;
+    const { sleep } = settings;
 
     if (sleep != null && !isPositive(sleep.distanceScreens)) {
       throw new RangeError("Sleep distance must be positive");
     }
 
-    const arenaUnload = settings.arenaUnload;
+    const { arenaUnload } = settings;
 
     if (arenaUnload != null && !isPositive(arenaUnload.distanceScreens)) {
       throw new RangeError("Arena unload distance must be positive");

@@ -520,7 +520,7 @@ test("waking restarts looped sounds without replaying one-shot sounds", async ({
     };
 
     try {
-      const object = createProbe().object;
+      const { object } = createProbe();
       const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
       const oneShot = { buffer, loop: false, volume: 1 };
       const loop = { buffer, loop: true, volume: 1 };
@@ -559,7 +559,7 @@ test("animation default sound follows playback while manual sounds remain indepe
     let starts = 0;
     let stops = 0;
 
-    const object = createProbe().object;
+    const { object } = createProbe();
     void object.game.audio;
 
     context.createBufferSource = () => {
@@ -672,8 +672,8 @@ test("game audio settings update effect and music buses", async ({ page }) => {
     };
 
     try {
-      const object = createProbe().object;
-      const audio = object.game.audio;
+      const { object } = createProbe();
+      const { audio } = object.game;
       const initial = gains.map((gain) => gain.gain.value);
 
       object.game.settings.set("audio", { master: 0.5, effects: 0.25, music: 0.75 });

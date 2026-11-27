@@ -31,7 +31,7 @@ export class AnimationLayer {
   }
 
   getCollisionBounds(x: number, y: number): BBoxTuple {
-    const animation = this.#playback.animation;
+    const { animation } = this.#playback;
     const effectScale = this.#effects.scale ?? 1;
 
     const width = animation.maxWidth * effectScale;

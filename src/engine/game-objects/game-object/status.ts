@@ -1,4 +1,5 @@
 import { EventEmitter, handler } from "#lib/event-emitter";
+
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
 

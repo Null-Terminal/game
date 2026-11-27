@@ -48,10 +48,16 @@ export class GamepadInput extends Destroyable {
     }
 
     const gamepads = navigator.getGamepads();
-    const selectedIndex = GamepadInput.#selectedIndex;
-    const preferredId = GamepadInput.#preferredId;
 
-    if (preferredId && selectedIndex != null && gamepads[selectedIndex]?.connected && gamepads[selectedIndex]?.id === preferredId) {
+    const preferredId = GamepadInput.#preferredId;
+    const selectedIndex = GamepadInput.#selectedIndex;
+
+    if (
+      preferredId &&
+      selectedIndex != null &&
+      gamepads[selectedIndex]?.connected &&
+      gamepads[selectedIndex]?.id === preferredId
+    ) {
       return gamepads[selectedIndex]!;
     }
 
@@ -98,11 +104,13 @@ export class GamepadInput extends Destroyable {
 
   #keys: readonly GamepadBinding[];
   #tickId: number;
-  #currentIndex = GamepadInput.selectedIndex;
+
   #currentId = GamepadInput.getGamepad()?.id ?? null;
+  #currentIndex = GamepadInput.selectedIndex;
 
   constructor(keys: Iterable<GamepadBinding>) {
     super();
+
     this.#keys = [...keys];
     this.#tickId = requestAnimationFrame(() => this.#tick());
 
@@ -146,8 +154,9 @@ export class GamepadInput extends Destroyable {
 
   #poll() {
     const gamepad = GamepadInput.getGamepad();
-    const selectedIndex = GamepadInput.#selectedIndex;
+
     const id = gamepad?.id ?? null;
+    const selectedIndex = GamepadInput.#selectedIndex;
 
     if (selectedIndex !== this.#currentIndex || id !== this.#currentId) {
       for (const key of this.#pressed) {
@@ -155,9 +164,10 @@ export class GamepadInput extends Destroyable {
       }
 
       this.#pressed.clear();
-      this.#currentIndex = selectedIndex;
-      this.#currentId = id;
       this.#blocked.clear();
+
+      this.#currentId = id;
+      this.#currentIndex = selectedIndex;
     }
 
     for (const key of this.#keys) {

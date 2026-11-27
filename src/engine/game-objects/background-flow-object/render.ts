@@ -125,7 +125,7 @@ export class BackgroundFlowObjectRender extends BackgroundObjectRender<Backgroun
       debugParts.length = 0;
     }
 
-    const positions = state.layout.positions;
+    const { positions } = state.layout;
     const horizontal = direction === "horizontal";
     const localStart = horizontal ? left - originX : originBottom - bottom;
     const localEnd = horizontal ? right - originX : originBottom - top;

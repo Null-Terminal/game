@@ -1,9 +1,7 @@
-import { GameObjectRender } from "#engine/game-objects/game-object";
-import type { BitmapRenderPayload, ObjectRenderPayload } from "#engine/game-objects/game-object";
+import { GameObjectRender, type BitmapRenderPayload, type ObjectRenderPayload } from "#engine/game-objects/game-object";
 import { getBackgroundScrollFactor } from "#engine/game-objects/background-object/scroll-factor";
 
 import type { RenderContext } from "#engine/rendering";
-
 import type { BackgroundObject } from "#engine/game-objects/background-object";
 
 type Axis = "w" | "h";
@@ -106,6 +104,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
 
     payload.x = payload.getScreenX(factorX);
     payload.y = payload.getScreenY(factorY);
+
     const { ctx, x, y, toCanvasTop } = payload;
 
     const minX = bbox?.[0] ?? 0;
@@ -136,7 +135,8 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
     const { animation, frameIndex, ctx } = payload;
     const { width: viewWidth, height: viewHeight } = go.canvas.canvas;
 
-    const bbox = go.bbox;
+    const { bbox } = go;
+
     const image = animation.getSpriteFrame(frameIndex, go.effects);
     const sprite = animation.animation.at(frameIndex)!;
 

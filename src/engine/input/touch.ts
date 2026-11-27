@@ -14,6 +14,7 @@ export class TouchInput extends Destroyable {
 
   constructor(root: ShadowRoot | HTMLElement, keys: Iterable<string>) {
     super();
+
     const listenerOptions = { signal: this.abortSignal };
 
     for (const key of keys) {
@@ -44,6 +45,7 @@ export class TouchInput extends Destroyable {
 
     event.preventDefault();
     control.setPointerCapture(event.pointerId);
+
     this.#pointers.set(event.pointerId, key);
     this.events.change.emit({ key, pointerId: event.pointerId, pressed: true });
   }
