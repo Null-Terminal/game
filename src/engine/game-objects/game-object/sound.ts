@@ -101,6 +101,10 @@ export class GameObjectSound extends ServantObject {
           this.#stopSource(sound, playing);
         }
 
+        if (!sound.loop) {
+          this.#playing.delete(sound);
+        }
+
       } else if (playing == null) {
         this.#startSource(sound);
       }

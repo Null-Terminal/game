@@ -499,6 +499,52 @@ test("object sound follows object sleep and canvas pause, then stops on destroy"
   });
 });
 
+test("waking restarts looped sounds without replaying one-shot sounds", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ createProbe, destroy, getAudioContext }) => {
+    const context = getAudioContext();
+    const createBufferSource = context.createBufferSource.bind(context);
+    let starts = 0;
+
+    context.createBufferSource = () => {
+      const source = createBufferSource();
+      const start = source.start.bind(source);
+
+      source.start = () => {
+        starts++;
+        start();
+      };
+
+      return source;
+    };
+
+    try {
+      const object = createProbe().object;
+      const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+      const oneShot = { buffer, loop: false, volume: 1 };
+      const loop = { buffer, loop: true, volume: 1 };
+
+      object.sound.play(oneShot);
+      object.sound.play(loop);
+      const initial = starts;
+
+      object.status.sleep();
+      object.status.wake();
+      const afterWake = starts;
+
+      object.sound.play(oneShot);
+      return { initial, afterWake, explicitReplay: starts };
+
+    } finally {
+      context.createBufferSource = createBufferSource;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({ initial: 2, afterWake: 3, explicitReplay: 4 });
+});
+
 test("animation default sound follows playback while manual sounds remain independent", async ({ page }) => {
   const scene = await createScene(page);
 
