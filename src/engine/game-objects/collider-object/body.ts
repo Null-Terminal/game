@@ -236,20 +236,22 @@ export class CollisionBody extends ServantObject<ColliderObject> {
       // Пропускаем kind и index перед координатами в записи R-дерева
       const SKIP = 2;
 
-      if (
-        previous != null && (
-          bounds == null ||
-          previous[SKIP + 0] !== bounds[0] ||
-          previous[SKIP + 1] !== bounds[1] ||
-          previous[SKIP + 2] !== bounds[2] ||
-          previous[SKIP + 3] !== bounds[3]
-        )
-      ) {
+      const sameBounds = previous != null && bounds != null &&
+        previous[SKIP + 0] === bounds[0] &&
+        previous[SKIP + 1] === bounds[1] &&
+        previous[SKIP + 2] === bounds[2] &&
+        previous[SKIP + 3] === bounds[3];
+
+      if (sameBounds) {
+        continue;
+      }
+
+      if (previous != null) {
         tree.remove(...previous);
         entries[index + 1] = null;
       }
 
-      if (bounds != null && entries[index + 1] == null) {
+      if (bounds != null) {
         tree.insert(...go.poolPointer, ...bounds);
         entries[index + 1] = [...go.poolPointer, ...bounds];
       }
