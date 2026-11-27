@@ -1,7 +1,8 @@
-import { Camera, Game, RenderCanvas, World } from "#engine/game";
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
 
 import { WindDebrisObject } from "#game/background/wind-debris-object";
 import { roadDebris } from "#game/background/wind-debris-object/presets";
+import { defaultProjectSettings } from "#game/settings";
 
 export interface WindDebrisScene {
   debris: WindDebrisObject;
@@ -15,7 +16,7 @@ export async function createWindDebrisScene(): Promise<WindDebrisScene> {
   const canvas = new RenderCanvas(element, { width: 600, height: 240, backend: "2d" });
   canvas.stop();
 
-  const game = Game.camera(new Camera()).create(canvas);
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings)).create(canvas);
   const world = await game.loadLevel(async () => new World({
     persistentObjects: World.of([[
       WindDebrisObject,
