@@ -15,55 +15,42 @@ export function createDemoArenas(showSeams = false, debug = false) {
   });
 
   const arenas = Arenas.declare({
-    street: streetSource,
-    upper: upperSource,
-    background: async () => ({ objects: (await parts).background, autoUnload: false })
+    street: async (): Promise<ArenaDefinition> => ({ objects: (await parts).street }),
+    upper: async (): Promise<ArenaDefinition> => ({ objects: (await parts).upper }),
+    background: async () => ({ objects: (await parts).background, autoUnload: false }),
+    transitions: transitionSource
   });
 
-  arenas.preload(arenas.refs.background, arenas.refs.street);
+  arenas.preload(arenas.refs.background, arenas.refs.street, arenas.refs.transitions);
 
   return arenas;
 
-  async function streetSource(): Promise<ArenaDefinition> {
-    const { street } = await parts;
-
-    return {
-      objects: [...street, ...World.of([[ArenaBoundaryObject, {
-        bbox: [2600, 1050, 4700, 1350],
-        axis: "y",
-        threshold: 1200,
-        direction: "increasing",
+  function transitionSource(): ArenaDefinition {
+    const objects = World.of([
+      [ArenaBoundaryObject, {
+        bbox: [2600, 1050, 4700, 3200],
         isLoaded: (world: World) => world.arenas.getByRef(arenas.refs.upper)?.loaded === true,
         load: (world: World) => world.arenas.loadArena(arenas.refs.upper)
-      }]])]
-    };
-  }
+      }],
 
-  async function upperSource(): Promise<ArenaDefinition> {
-    const { upper } = await parts;
+      [ArenaBoundaryObject, {
+        bbox: [2600, 1750, 4700, 2050],
+        isLoaded: (world: World) => world.arenas.getByRef(arenas.refs.street)?.loaded === true,
+        load: (world: World) => world.arenas.loadArena(arenas.refs.street)
+      }],
 
-    return {
-      objects: [
-        ...upper,
-        ...World.of([[ArenaBoundaryObject, {
-          bbox: [2600, 1750, 4700, 2050],
-          axis: "y",
-          threshold: 1900,
-          direction: "decreasing",
-          isLoaded: (world: World) => world.arenas.getByRef(arenas.refs.street)?.loaded === true,
-          load: (world: World) => world.arenas.loadArena(arenas.refs.street)
-        }]]),
+      [ArenaBoundaryObject, {
+        bbox: [3500, 2050, 4300, 3000],
+        isLoaded: (world: World) => world.arenas.getByRef(arenas.refs.street)?.loaded === true,
+        load: (world: World) => world.arenas.loadArena(arenas.refs.street)
+      }]
+    ]);
 
-        ...World.of([[ArenaBoundaryObject, {
-          bbox: [3500, 2050, 4300, 3000],
-          axis: "x",
-          threshold: 3900,
-          direction: "decreasing",
-          isLoaded: (world: World) => world.arenas.getByRef(arenas.refs.street)?.loaded === true,
-          load: (world: World) => world.arenas.loadArena(arenas.refs.street)
-        }]])
-      ]
-    };
+    if (debug) {
+      enableDebug(objects);
+    }
+
+    return { objects, autoUnload: false };
   }
 }
 

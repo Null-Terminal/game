@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import type { World as GameWorld } from "#engine/game";
 import { createInteractionScene } from "#game/tests/browser";
 
-test("crossing a boundary loads the next arena once", async ({ page }) => {
+test("a transition loads on either side without duplicate requests", async ({ page }) => {
   const scene = await createInteractionScene(page);
 
   const result = await scene.evaluate(async ({ game, World, Arenas, PersonObject, ArenaBoundaryObject, destroy }) => {
@@ -13,9 +13,6 @@ test("crossing a boundary loads the next arena once", async ({ page }) => {
     const arenas = Arenas.declare({ start: () => ({
         objects: [[ArenaBoundaryObject, {
           bbox: [0, 0, 200, 200],
-          axis: "y",
-          threshold: 100,
-          direction: "increasing",
           isLoaded: () => targetLoaded,
           load: async (world: GameWorld) => {
             loads++;
@@ -77,7 +74,7 @@ test("crossing a boundary loads the next arena once", async ({ page }) => {
   });
 });
 
-test("approaching the lift horizontally can load the previous arena", async ({ page }) => {
+test("a horizontal transition responds from either side", async ({ page }) => {
   const scene = await createInteractionScene(page);
 
   const result = await scene.evaluate(async ({ game, World, Arenas, PersonObject, ArenaBoundaryObject, destroy }) => {
@@ -87,9 +84,6 @@ test("approaching the lift horizontally can load the previous arena", async ({ p
     const arenas = Arenas.declare({ start: () => ({
         objects: [[ArenaBoundaryObject, {
           bbox: [0, 0, 200, 200],
-          axis: "x",
-          threshold: 100,
-          direction: "decreasing",
           isLoaded: () => targetLoaded,
           load: async () => {
             loads++;
@@ -110,15 +104,19 @@ test("approaching the lift horizontally can load the previous arena", async ({ p
     boundary.visit(player);
     const before = loads;
 
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const fromRight = loads;
+
+    targetLoaded = false;
     player.x = 20;
     boundary.visit(player);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-    const after = loads;
+    const fromLeft = loads;
     destroy();
 
-    return { before, after };
+    return { before, fromRight, fromLeft };
   });
 
-  expect(result).toEqual({ before: 0, after: 1 });
+  expect(result).toEqual({ before: 0, fromRight: 1, fromLeft: 2 });
 });
