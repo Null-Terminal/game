@@ -38,7 +38,7 @@ test("touch buttons press and release shared actions", async ({ page }) => {
   const released = await scene.evaluate(({ player }) => player.actions.has("left"));
   expect(released).toBe(false);
 
-  await page.locator("game-touch-controls").getByRole("button", { name: "Пауза" }).tap();
+  await page.locator("game-touch-controls").getByRole("button", { name: "Открыть меню" }).tap();
   const paused = await scene.evaluate(({ game }) => game.status.paused);
   expect(paused).toBe(true);
 

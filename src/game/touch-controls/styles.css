@@ -36,7 +36,8 @@ button:active {
 #pause {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
-  right: max(16px, env(safe-area-inset-right));
+  left: 50%;
+  transform: translateX(-50%);
   width: 44px;
   height: 44px;
   font-size: 22px;
@@ -72,5 +73,11 @@ button:active {
   .movement,
   .actions {
     gap: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  #pause {
+    top: max(80px, calc(env(safe-area-inset-top) + 64px));
   }
 }

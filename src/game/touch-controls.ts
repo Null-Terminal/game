@@ -46,7 +46,7 @@ export class GameTouchControls extends HTMLElement {
 
   #sync() {
     const game = this.#game;
-    this.hidden = game == null || game.status.paused || !game.hasWorld;
+    this.hidden = game == null || !game.status.playing || !game.hasWorld;
 
     if (this.hidden) {
       this.#input?.touch?.clear();
