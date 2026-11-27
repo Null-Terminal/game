@@ -1,4 +1,4 @@
-import { getAudioContext } from "#engine/audio";
+import { getAudioContext, type AudioCategory } from "#engine/audio";
 import { Destroyable } from "#lib/destroyable";
 
 import type { Subscription } from "#lib/event-emitter";
@@ -45,8 +45,7 @@ export class GameAudio extends Destroyable {
     });
   }
 
-  output(category: "effects" | "music" = "effects"): AudioNode {
+  output(category: AudioCategory = "effects"): AudioNode {
     return category === "music" ? this.#music : this.#effects;
   }
-
 }

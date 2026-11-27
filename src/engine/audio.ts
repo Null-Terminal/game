@@ -1,3 +1,7 @@
+import type { AudioCategory } from "#lib/animation-definition";
+
+export type { AudioCategory } from "#lib/animation-definition";
+
 let context: AudioContext | null = null;
 
 const sounds = new Map<string, Promise<AudioBuffer>>();
@@ -6,7 +10,7 @@ export interface LoadedSound {
   readonly buffer: AudioBuffer;
   readonly loop: boolean;
   readonly volume: number;
-  readonly category?: "effects" | "music";
+  readonly category?: AudioCategory;
 }
 
 export function getAudioContext(): AudioContext {

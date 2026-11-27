@@ -15,11 +15,13 @@ export interface SpriteDescriptor extends SpriteRegion {
   spriteId: string;
 }
 
+export type AudioCategory = "effects" | "music";
+
 export interface AnimationSound {
   url: string;
   loop?: boolean;
   volume?: number;
-  category?: "effects" | "music";
+  category?: AudioCategory;
 }
 
 export interface OptionalAnimationParameters {
