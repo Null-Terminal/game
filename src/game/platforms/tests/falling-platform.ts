@@ -15,6 +15,7 @@ export async function createFallingPlatformScene() {
 
   const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings))
     .input((game) => new GameInput(game)).create(canvas);
+
   const world = await game.loadLevel(async () => new World({ persistentObjects: [] }));
 
   const leftPointer = world.createObject(PlatformObject, { show: scaffoldPlank.intact, x: 0, y: 200 });

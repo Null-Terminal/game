@@ -1,6 +1,7 @@
 export async function sampleFrameIntervals(durationSeconds: number): Promise<number[]> {
   return new Promise((resolve) => {
     const times: number[] = [];
+
     let previous = 0;
     let started = 0;
 

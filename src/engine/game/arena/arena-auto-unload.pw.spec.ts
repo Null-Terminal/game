@@ -216,6 +216,7 @@ test("automatic unload follows the current game setting", async ({ page }) => {
     const declaration = Arenas.declare({
       start: () => ({ objects: [[ArenaProbe, { bbox: [1000, 0, 1020, 20] }]] })
     }, arenaOptions);
+
     declaration.preload(declaration.refs.start);
 
     const world = await game.loadLevel(async () => new World({ persistentObjects: [], arenas: declaration }));

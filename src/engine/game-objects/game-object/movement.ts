@@ -6,9 +6,9 @@ import type * as t from "#engine/game-objects/game-object/movement/types";
 export type * from "#engine/game-objects/game-object/movement/types";
 
 export class Movement extends ServantObject {
-  #cancelMovementHandler: Destructor | null = null;
-  #progress: t.MovementSnapshot | null = null;
   #paused = false;
+  #progress: t.MovementSnapshot | null = null;
+  #cancelMovementHandler: Destructor | null = null;
 
   get paused() {
     return this.#paused;
