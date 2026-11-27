@@ -87,12 +87,13 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
     this.refs = refs;
 
     this.options = {
-      unload: { checkInterval: opts?.unload?.checkInterval ?? 500 }
+      unload: { checkInterval: opts?.unload?.checkInterval ?? 1000 }
     };
 
     this.#world = world;
     this.#refsToPreload = new Set(refsToPreload);
     this.#unloadSettings = world.game.settings.get("arenaUnload");
+
     this.#settingsSubscription = world.game.settings.events.change.on((key) => {
       if (key === "arenaUnload") {
         this.#unloadSettings = world.game.settings.get("arenaUnload");

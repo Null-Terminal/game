@@ -23,7 +23,7 @@ export class GameSleep extends Destroyable {
 
     const {
       wakeDistanceFactor = 0.8,
-      checkInterval = 250
+      checkInterval = 1000
     } = game.options.sleep ?? {};
 
     if (!isPositive(wakeDistanceFactor) || wakeDistanceFactor >= 1 || !isPositive(checkInterval)) {
