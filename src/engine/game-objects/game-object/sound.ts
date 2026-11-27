@@ -5,6 +5,7 @@ import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
+import type { Subscription } from "#lib/event-emitter";
 
 type PlayingSource = { source: AudioBufferSourceNode; gain: GainNode };
 
@@ -13,6 +14,7 @@ export class GameObjectSound extends ServantObject {
 
   #volume = 1;
   #cleanup: (() => void) | null = null;
+  #falloffUpdates: Subscription | null = null;
 
   get volume() {
     return this.#volume;
@@ -27,7 +29,7 @@ export class GameObjectSound extends ServantObject {
 
     for (const [sound, playing] of this.#playing) {
       if (playing != null) {
-        playing.gain.gain.value = sound.volume * volume;
+        playing.gain.gain.value = this.#gainFor(sound);
       }
     }
   }
@@ -40,6 +42,19 @@ export class GameObjectSound extends ServantObject {
   play(sound: LoadedSound) {
     if (!isInRange(sound.volume, 0, 1)) {
       throw new RangeError(`${this.constructor.name}.play: volume must be between 0 and 1`);
+    }
+
+    const { falloff } = sound;
+
+    if (falloff != null) {
+      const { near, far } = falloff;
+
+      const validNear = Number.isFinite(near) && near >= 0;
+      const validFar = Number.isFinite(far) && far > near;
+
+      if (!validNear || !validFar) {
+        throw new RangeError(`${this.constructor.name}.play: falloff must satisfy 0 <= near < far`);
+      }
     }
 
     this.#ensureSubscribed();
@@ -64,6 +79,7 @@ export class GameObjectSound extends ServantObject {
     }
 
     this.#playing.delete(sound);
+    this.#stopFalloffUpdatesIfIdle();
   }
 
   reset() {
@@ -110,6 +126,8 @@ export class GameObjectSound extends ServantObject {
         this.#startSource(sound);
       }
     }
+
+    this.#stopFalloffUpdatesIfIdle();
   }
 
   #startSource(sound: LoadedSound) {
@@ -121,7 +139,7 @@ export class GameObjectSound extends ServantObject {
     source.buffer = sound.buffer;
     source.connect(gain);
 
-    gain.gain.value = sound.volume * this.#volume;
+    gain.gain.value = this.#gainFor(sound);
     gain.connect(this.go.game.audio.output(sound.category));
 
     const playing = { source, gain };
@@ -132,11 +150,22 @@ export class GameObjectSound extends ServantObject {
 
       if (this.#playing.get(sound) === playing) {
         this.#playing.delete(sound);
+        this.#stopFalloffUpdatesIfIdle();
       }
     };
 
     this.#playing.set(sound, playing);
     source.start();
+
+    if (sound.falloff != null) {
+      this.#falloffUpdates ??= this.go.canvas.events.ui.on(() => {
+        for (const [activeSound, active] of this.#playing) {
+          if (active != null && activeSound.falloff != null) {
+            active.gain.gain.value = this.#gainFor(activeSound);
+          }
+        }
+      });
+    }
 
     if (context.state === "suspended") {
       void context.resume().catch(() => {});
@@ -148,5 +177,46 @@ export class GameObjectSound extends ServantObject {
     source.stop();
     source.disconnect();
     gain.disconnect();
+  }
+
+  #gainFor(sound: LoadedSound): number {
+    const volume = sound.volume * this.#volume;
+    const { falloff } = sound;
+
+    if (falloff == null) {
+      return volume;
+    }
+
+    const { go } = this;
+    const { camera, canvas } = go.game;
+    const { target } = camera;
+    const listenerX = target == null ? camera.x + canvas.width / 2 : target.x + target.width / 2;
+    const listenerY = target == null ? camera.y + canvas.height / 2 : target.y + target.height / 2;
+    const distance = Math.hypot(go.x + go.width / 2 - listenerX, go.y + go.height / 2 - listenerY);
+
+    if (!Number.isFinite(distance) || distance >= falloff.far) {
+      return 0;
+    }
+
+    if (distance <= falloff.near) {
+      return volume;
+    }
+
+    return volume * (falloff.far - distance) / (falloff.far - falloff.near);
+  }
+
+  #stopFalloffUpdatesIfIdle() {
+    if (this.#falloffUpdates == null) {
+      return;
+    }
+
+    for (const [sound, playing] of this.#playing) {
+      if (playing != null && sound.falloff != null) {
+        return;
+      }
+    }
+
+    this.#falloffUpdates.dispose();
+    this.#falloffUpdates = null;
   }
 }

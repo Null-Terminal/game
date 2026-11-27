@@ -17,11 +17,20 @@ export interface SpriteDescriptor extends SpriteRegion {
 
 export type AudioCategory = "effects" | "music";
 
+export interface SoundFalloff {
+  // Расстояние до источника в пикселях мира при полной громкости
+  readonly near: number;
+
+  // Расстояние до источника в пикселях мира, после которого звук не слышен
+  readonly far: number;
+}
+
 export interface AnimationSound {
   url: string;
   loop?: boolean;
   volume?: number;
   category?: AudioCategory;
+  falloff?: SoundFalloff;
 }
 
 export interface OptionalAnimationParameters {

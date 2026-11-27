@@ -1,6 +1,6 @@
-import type { AudioCategory } from "#lib/animation-definition";
+import type { AudioCategory, SoundFalloff } from "#lib/animation-definition";
 
-export type { AudioCategory } from "#lib/animation-definition";
+export type { AudioCategory, SoundFalloff } from "#lib/animation-definition";
 
 let context: AudioContext | null = null;
 
@@ -11,6 +11,7 @@ export interface LoadedSound {
   readonly loop: boolean;
   readonly volume: number;
   readonly category?: AudioCategory;
+  readonly falloff?: SoundFalloff;
 }
 
 export function getAudioContext(): AudioContext {

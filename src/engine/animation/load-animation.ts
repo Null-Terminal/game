@@ -30,7 +30,8 @@ export async function loadAnimation<T extends Animation>(
           buffer: await loadSound(definition.url),
           loop: definition.loop ?? false,
           volume,
-          category: definition.category ?? "effects"
+          category: definition.category ?? "effects",
+          ...(definition.falloff == null ? {} : { falloff: definition.falloff })
         }];
       }))
   ]);
