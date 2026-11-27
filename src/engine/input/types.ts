@@ -2,6 +2,11 @@ export type GamepadBinding =
   | { button: number }
   | { axis: number; direction: -1 | 1; threshold?: number };
 
+export interface GamepadDevice {
+  index: number;
+  id: string;
+}
+
 export interface InputBindings<Action extends string> {
   keyboard: ReadonlyMap<string, Action>;
   gamepad: ReadonlyMap<GamepadBinding, Action>;

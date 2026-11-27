@@ -1,4 +1,4 @@
-import { Input, type GamepadBinding, type InputBindings } from "#engine/input";
+import { GamepadInput, Input, type GamepadBinding, type InputBindings } from "#engine/input";
 import { gameActions, type GameAction } from "#game/input/types";
 
 import type { Game } from "#engine/game";
@@ -11,6 +11,8 @@ export class GameInput extends Input<GameAction> {
     super(gameActions, controlsToBindings(game.settings.get("controls")), {
       active: () => game.status.playing && game.hasWorld
     });
+
+    GamepadInput.setPreferredId(game.settings.get("gamepadId"));
 
     this.onDestroy(this.events.press.on((action) => {
       if (action === "pause") {
@@ -32,6 +34,9 @@ export class GameInput extends Input<GameAction> {
     this.onDestroy(game.settings.events.change.on((key) => {
       if (key === "controls") {
         this.setBindings(controlsToBindings(game.settings.get("controls")));
+
+      } else if (key === "gamepadId") {
+        GamepadInput.setPreferredId(game.settings.get("gamepadId"));
       }
     }));
   }

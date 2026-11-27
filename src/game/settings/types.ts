@@ -8,9 +8,19 @@ export interface ProjectControls {
   gamepad: Record<GameAction, GamepadBinding[]>;
 }
 
+export type MenuGamepadAction = "confirm" | "back" | "previousGroup" | "nextGroup";
+
+export interface MenuGamepadProfile {
+  id: string;
+  bindings: Partial<Record<MenuGamepadAction, GamepadBinding>>;
+}
+
 export interface ProjectSettings {
   dynamicEffects: boolean;
   vibrationIntensity: number;
+  gamepadLayout: "playstation" | "xbox";
+  gamepadId: string;
+  menuGamepadProfiles: MenuGamepadProfile[];
   controls: ProjectControls;
 }
 

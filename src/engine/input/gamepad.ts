@@ -1,10 +1,45 @@
 import { EventEmitter, handler } from "#lib/event-emitter";
 import { Destroyable } from "#lib/destroyable";
 
-import type { GamepadBinding, KeyChange } from "#engine/input/types";
+import type { GamepadBinding, GamepadDevice, KeyChange } from "#engine/input/types";
 
 export class GamepadInput extends Destroyable {
   static #selectedIndex: number | null = null;
+  static #preferredId = "";
+
+  static get selectedIndex(): number | null {
+    this.getGamepad();
+    return this.#selectedIndex;
+  }
+
+  static getConnectedGamepads(): GamepadDevice[] {
+    if (typeof navigator.getGamepads !== "function") {
+      return [];
+    }
+
+    return navigator.getGamepads().entries()
+      .filter((entry): entry is [number, Gamepad] => entry[1]?.connected === true)
+      .map(([index, gamepad]) => ({ index, id: gamepad.id }))
+      .toArray();
+  }
+
+  static selectGamepad(index: number): string | null {
+    const gamepad = Number.isInteger(index) ? navigator.getGamepads?.()[index] : null;
+
+    if (gamepad?.connected !== true) {
+      return null;
+    }
+
+    this.#selectedIndex = index;
+    this.#preferredId = gamepad.id;
+
+    return gamepad.id;
+  }
+
+  static setPreferredId(id: string) {
+    this.#preferredId = id;
+    this.getGamepad();
+  }
 
   static getGamepad(): Gamepad | null {
     if (typeof navigator.getGamepads !== "function") {
@@ -14,9 +49,21 @@ export class GamepadInput extends Destroyable {
 
     const gamepads = navigator.getGamepads();
     const selectedIndex = GamepadInput.#selectedIndex;
+    const preferredId = GamepadInput.#preferredId;
 
-    if (selectedIndex != null && gamepads[selectedIndex]?.connected) {
+    if (preferredId && selectedIndex != null && gamepads[selectedIndex]?.connected && gamepads[selectedIndex]?.id === preferredId) {
       return gamepads[selectedIndex]!;
+    }
+
+    if (preferredId) {
+      for (let index = 0; index < gamepads.length; index++) {
+        const gamepad = gamepads[index];
+
+        if (gamepad?.connected && gamepad.id === preferredId) {
+          GamepadInput.#selectedIndex = index;
+          return gamepad;
+        }
+      }
     }
 
     for (let index = 0; index < gamepads.length; index++) {
@@ -51,6 +98,8 @@ export class GamepadInput extends Destroyable {
 
   #keys: readonly GamepadBinding[];
   #tickId: number;
+  #currentIndex = GamepadInput.selectedIndex;
+  #currentId = GamepadInput.getGamepad()?.id ?? null;
 
   constructor(keys: Iterable<GamepadBinding>) {
     super();
@@ -97,6 +146,19 @@ export class GamepadInput extends Destroyable {
 
   #poll() {
     const gamepad = GamepadInput.getGamepad();
+    const selectedIndex = GamepadInput.#selectedIndex;
+    const id = gamepad?.id ?? null;
+
+    if (selectedIndex !== this.#currentIndex || id !== this.#currentId) {
+      for (const key of this.#pressed) {
+        this.events.change.emit({ key, pressed: false });
+      }
+
+      this.#pressed.clear();
+      this.#currentIndex = selectedIndex;
+      this.#currentId = id;
+      this.#blocked.clear();
+    }
 
     for (const key of this.#keys) {
       const physicallyPressed = this.#isBindingPressed(gamepad, key);

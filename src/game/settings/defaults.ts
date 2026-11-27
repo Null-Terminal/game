@@ -8,6 +8,9 @@ export const defaultDistanceScreens = {
 export const defaultProjectSettings: ProjectSettings = {
   dynamicEffects: true,
   vibrationIntensity: 1,
+  gamepadLayout: "playstation",
+  gamepadId: "",
+  menuGamepadProfiles: [],
   controls: {
     keyboard: {
       left: "ArrowLeft",
