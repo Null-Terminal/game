@@ -43,25 +43,39 @@ const vertices = new Float32Array([
 
 export function createWebGLProgram(gl: WebGL2RenderingContext) {
   const vertex = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
-  const fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-  const program = gl.createProgram()!;
 
-  gl.attachShader(program, vertex);
-  gl.attachShader(program, fragment);
-  gl.linkProgram(program);
+  let fragment: WebGLShader | null = null;
+  let program: WebGLProgram | null = null;
 
-  const linkError = !gl.getProgramParameter(program, gl.LINK_STATUS) ?
-    gl.getProgramInfoLog(program) ?? "WebGL program linking failed" :
-    null;
+  try {
+    fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    program = gl.createProgram();
 
-  gl.detachShader(program, vertex);
-  gl.detachShader(program, fragment);
-  gl.deleteShader(vertex);
-  gl.deleteShader(fragment);
+    if (program == null) {
+      throw new Error("Could not create a WebGL program");
+    }
 
-  if (linkError != null) {
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      throw new Error(gl.getProgramInfoLog(program) ?? "WebGL program linking failed");
+    }
+
+    gl.detachShader(program, vertex);
+    gl.detachShader(program, fragment);
+
+  } catch (err) {
     gl.deleteProgram(program);
-    throw new Error(linkError);
+    throw err;
+
+  } finally {
+    gl.deleteShader(vertex);
+
+    if (fragment != null) {
+      gl.deleteShader(fragment);
+    }
   }
 
   gl.useProgram(program);
