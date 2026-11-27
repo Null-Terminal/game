@@ -7,10 +7,9 @@ import type { GameObject } from "#engine/game-objects";
 import type { GameSleepOptions } from "#engine/game/sleep/types";
 
 export class GameSleep extends Destroyable {
-  readonly #game: Game;
-
-  readonly #options: Required<GameSleepOptions>;
-  #sleepSettings: SleepSettings | null;
+  readonly game: Game;
+  readonly options: Required<GameSleepOptions>;
+  #settings: SleepSettings | null;
 
   #subscription: Subscription | null = null;
   readonly #settingsSubscription: Subscription;
@@ -19,7 +18,7 @@ export class GameSleep extends Destroyable {
 
   constructor(game: Game) {
     super();
-    this.#game = game;
+    this.game = game;
 
     const {
       wakeDistanceFactor = 0.8,
@@ -30,12 +29,12 @@ export class GameSleep extends Destroyable {
       throw new RangeError(`${this.constructor.name}: expected a wake factor between 0 and 1 and a positive interval`);
     }
 
-    this.#options = { wakeDistanceFactor, checkInterval };
-    this.#sleepSettings = game.settings.get("sleep");
+    this.options = { wakeDistanceFactor, checkInterval };
+    this.#settings = game.settings.get("sleep");
 
     this.#settingsSubscription = game.settings.events.change.on((key) => {
       if (key === "sleep") {
-        this.#sleepSettings = game.settings.get("sleep");
+        this.#settings = game.settings.get("sleep");
         this.#syncSubscription();
       }
     });
@@ -51,12 +50,12 @@ export class GameSleep extends Destroyable {
   #syncSubscription() {
     this.#lastCheckAt = null;
 
-    if (this.#sleepSettings == null) {
+    if (this.#settings == null) {
       this.#subscription?.dispose();
       this.#subscription = null;
 
-      if (this.#game.hasWorld) {
-        for (const store of Object.values(this.#game.world.objects.objects)) {
+      if (this.game.hasWorld) {
+        for (const store of Object.values(this.game.world.objects.objects)) {
           for (let index = 0; index < store.length; index++) {
             store.buffer[index]?.status.wake();
           }
@@ -70,20 +69,20 @@ export class GameSleep extends Destroyable {
       return;
     }
 
-    this.#subscription = this.#game.canvas.events.beforeRender.on(({ now }) => {
-      if (this.#lastCheckAt != null && now - this.#lastCheckAt < this.#options.checkInterval) {
+    this.#subscription = this.game.canvas.events.beforeRender.on(({ now }) => {
+      if (this.#lastCheckAt != null && now - this.#lastCheckAt < this.options.checkInterval) {
         return;
       }
 
       this.#lastCheckAt = now;
-      this.update();
+      this.sync();
     });
   }
 
   sleepIfFar(go: GameObject) {
-    const opts = this.#sleepSettings;
+    const opts = this.#settings;
 
-    if (opts == null || go === this.#game.camera.target || !go.sleepable || go.options.sleep === false) {
+    if (opts == null || go === this.game.camera.target || !go.sleepable || go.options.sleep === false) {
       return;
     }
 
@@ -92,11 +91,12 @@ export class GameSleep extends Destroyable {
     }
   }
 
-  update() {
-    const game = this.#game;
-    const opts = this.#sleepSettings;
+  sync() {
+    const { game } = this;
 
-    if (!game.hasWorld || opts == null) {
+    const settings = this.#settings;
+
+    if (!game.hasWorld || settings == null) {
       return;
     }
 
@@ -118,11 +118,11 @@ export class GameSleep extends Destroyable {
         }
 
         if (go.status.sleeping) {
-          if (!go.isFarFromViewport(opts.distanceScreens * this.#options.wakeDistanceFactor)) {
+          if (!go.isFarFromViewport(settings.distanceScreens * this.options.wakeDistanceFactor)) {
             go.status.wake();
           }
 
-        } else if (go.isFarFromViewport(opts.distanceScreens)) {
+        } else if (go.isFarFromViewport(settings.distanceScreens)) {
           go.status.sleep();
         }
       }

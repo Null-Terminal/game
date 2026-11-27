@@ -10,7 +10,7 @@ test("destroy removes an object before the sleep update", async ({ page }) => {
   const result = await scene.evaluate(({ game, world, probe, destroy }) => {
     const pointer = [...probe.poolPointer] as const;
     probe.destroy();
-    game.sleep.update();
+    game.sleep.sync();
 
     const result = {
       destroyed: probe.destroyed,
@@ -35,7 +35,7 @@ test("changing sleep settings wakes and resleeps distant objects", async ({ page
     const disabled = probe.status.sleeping;
 
     game.settings.set("sleep", { distanceScreens: 2 });
-    game.sleep.update();
+    game.sleep.sync();
     const enabled = probe.status.sleeping;
 
     destroy();
@@ -56,7 +56,7 @@ test("distant objects start asleep and resume movement, rendering, and collision
     };
 
     game.camera.x = 300;
-    game.sleep.update();
+    game.sleep.sync();
 
     const awake = {
       sleeping: probe.status.sleeping,
@@ -71,7 +71,7 @@ test("distant objects start asleep and resume movement, rendering, and collision
     const resumed = { x: probe.x, renderTicks: probe.renderTicks };
 
     game.camera.x = 0;
-    game.sleep.update();
+    game.sleep.sync();
 
     canvas.events.beforeRender.emit({ ...frame, now: 32 });
     canvas.events.scene.emit({ ...frame, now: 32 });
@@ -104,7 +104,7 @@ test("distance wakeup preserves paused movement", async ({ page }) => {
     const initialX = probe.x;
 
     game.camera.x = 300;
-    game.sleep.update();
+    game.sleep.sync();
 
     const ctx = canvas.canvas.getContext("2d")!;
     canvas.events.beforeRender.emit({ ctx, now: 100, delta: 1 });
@@ -131,7 +131,7 @@ test("the camera target stays awake even outside the viewport", async ({ page })
 
   const result = await scene.evaluate(({ game, world, probe, destroy }) => {
     const unbind = game.camera.bindTo(probe);
-    game.sleep.update();
+    game.sleep.sync();
 
     const { sleeping } = probe.status;
     const collides = world.hasCollision(350, 0, 360, 10);
@@ -154,17 +154,17 @@ test("parallax backgrounds sleep by their projected bounds while screen-fixed ba
     const fixed = createBackground({ bbox, static: "w" });
 
     game.camera.x = 400;
-    game.sleep.update();
+    game.sleep.sync();
 
     const near = { parallax: parallax.status.sleeping, fixed: fixed.status.sleeping };
 
     game.camera.x = 1600;
-    game.sleep.update();
+    game.sleep.sync();
 
     const far = { parallax: parallax.status.sleeping, fixed: fixed.status.sleeping };
 
     game.camera.x = 400;
-    game.sleep.update();
+    game.sleep.sync();
 
     const returned = { parallax: parallax.status.sleeping, fixed: fixed.status.sleeping };
     destroy();
@@ -192,10 +192,10 @@ test("waking a background restores its original drawing order", async ({ page })
     last.render.on(canvas.events.background, () => drawOrder.push("last"));
 
     game.camera.x = 1600;
-    game.sleep.update();
+    game.sleep.sync();
 
     game.camera.x = 0;
-    game.sleep.update();
+    game.sleep.sync();
 
     const ctx = canvas.canvas.getContext("2d")!;
     canvas.events.background.emit({ ctx, now: 16, delta: 0.016 });
