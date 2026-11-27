@@ -66,8 +66,7 @@ export class RenderCanvasInspector {
     this.#entries.push(entry);
   }
 
-  #row({ go, left, top, right, bottom, frame, animation: partAnimation, part }: InspectionEntry, drawOrder: number) {
-    const playing = partAnimation;
+  #row({ go, left, top, right, bottom, frame, animation: playing, part }: InspectionEntry, drawOrder: number) {
     let animation: string | null = null;
 
     if (playing instanceof LoadedAnimation) {
@@ -79,13 +78,7 @@ export class RenderCanvasInspector {
 
     const layer = Object.entries(go.canvas.events).find(([, event]) => event === go.redrawEvent)?.[0] ?? "custom";
 
-    const states: string[] = [];
-
-    if (go.status.sleeping) {
-      states.push("sleeping");
-    }
-
-    const status = states.length > 0 ? states.join(", ") : "active";
+    const status = go.status.sleeping ? "sleeping" : "active";
 
     return {
       drawOrder,
