@@ -96,7 +96,7 @@ export class Arena extends Destroyable {
     return this.#createObject(go, opts, path);
   }
 
-  release(go: GameObject) {
+  releaseObject(go: GameObject) {
     this.#objects.delete(go);
 
     const key = this.#stateKeyByObject.get(go);

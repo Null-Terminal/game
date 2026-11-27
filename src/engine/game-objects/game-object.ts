@@ -168,7 +168,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
         this.status.reset();
 
       } finally {
-        this.arena?.release(this);
+        this.arena?.releaseObject(this);
         this.arena = null;
         this.world.objects.release(this);
       }
