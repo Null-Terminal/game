@@ -17,6 +17,10 @@ export default defineConfig([
         "semi": ["error", "always"],
         "curly": ["error", "all"],
         "arrow-parens": ["error", "always"],
+        "prefer-destructuring": ["error", {
+          VariableDeclarator: { object: true, array: false },
+          AssignmentExpression: { object: false, array: false }
+        }],
         "no-nested-ternary": "error",
         "multiline-ternary": ["error", "always-multiline"],
         "operator-linebreak": ["error", "after"],
