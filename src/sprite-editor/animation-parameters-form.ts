@@ -1,4 +1,4 @@
-import type { AnimationParameters, RawAnimationParameters, SpriteRegion } from "#/animation-definition";
+import type { AnimationParameters, RawAnimationParameters, SpriteRegion } from "#lib/animation-definition";
 
 export class AnimationParametersForm {
   readonly #form: HTMLFormElement;

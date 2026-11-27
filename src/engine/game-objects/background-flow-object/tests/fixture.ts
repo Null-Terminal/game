@@ -1,8 +1,8 @@
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 
 import { LoadedAnimation } from "#engine/animation";
 import { Camera, Game, RenderCanvas, World } from "#engine/game";
-import { BackgroundFlowObject } from "#engine/game-objects/background-flow-object";
+import { BackgroundFlowObject } from "#engine/game-objects";
 
 export interface FlowScene {
   flow: BackgroundFlowObject;
@@ -15,7 +15,13 @@ export interface FlowScene {
 
 export async function createFlowScene(): Promise<FlowScene> {
   const element = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = new RenderCanvas(element, { width: 100, height: 100, backgroundColor: "#FFFFFF" });
+  const canvas = new RenderCanvas(element, {
+    width: 100,
+    height: 100,
+    backgroundColor: "#FFFFFF",
+    backend: "2d"
+  });
+
   canvas.stop();
 
   const first = createAnimation(["#FF0000", "#00FF00"], 50);
@@ -23,7 +29,7 @@ export async function createFlowScene(): Promise<FlowScene> {
   const game = Game.camera(new Camera()).create(canvas);
 
   const world = await game.loadLevel(async () => new World({
-    objects: World.of([[
+    persistentObjects: World.of([[
       BackgroundFlowObject,
       { sprites: [first, second], order: "round-robin", gap: 0, seed: 1, y: 10 }
     ]])
@@ -39,7 +45,7 @@ export async function createFlowScene(): Promise<FlowScene> {
 
     renderAt(now) {
       canvas.clear();
-      canvas.emitter.emit(canvas.events.background, { ctx, now, delta: 0.016 });
+      canvas.events.background.emit({ ctx, now, delta: 0.016 });
     },
 
     colorAt(x, y) {

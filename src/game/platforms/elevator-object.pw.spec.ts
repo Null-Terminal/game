@@ -89,6 +89,79 @@ test("calling a stop replaces the initial movement", async ({ page }) => {
   expect(returned.panel.y - returned.elevator.y).toBeCloseTo(initial.panel.y - initial.elevator.y, 0);
 });
 
+test("the saved state remembers which stop the elevator was heading to", async ({ page }) => {
+  const scene = await createScene(page, { rider: "floor" });
+
+  const result = await scene.evaluate(({ elevator }) => {
+    elevator.goToStop(1);
+    const saved = elevator.state.save();
+
+    elevator.goToStop(2);
+    elevator.state.restore(saved);
+
+    const restoredStop = elevator.targetStop;
+    elevator.nextStop();
+
+    return { restoredStop, nextStop: elevator.targetStop };
+  });
+
+  expect(result).toEqual({ restoredStop: 1, nextStop: 2 });
+});
+
+test("a pooled elevator registers its state only once", async ({ page }) => {
+  const scene = await createScene(page, { rider: "floor" });
+
+  const result = await scene.evaluate(({ world, ElevatorObject, elevator }) => {
+    const options = elevator.options;
+    elevator.destroy();
+
+    const pointer = world.createObject(ElevatorObject, options);
+    const reused = world.objects.get(...pointer);
+
+    if (reused == null) {
+      throw new Error("Elevator was not recreated");
+    }
+
+    return { sameObject: reused === elevator, state: reused.state.save()["targetStop"] };
+  });
+
+  expect(result).toEqual({ sameObject: true, state: 0 });
+});
+
+test("an elevator resumes its selected stop after its arena is restored", async ({ page }) => {
+  const scene = await createScene(page, { rider: "floor" });
+
+  const result = await scene.evaluate(async ({ World, world, ElevatorObject, elevator }) => {
+    const source = () => ({
+      objects: World.of([[ElevatorObject, { ...elevator.options, x: 650, y: 100 }]])
+    });
+
+    const arena = await world.arenas.loadArena(source);
+    world.game.canvas.stop();
+
+    const moving = world.objects.get(ElevatorObject.kind, 1);
+
+    if (!(moving instanceof ElevatorObject)) {
+      throw new Error("Arena elevator was not created");
+    }
+
+    moving.goToStop(2);
+    await world.arenas.unloadArena(arena);
+    await world.arenas.restoreArena(arena);
+
+    const restored = world.objects.get(ElevatorObject.kind, 1);
+
+    if (!(restored instanceof ElevatorObject)) {
+      throw new Error("Arena elevator was not restored");
+    }
+
+    return { targetStop: restored.targetStop, position: [restored.x, restored.y] };
+  });
+
+  expect(result.targetStop).toBe(2);
+  expect(result.position).toEqual([650, 100]);
+});
+
 test("cabin ceiling blocks the player's jetpack from below", async ({ page }) => {
   const scene = await createScene(page, { rider: "floor" });
   await expect.poll(() => getContactDistance(scene, "floor")).toBeLessThan(2);

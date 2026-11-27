@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AnimationDefinition } from "#/animation-definition";
+import { World } from "#engine/game";
+import { AnimationDefinition } from "#lib/animation-definition";
 import { LoadedAnimation } from "#engine/animation";
-import { World } from "#engine/game/world";
 import type { GameObject } from "#engine/game-objects";
 
 describe("World collision bounds", () => {
@@ -12,7 +12,7 @@ describe("World collision bounds", () => {
       sprites: [{ x: 0, y: 0, width: 200, height: 100, duration: 100, spriteId: "" }]
     }));
 
-    const world = new World({ objects: [] });
+    const world = new World({ persistentObjects: [] });
     const object = {
       poolPointer: [1, 2],
       nowPlaying: animation,
@@ -37,7 +37,7 @@ describe("World collision bounds", () => {
       sprites: [{ x: 0, y: 0, width: 200, height: 100, duration: 100, spriteId: "" }]
     }));
 
-    const world = new World({ objects: [] });
+    const world = new World({ persistentObjects: [] });
     const object = {
       poolPointer: [1, 2],
       nowPlaying: animation,
@@ -60,7 +60,7 @@ describe("World collision bounds", () => {
       sprites: [{ x: 0, y: 0, width: 100, height: 100, duration: 100, spriteId: "" }]
     }));
 
-    const world = new World({ objects: [] });
+    const world = new World({ persistentObjects: [] });
     const object = {
       poolPointer: [1, 2],
       nowPlaying: animation,

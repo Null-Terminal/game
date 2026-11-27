@@ -1,0 +1,39 @@
+<div class="backdrop">
+  <section id="menu-screen" class="panel" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+    <p class="eyebrow">NULL TERMINAL</p>
+    <h1 id="menu-title">Меню игры</h1>
+    <p class="subtitle">Исследуйте мир и найдите путь дальше.</p>
+
+    <div class="actions">
+      <button id="start" type="button" class="primary" data-action="playGame">Начать игру</button>
+      <button id="settings" type="button" data-action="openSettings">Настройки</button>
+    </div>
+
+    <p id="error" class="error" role="alert"></p>
+    <p id="gamepad-status" class="hint" aria-live="polite"></p>
+    <p class="hint">Меню и пауза: Esc или кнопка Menu/Start на геймпаде (кнопка 9 по умолчанию).</p>
+    <p class="hint">Геймпад: стик или крестовина — выбор, ×/A — подтвердить, ○/B — назад.</p>
+  </section>
+
+  <section id="game-over-screen" class="panel" role="alertdialog" aria-modal="true" aria-labelledby="game-over-title" hidden>
+    <p class="eyebrow">NULL TERMINAL</p>
+    <h1 id="game-over-title">Вы проиграли</h1>
+    <p class="subtitle">Попробуйте ещё раз.</p>
+    <div class="actions">
+      <button id="restart" type="button" class="primary" data-action="restartGame">Начать заново</button>
+    </div>
+    <p id="restart-error" class="error" role="alert"></p>
+  </section>
+
+  <section id="settings-screen" class="panel settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="heading">
+      <div>
+        <p class="eyebrow">NULL TERMINAL</p>
+        <h1 id="settings-title">Настройки</h1>
+      </div>
+      <button id="back" type="button" data-action="closeSettings">Назад</button>
+    </div>
+
+    <game-settings-panel></game-settings-panel>
+  </section>
+</div>

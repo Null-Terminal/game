@@ -1,0 +1,51 @@
+import type { Game } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
+
+import type { StateValue } from "#engine/game-objects";
+import { InteractObject, ifAlive } from "#engine/game-objects";
+import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
+
+import { PersonObject } from "#game/characters/person-object";
+
+import { fuelCanister } from "#game/sprites/interactables/fuel-canister";
+import { medkit } from "#game/sprites/interactables/medkit";
+
+export type PickupKind = keyof typeof PickupObject.kinds;
+export type PickupOptions = GameObjectOptions<DefaultGameObjectOptions & { kind: PickupKind }>;
+
+export class PickupObject extends InteractObject<PickupOptions> {
+  static readonly kinds = {
+    fuel: { show: fuelCanister, stat: "fuel", max: "fuelMax", gain: 20 },
+    medkit: { show: medkit, stat: "hp", max: "hpMax", gain: 35 }
+  } as const;
+
+  override init() {
+    super.init();
+    this.initPhysics();
+  }
+
+  override create(game: Game, poolPointer: PoolPointer, opts?: PickupOptions, snapshot?: StateValue) {
+    if (opts == null) {
+      throw new TypeError("Pickup kind is required");
+    }
+
+    return super.create(game, poolPointer, {
+      show: PickupObject.kinds[opts.kind].show,
+      ...opts
+    }, snapshot);
+  }
+
+  @ifAlive
+  override visit(go: GameObject) {
+    if (!(go instanceof PersonObject)) {
+      return;
+    }
+
+    const { stat, max, gain } = PickupObject.kinds[this.options.kind];
+
+    if (go.stats[stat] < go.stats[max]) {
+      go.updateStats((stats) => ({ [stat]: stats[stat] + gain }));
+      this.destroy();
+    }
+  }
+}

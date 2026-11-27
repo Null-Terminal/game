@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["benchmarks", "src", "index.d.ts", "playwright.bench.config.ts"],
+  "compilerOptions": {
+    "types": ["node", "vite/client"]
+  }
+}

@@ -1,13 +1,13 @@
-import type { Handlers } from "#/event-emitter";
+import type { EventChannel } from "#lib/event-emitter";
 
-import { AnimationLayer, LoadedAnimation } from "#engine/animation";
+import { AnimationLayer, LoadedAnimation, type SpriteAnchorX, type SpriteAnchorY } from "#engine/animation";
+import type { RenderPayload } from "#engine/game";
+import type { RenderContext } from "#engine/rendering";
+
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
+import type { GameObject, PlayableAnimation } from "#engine/game-objects/game-object";
 
-import type { SpriteAnchorX, SpriteAnchorY } from "#engine/animation";
-import type { RenderPayload } from "#engine/game";
-import type { GameObject } from "#engine/game-objects/game-object";
-import type { PlayableAnimation } from "#engine/game-objects/game-object/types";
 import type * as t from "#engine/game-objects/game-object/render/types";
 
 export type * from "#engine/game-objects/game-object/render/types";
@@ -22,14 +22,18 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   #cameraY = 0;
   #visualOffsetY = 0;
 
-  #stopRedraw: Destructor | null = null;
+  #redraw: ((payload: t.ObjectRenderPayload) => void) | null = null;
+  #redrawSubscription: Destructor | null = null;
+  #redrawElapsedStart: number | null = null;
+  #onRedrawStop: Destructor | null = null;
   #playing: PlayableAnimation | null = null;
 
   constructor(go: T) {
     super(go);
 
+    // Переиспользуем объект между кадрами, чтобы снизить нагрузку на сборщик мусора
     this.#payload = {
-      ctx: null as CanvasRenderingContext2D | null,
+      ctx: null as RenderContext | null,
       now: 0,
 
       delta: 0,
@@ -90,27 +94,43 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
   }
 
   @ifAlive
-  on<E extends Handlers<RenderPayload>>(
-    event: E,
-    listener: (payload: E["PayloadType"], elapsed: number) => void
+  on(
+    event: EventChannel<RenderPayload>,
+    listener: (payload: RenderPayload, elapsed: number) => void
   ): Destructor {
     const { go } = this;
 
     let elapsed = 0;
     let lastNow = 0;
 
-    const unsubscribe = go.canvas.emitter.on(event, (frame) => {
-      if (lastNow !== 0 && !go.status.paused && !go.status.shadowed) {
+    const handle = (frame: RenderPayload) => {
+      if (lastNow !== 0) {
         elapsed += Math.max(0, frame.now - lastNow) * go.effects.speed;
       }
 
       lastNow = frame.now;
       listener(frame, elapsed);
-    });
+    };
+
+    const subscription = event.on(handle);
+
+    const syncSubscription = (sleeping: boolean) => {
+      if (sleeping) {
+        subscription.sleep();
+
+      } else {
+        lastNow = 0;
+        subscription.wake();
+      }
+    };
+
+    const statusSubscription = go.status.events.sleepChange.on(syncSubscription);
+    syncSubscription(go.status.sleeping);
 
     const stop = () => {
       if (this.#listeners.delete(stop)) {
-        unsubscribe();
+        statusSubscription.dispose();
+        subscription.dispose();
       }
     };
 
@@ -129,16 +149,23 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
     this.stopRedraw();
     this.#playing = animation;
 
+    this.#redraw = draw;
+    this.#redrawElapsedStart = null;
+    this.#onRedrawStop = onStop ?? null;
+
     const payload = this.#payload;
-    const unsubscribe = this.on(go.redrawEvent, (frame, elapsed) => {
-      if (go.status.shadowed) {
+
+    this.#redrawSubscription ??= this.on(go.redrawEvent, (frame, elapsed) => {
+      if (this.#redraw == null) {
         return;
       }
 
       payload.ctx = frame.ctx;
       payload.now = frame.now;
       payload.delta = frame.delta;
-      payload.elapsed = elapsed;
+
+      this.#redrawElapsedStart ??= elapsed;
+      payload.elapsed = elapsed - this.#redrawElapsedStart;
 
       const bitmap = this.#playing instanceof LoadedAnimation;
 
@@ -151,24 +178,23 @@ export class GameObjectRender<T extends GameObject = GameObject> extends Servant
       payload.x = bitmap ? Math.round(payload.getScreenX()) : payload.getScreenX();
       payload.y = bitmap ? Math.round(payload.getScreenY()) : payload.getScreenY();
 
-      draw(payload);
+      this.#redraw(payload);
     });
-
-    this.#stopRedraw = () => {
-      unsubscribe();
-      onStop?.();
-    };
   }
 
   stopRedraw() {
-    const stop = this.#stopRedraw;
-    this.#stopRedraw = null;
+    const onStop = this.#onRedrawStop;
+    this.#onRedrawStop = null;
+    this.#redraw = null;
+    this.#redrawElapsedStart = null;
     this.#playing = null;
-    stop?.();
+    onStop?.();
   }
 
   clear() {
     this.stopRedraw();
+    this.#redrawSubscription?.();
+    this.#redrawSubscription = null;
     this.#visualOffsetY = 0;
 
     for (const stop of this.#listeners) {

@@ -1,7 +1,6 @@
 import { SeededRandom } from "#/utils/seeded-random";
 
-import type { AnimationInstance } from "#engine/game-objects";
-import { GameObjectRender, type ObjectRenderPayload } from "#engine/game-objects/game-object/render";
+import { GameObjectRender, type AnimationInstance, type ObjectRenderPayload } from "#engine/game-objects";
 
 import type { WindDebrisObject } from "#game/background/wind-debris-object";
 import { NewspaperParticle } from "#game/background/wind-debris-object/particles/newspaper";
@@ -40,7 +39,12 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     if (particles.tumbleweed != null) {
       for (let i = 0; i < particles.tumbleweed.count; i++) {
         this.#particles.push(new TumbleweedParticle({
-          random, cameraX, viewWidth, wind, motion, options: particles.tumbleweed
+          random,
+          cameraX,
+          viewWidth,
+          wind,
+          motion,
+          options: particles.tumbleweed
         }));
       }
     }
@@ -48,7 +52,12 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     if (particles.newspaper != null) {
       for (let i = 0; i < particles.newspaper.count; i++) {
         this.#particles.push(new NewspaperParticle({
-          random, cameraX, viewWidth, wind, motion, options: particles.newspaper
+          random,
+          cameraX,
+          viewWidth,
+          wind,
+          motion,
+          options: particles.newspaper
         }));
       }
     }
@@ -67,6 +76,12 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
 
   #drawParticles(frame: ObjectRenderPayload) {
     const { ctx, elapsed } = frame;
+
+    if (!this.go.game.settings.get("dynamicEffects")) {
+      this.#lastElapsed = elapsed;
+      return;
+    }
+
     const { width, height } = this.go.canvas;
     const scene = this.#scene;
     const random = this.#random;
@@ -99,10 +114,17 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
     ctx.save();
     // Сохраняем чёткие пиксели при масштабировании и повороте спрайтов
     ctx.imageSmoothingEnabled = false;
+    const collectDebugParts = this.go.options.debug != null && this.go.debug.enabled;
 
     for (const particle of this.#particles) {
       particle.advance(elapsed, delta, gust, cameraX, width);
-      particle.draw(ctx, elapsed, gust, cameraX, cameraY, width, height);
+      const part = particle.draw(ctx, elapsed, gust, cameraX, cameraY, width, height, collectDebugParts);
+
+      if (part != null) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1;
+        this.go.debug.drawPart(frame, part);
+      }
     }
 
     ctx.restore();

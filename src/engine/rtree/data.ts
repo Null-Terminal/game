@@ -1,4 +1,4 @@
-import { alias, tuple, usize } from "#/bindata";
+import { alias, tuple, usize } from "#lib/bindata";
 import type { PoolPointer } from "#engine/game-object-pool";
 
 import { BinView } from "#engine/rtree/binview";

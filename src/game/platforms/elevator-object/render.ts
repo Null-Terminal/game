@@ -1,4 +1,4 @@
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectRender } from "#engine/game-objects";
 
 import type { AnimationLayer } from "#engine/animation";
 import type { ElevatorObject } from "#game/platforms/elevator-object";
@@ -41,8 +41,8 @@ export class ElevatorObjectRender extends GameObjectRender<ElevatorObject> {
       return;
     }
 
-    this.on(events.dynamic, ({ ctx }, elapsed) => {
-      if (go.status.shadowed) {
+    this.on(events.scene, ({ ctx }, elapsed) => {
+      if (go.status.sleeping) {
         return;
       }
 
@@ -60,7 +60,7 @@ export class ElevatorObjectRender extends GameObjectRender<ElevatorObject> {
     });
 
     this.on(events.overlay, ({ ctx }) => {
-      if (go.status.shadowed) {
+      if (go.status.sleeping) {
         return;
       }
 

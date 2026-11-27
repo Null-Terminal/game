@@ -2,11 +2,12 @@ import type { LoadedAnimation } from "#engine/animation";
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { CollisionStatus, MovableObject, ifAlive } from "#engine/game-objects";
+import type { StateValue } from "#engine/game-objects";
+import { CollisionStatus, ColliderObject, ifAlive } from "#engine/game-objects";
 import type { GameObject } from "#engine/game-objects";
-import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects/game-object";
+import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects";
 
-import { PersonObject } from "#game/person-object";
+import { PersonObject } from "#game/characters/person-object";
 
 export interface DefaultFallingPlatformObjectOptions extends DefaultGameObjectOptions {
   show: LoadedAnimation;
@@ -17,38 +18,40 @@ export interface DefaultFallingPlatformObjectOptions extends DefaultGameObjectOp
 
 export type FallingPlatformOptions = GameObjectOptions<DefaultFallingPlatformObjectOptions>;
 
-export class FallingPlatformObject extends MovableObject<FallingPlatformOptions> {
+export class FallingPlatformObject extends ColliderObject<FallingPlatformOptions> {
   #triggered = false;
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: FallingPlatformOptions) {
-    return super.create(game, poolPointer, opts == null ? opts : {
-      fallAfterSeconds: 0,
-      maxStepHeight: 8,
-      ...opts
-    });
+  override create(game: Game, poolPointer: PoolPointer, opts?: FallingPlatformOptions, snapshot?: StateValue) {
+    let resolvedOptions = opts;
+
+    if (opts != null) {
+      resolvedOptions = {
+        fallAfterSeconds: 0,
+        maxStepHeight: 8,
+        ...opts
+      };
+    }
+
+    return super.create(game, poolPointer, resolvedOptions, snapshot);
   }
 
   override get redrawEvent() {
-    return this.canvas.events.dynamic;
+    return this.canvas.events.scene;
   }
 
-  init() {
+  override init() {
     this.#triggered = false;
     this.motion.toKinematic();
   }
 
-  protected override bindFlush() {
-    this.world.addToWorld(this, this.world.dynamics);
-  }
-
   override allows(go: GameObject, kind: "stepUp", height: number): boolean;
-  override allows(go: GameObject, kind: string, options?: unknown): boolean | null;
-  override allows(_go: GameObject, kind: string, options?: unknown): boolean | null {
+  override allows(go: GameObject, kind: string, opts?: unknown): boolean | null;
+  override allows(_go: GameObject, kind: string, opts?: unknown): boolean | null {
     if (kind !== "stepUp") {
       return null;
     }
 
-    return typeof options === "number" && options <= this.options.maxStepHeight!;
+    return typeof opts === "number" && opts <= this.options.maxStepHeight!;
   }
 
   @ifAlive
@@ -88,9 +91,10 @@ export class FallingPlatformObject extends MovableObject<FallingPlatformOptions>
   }
 
   protected override onMove(status: number) {
+    super.onMove(status);
+
     if (status & CollisionStatus.BottomCollision) {
-      const [kind, index] = this.poolPointer;
-      this.world.objects.delete(kind, index);
+      this.destroy();
     }
   }
 }

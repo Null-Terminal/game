@@ -1,0 +1,72 @@
+import { Camera, Game, GameSettings, RenderCanvas, World } from "#engine/game";
+
+import { SkyObject, duskSky } from "#game/background/sky-object";
+import { defaultProjectSettings } from "#game/settings";
+
+export interface SkyScene {
+  sky: SkyObject;
+  canvas: RenderCanvas;
+  render(now: number): void;
+  pixel(x: number, y: number): number[];
+  destroy(): void;
+}
+
+export interface WebGLSkyScene {
+  sky: SkyObject;
+  canvas: RenderCanvas;
+  destroy(): void;
+}
+
+export async function createWebGLSkyScene(): Promise<WebGLSkyScene> {
+  const element = document.getElementById("game") as HTMLCanvasElement;
+  const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "webgl" });
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings)).create(canvas);
+  const world = await game.loadLevel(async () => new World({
+    persistentObjects: World.of([[SkyObject, { show: "storm", debug: { bounds: true, inspect: true } }]])
+  }));
+
+  const sky = world.objects.get(SkyObject.kind, 0);
+
+  if (!(sky instanceof SkyObject)) {
+    throw new Error("WebGL sky fixture: sky was not created");
+  }
+
+  return { sky, canvas, destroy: () => game.destroy() };
+}
+
+export async function createSkyScene(preset: "storm" | "dusk" = "storm"): Promise<SkyScene> {
+  const element = document.getElementById("game") as HTMLCanvasElement;
+  const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
+  canvas.stop();
+
+  const game = Game.camera(new Camera()).settings(new GameSettings(defaultProjectSettings)).create(canvas);
+  const world = await game.loadLevel(async () => new World({
+    persistentObjects: World.of([[SkyObject, preset === "dusk" ? { ...duskSky } : { show: "storm" }]])
+  }));
+
+  await Promise.resolve();
+
+  const sky = world.objects.get(SkyObject.kind, 0);
+
+  if (!(sky instanceof SkyObject)) {
+    throw new Error("Sky fixture: sky was not created");
+  }
+
+  const ctx = element.getContext("2d")!;
+
+  return {
+    sky,
+    canvas,
+
+    render(now) {
+      canvas.clear();
+      canvas.events.background.emit({ ctx, now, delta: 0.016 });
+    },
+
+    pixel(x, y) {
+      return Array.from(ctx.getImageData(x, y, 1, 1).data.slice(0, 3));
+    },
+
+    destroy: () => game.destroy()
+  };
+}

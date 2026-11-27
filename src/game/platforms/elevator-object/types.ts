@@ -1,7 +1,6 @@
 import type { LoadedAnimation } from "#engine/animation";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
-import type { DynamicInteractObject } from "#engine/game-objects";
-import type { DefaultGameObjectOptions, GameObjectOptions } from "#engine/game-objects";
+import type { DefaultGameObjectOptions, GameObjectOptions, InteractObject } from "#engine/game-objects";
 
 export interface ElevatorCabin {
   // Задняя стенка за игроком
@@ -18,7 +17,7 @@ export interface ElevatorCabin {
 }
 
 export type ElevatorPanelEntry = readonly [
-  object: KindedGameObjectCtor<typeof DynamicInteractObject>,
+  object: KindedGameObjectCtor<typeof InteractObject>,
   // Координаты относительно кабины; y по умолчанию совпадает с поверхностью пола
   options: { x?: number; y?: number; [key: string]: unknown }
 ];

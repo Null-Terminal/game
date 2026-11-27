@@ -1,37 +1,42 @@
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
 
-import { DynamicObject, ifAlive } from "#engine/game-objects";
+import type { StateValue } from "#engine/game-objects";
+import { ColliderObject, ifAlive } from "#engine/game-objects";
 import type { DefaultGameObjectOptions, GameObject, GameObjectOptions } from "#engine/game-objects";
 
-import { ControlObject } from "#game/control-object";
+import { ControlObject } from "#game/interactables/control-object";
 
 export type PlatformOptions = GameObjectOptions<DefaultGameObjectOptions & {
   maxStepHeight?: number;
 }>;
 
-export class PlatformObject<T extends PlatformOptions = PlatformOptions> extends DynamicObject<T> {
-  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
+export class PlatformObject<T extends PlatformOptions = PlatformOptions> extends ColliderObject<T> {
+  override init() {
+    this.motion.toKinematic();
+  }
+
+  override create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
     return super.create(game, poolPointer, {
       maxStepHeight: 8,
       ...opts
-    } as T);
+    } as T, snapshot);
   }
 
   override allows(go: GameObject, kind: "stepUp", height: number): boolean;
-  override allows(go: GameObject, kind: string, options?: unknown): boolean | null;
-  override allows(_go: GameObject, kind: string, options?: unknown): boolean | null {
+  override allows(go: GameObject, kind: string, opts?: unknown): boolean | null;
+  override allows(_go: GameObject, kind: string, opts?: unknown): boolean | null {
     if (kind !== "stepUp") {
       return null;
     }
 
-    return typeof options === "number" && options <= this.options.maxStepHeight!;
+    return typeof opts === "number" && opts <= this.options.maxStepHeight!;
   }
 
   @ifAlive
   override visit(go: GameObject) {
     if (go instanceof ControlObject) {
-      this.status.togglePause();
+      this.movement.togglePause();
     }
   }
 }

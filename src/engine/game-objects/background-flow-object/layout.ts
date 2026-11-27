@@ -8,8 +8,13 @@ export interface FlowPosition {
 }
 
 interface FlowLayoutOptions {
+  // Порядок выбора спрайтов
   order?: BackgroundFlowOrder;
+
+  // Расстояние между соседними спрайтами
   gap?: BackgroundFlowGap;
+
+  // Начальное значение генератора для повторяемой раскладки
   seed: number;
 }
 
@@ -70,9 +75,10 @@ export class FlowLayout {
       }
 
       const gap = this.#minGap === this.#maxGap ?
-        this.#minGap : this.#minGap + this.#random.next() * (this.#maxGap - this.#minGap);
+        this.#minGap :
+        this.#minGap + this.#random.next() * (this.#maxGap - this.#minGap);
 
-      // Даже при отрицательном промежутке следующая позиция должна быть дальше текущей.
+      // Даже при отрицательном промежутке следующая позиция должна быть дальше текущей
       this.#nextPosition += Math.max(1, size + gap);
     }
   }

@@ -5,7 +5,7 @@ type Destroyable = {
 };
 
 type WithStatus = {
-  readonly status: { readonly shadowed: boolean };
+  readonly status: { readonly sleeping: boolean };
 };
 
 function getScope(value: Destroyable | ServantObject): string {
@@ -48,14 +48,14 @@ export function ifDead<This extends Destroyable | ServantObject, Args extends un
   };
 }
 
-export function ifShadowed<ReturnValue = undefined>(returnValue?: ReturnValue) {
+export function ifSleeping<ReturnValue = undefined>(returnValue?: ReturnValue) {
   return function <This extends WithStatus | ServantObject, Args extends unknown[], Result>(
     target: (this: This, ...args: Args) => Result,
   ) {
     return function (this: This, ...args: Args): Result {
       const owner = this instanceof ServantObject ? this.go : this;
 
-      if (owner.status.shadowed) {
+      if (owner.status.sleeping) {
         return returnValue as Result;
       }
 

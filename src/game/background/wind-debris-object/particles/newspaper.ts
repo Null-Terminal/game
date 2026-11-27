@@ -3,7 +3,7 @@ import { sampleWindRange } from "#game/background/wind-debris-object/utils";
 import { WindParticle } from "#game/background/wind-debris-object/particles/particle";
 import type { NewspaperOptions, WindParticleSpawnParams } from "#game/background/wind-debris-object/types";
 
-import { newspaper } from "#/sprites/backgrounds/particles/newspaper";
+import { newspaper } from "#game/sprites/backgrounds/particles/newspaper";
 
 export class NewspaperParticle extends WindParticle {
   readonly #spin: number;

@@ -1,17 +1,21 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 
 import type { Game } from "#engine/game";
 import type { PoolPointer } from "#engine/game-object-pool";
+import type { StateValue } from "#engine/game-objects";
 
-import { GameObject } from "#engine/game-objects/game-object";
-import type { GameObjectOptions } from "#engine/game-objects/game-object";
+import { GameObject, type GameObjectOptions } from "#engine/game-objects/game-object";
 
 import { BackgroundObjectDebug } from "#engine/game-objects/background-object/debug";
 import { BackgroundObjectRender } from "#engine/game-objects/background-object/render";
+import { getBackgroundScrollFactor } from "#engine/game-objects/background-object/scroll-factor";
 
 import type { DefaultBackgroundObjectOptions } from "#engine/game-objects/background-object/types";
 
 export type * from "#engine/game-objects/background-object/types";
+
+export { BackgroundObjectDebug } from "#engine/game-objects/background-object/debug";
+export { BackgroundObjectRender } from "#engine/game-objects/background-object/render";
 
 export class BackgroundObject<
   T extends GameObjectOptions<DefaultBackgroundObjectOptions> = GameObjectOptions<DefaultBackgroundObjectOptions>
@@ -31,10 +35,15 @@ export class BackgroundObject<
     return this.options?.overlay ? overlay : background;
   }
 
+  override get sleepable() {
+    // Без bbox фон может покрывать весь экран независимо от размеров объекта
+    return this.bbox != null;
+  }
+
   init() {}
 
-  override create(game: Game, poolPointer: PoolPointer, opts?: T): T {
-    const options = super.create(game, poolPointer, opts);
+  override create(game: Game, poolPointer: PoolPointer, opts?: T, snapshot?: StateValue): T {
+    const options = super.create(game, poolPointer, opts, snapshot);
     const autoStretch = this.shouldAutoStretchInfiniteBounds();
 
     if (autoStretch && !Number.isFinite(this.width) && !options.stretch?.includes("w")) {
@@ -50,6 +59,27 @@ export class BackgroundObject<
     }
 
     return options;
+  }
+
+  override isFarFromViewport(distanceScreens: number): boolean {
+    const { bbox } = this;
+
+    if (bbox == null) {
+      return false;
+    }
+
+    const { canvas, camera } = this.game;
+
+    const offsetX = camera.x * getBackgroundScrollFactor(this.options, "w");
+    const offsetY = camera.y * getBackgroundScrollFactor(this.options, "h");
+
+    const marginX = distanceScreens * canvas.width;
+    const marginY = distanceScreens * canvas.height;
+
+    const farX = bbox[2] - offsetX < -marginX || bbox[0] - offsetX > canvas.width + marginX;
+    const farY = bbox[3] - offsetY < -marginY || bbox[1] - offsetY > canvas.height + marginY;
+
+    return farX || farY;
   }
 
   syncSize() {

@@ -1,6 +1,7 @@
-import { GameObjectRender } from "#engine/game-objects/game-object/render";
+import { GameObjectRender, type BitmapRenderPayload, type ObjectRenderPayload } from "#engine/game-objects/game-object";
+import { getBackgroundScrollFactor } from "#engine/game-objects/background-object/scroll-factor";
 
-import type * as go from "#engine/game-objects/game-object";
+import type { RenderContext } from "#engine/rendering";
 import type { BackgroundObject } from "#engine/game-objects/background-object";
 
 type Axis = "w" | "h";
@@ -17,7 +18,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   readonly #visibleBounds: VisibleBounds = { left: 0, top: 0, right: 0, bottom: 0 };
   readonly #repeatBounds: VisibleBounds = { left: 0, top: 0, right: 0, bottom: 0 };
 
-  getVisibleBounds(frame: go.ObjectRenderPayload): Readonly<VisibleBounds> | null {
+  getVisibleBounds(frame: ObjectRenderPayload): Readonly<VisibleBounds> | null {
     const { bbox } = this.go;
     const { width, height } = this.go.canvas.canvas;
 
@@ -42,12 +43,12 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
     return this.isVisibleInViewport(bounds.left, bounds.top, bounds.right, bounds.bottom) ? bounds : null;
   }
 
-  override drawBitmap(payload: go.BitmapRenderPayload) {
+  override drawBitmap(payload: BitmapRenderPayload) {
     const { go } = this;
-    const { options: opts } = go;
+    const { options } = go;
 
-    const wrapWidth = opts.stretch?.includes("w") && !opts.static?.includes("w");
-    const wrapHeight = opts.stretch?.includes("h") && !opts.static?.includes("h");
+    const wrapWidth = options.stretch?.includes("w") && !options.static?.includes("w");
+    const wrapHeight = options.stretch?.includes("h") && !options.static?.includes("h");
 
     const factorX = this.getScrollFactor("w");
     const factorY = this.getScrollFactor("h");
@@ -79,7 +80,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   }
 
   drawPattern(
-    payload: go.ObjectRenderPayload,
+    payload: ObjectRenderPayload,
     pattern: ImageBitmap,
     bounds?: Readonly<VisibleBounds>
   ) {
@@ -103,6 +104,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
 
     payload.x = payload.getScreenX(factorX);
     payload.y = payload.getScreenY(factorY);
+
     const { ctx, x, y, toCanvasTop } = payload;
 
     const minX = bbox?.[0] ?? 0;
@@ -120,19 +122,11 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   }
 
   protected getScrollFactor(axis: Axis): number {
-    if (this.go.options.static?.includes(axis)) {
-      return 0;
-    }
-
-    const { scrollFactor } = this.go.options;
-
-    return axis === "w" ?
-      scrollFactor?.[0] ?? 1 :
-      scrollFactor?.[1] ?? scrollFactor?.[0] ?? 1;
+    return getBackgroundScrollFactor(this.go.options, axis);
   }
 
   #drawRepeatRegions(
-    payload: go.BitmapRenderPayload,
+    payload: BitmapRenderPayload,
     bounds: Readonly<VisibleBounds>,
     repeatWidth: boolean,
     repeatHeight: boolean
@@ -141,7 +135,8 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
     const { animation, frameIndex, ctx } = payload;
     const { width: viewWidth, height: viewHeight } = go.canvas.canvas;
 
-    const bbox = go.bbox;
+    const { bbox } = go;
+
     const image = animation.getSpriteFrame(frameIndex, go.effects);
     const sprite = animation.animation.at(frameIndex)!;
 
@@ -218,7 +213,7 @@ export class BackgroundObjectRender<T extends BackgroundObject = BackgroundObjec
   }
 
   #fillPattern(
-    ctx: CanvasRenderingContext2D,
+    ctx: RenderContext,
     pattern: ImageBitmap,
     bounds: Readonly<VisibleBounds>,
     originX: number,

@@ -53,8 +53,8 @@ describe("background flow layout", () => {
 
 type LayoutOptions = ConstructorParameters<typeof FlowLayout>[1];
 
-function positions(sizes: readonly number[], end: number, options: LayoutOptions) {
-  const layout = new FlowLayout(sizes, options);
+function positions(sizes: readonly number[], end: number, opts: LayoutOptions) {
+  const layout = new FlowLayout(sizes, opts);
   layout.extendTo(end);
   return layout.positions;
 }

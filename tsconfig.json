@@ -3,10 +3,10 @@
 
   "compilerOptions": {
     "paths": {
-      "#decorators/*": ["./src/decorators/*"],
       "#sprite-editor/*": ["./src/sprite-editor/*"],
       "#engine/*": ["./src/engine/*"],
       "#game/*": ["./src/game/*"],
+      "#lib/*": ["./src/lib/*"],
       "#/*": ["./src/*"]
     },
 

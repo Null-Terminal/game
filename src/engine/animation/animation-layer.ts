@@ -2,6 +2,7 @@ import { AnimationPlayback } from "#engine/animation/animation-playback";
 
 import type { LoadedAnimation } from "#engine/animation/loaded-animation";
 import type { FrameEffects, SpriteAnchorX, SpriteAnchorY } from "#engine/animation/types";
+import type { RenderContext } from "#engine/rendering";
 import type { BBoxTuple } from "#engine/rtree";
 
 export class AnimationLayer {
@@ -30,14 +31,14 @@ export class AnimationLayer {
   }
 
   getCollisionBounds(x: number, y: number): BBoxTuple {
-    const animation = this.#playback.animation;
+    const { animation } = this.#playback;
     const effectScale = this.#effects.scale ?? 1;
 
     const width = animation.maxWidth * effectScale;
     const height = animation.maxHeight * effectScale;
 
-    const left = x - (this.#anchorX === "center" ? width / 2 : this.#anchorX === "right" ? width : 0);
-    const bottom = y - (this.#anchorY === "center" ? height / 2 : this.#anchorY === "top" ? height : 0);
+    const left = x - this.#anchorOffset(this.#anchorX, "right", width);
+    const bottom = y - this.#anchorOffset(this.#anchorY, "top", height);
 
     const bounds = animation.collisionBounds;
 
@@ -55,12 +56,12 @@ export class AnimationLayer {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  draw(ctx: RenderContext, x: number, y: number) {
     const { animation, frameIndex } = this.#playback;
 
     const image = animation.getSpriteFrame(frameIndex, this.#effects);
-    const anchorWidth = this.#anchorX === "center" ? image.width / 2 : this.#anchorX === "right" ? image.width : 0;
-    const anchorHeight = this.#anchorY === "center" ? image.height / 2 : this.#anchorY === "bottom" ? image.height : 0;
+    const anchorWidth = this.#anchorOffset(this.#anchorX, "right", image.width);
+    const anchorHeight = this.#anchorOffset(this.#anchorY, "bottom", image.height);
 
     const left = Math.round(x - anchorWidth) - Math.round(this.#camera.x);
     const top = ctx.canvas.height - Math.round(y) + Math.round(this.#camera.y) - Math.round(anchorHeight);
@@ -68,5 +69,13 @@ export class AnimationLayer {
     if (left < ctx.canvas.width && top < ctx.canvas.height && left + image.width > 0 && top + image.height > 0) {
       ctx.drawImage(image, left, top);
     }
+  }
+
+  #anchorOffset(anchor: string, full: string, size: number): number {
+    if (anchor === "center") {
+      return size / 2;
+    }
+
+    return anchor === full ? size : 0;
   }
 }

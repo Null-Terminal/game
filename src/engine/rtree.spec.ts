@@ -31,8 +31,13 @@ describe("RTree", () => {
     tree.insert(1, 20, 10, 10, 20, 20);
     tree.insert(1, 30, 10, 10, 20, 20);
 
-    const score = ({ pointer }: { pointer: readonly [number, number] }) =>
-      pointer[1] === 20 ? 0 : pointer[1] === 10 ? 5 : Infinity;
+    const score = ({ pointer }: { pointer: readonly [number, number] }) => {
+      if (pointer[1] === 20) {
+        return 0;
+      }
+
+      return pointer[1] === 10 ? 5 : Infinity;
+    };
 
     expect(tree.searchBest(0, 0, 30, 30, score)?.pointer[1]).toBe(20);
     expect(tree.searchBest(0, 0, 30, 30, () => Infinity)).toBeNull();

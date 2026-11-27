@@ -1,10 +1,21 @@
-import { removeCanvasBackground } from "#engine/animation/remove-background";
-import type { LoadSpriteOptions } from "#engine/animation/types";
+import { WorkerClient, WorkerPool } from "#lib/worker-pool";
+
+import { bakeSprite } from "#engine/animation/bake-sprite";
+import type { LoadSpriteOptions, SpriteLoadData } from "#engine/animation/types";
 
 const spriteCache = new Map<string, Promise<ImageBitmap>>();
+const MAX_SPRITE_WORKERS = 4;
 
-export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promise<ImageBitmap> {
-  const { removeBackground = false, tolerance = 5 } = options ?? {};
+class SpriteWorker extends WorkerClient<SpriteLoadData, ImageBitmap> {
+  readonly worker = new Worker(new URL("./load-sprite-worker.ts", import.meta.url), { type: "module" });
+}
+
+const workerPool = typeof Worker === "undefined" ?
+  null :
+  new WorkerPool(MAX_SPRITE_WORKERS, { idleTimeout: null });
+
+export function loadSprite(url: string, opts: LoadSpriteOptions = {}): Promise<ImageBitmap> {
+  const { removeBackground = false, tolerance = 5 } = opts ?? {};
 
   const cacheKey = [url, removeBackground, tolerance].join("_");
 
@@ -14,33 +25,29 @@ export function loadSprite(url: string, options: LoadSpriteOptions = {}): Promis
     return fromCache;
   }
 
-  const { promise, resolve, reject } = Promise.withResolvers<ImageBitmap>();
+  const promise = loadSpriteUncached(url, opts);
 
   spriteCache.set(cacheKey, promise);
 
-  const img = new Image();
-
-  img.onload = () => {
-    try {
-      const canvas = new OffscreenCanvas(img.width, img.height);
-      canvas.getContext("2d")!.drawImage(img, 0, 0);
-
-      if (removeBackground) {
-        removeCanvasBackground(canvas, removeBackground, tolerance);
-      }
-
-      resolve(createImageBitmap(canvas));
-
-    } catch (err) {
-      reject(err);
-    }
-  };
-
-  img.onerror = () => {
-    reject(new Error(`Failed to load sprite ${url}`));
-  };
-
-  img.src = url;
-
   return promise;
+}
+
+async function loadSpriteUncached(url: string, options: LoadSpriteOptions): Promise<ImageBitmap> {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load sprite ${url}: ${response.status}`);
+  }
+
+  const payload: SpriteLoadData = {
+    headers: { contentType: response.headers.get("content-type") ?? "image/webp" },
+    data: await response.arrayBuffer(),
+    options
+  };
+
+  if (workerPool == null) {
+    return bakeSprite(payload);
+  }
+
+  return workerPool.run(SpriteWorker, payload, [payload.data]);
 }

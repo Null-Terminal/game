@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Null Terminal</title>
   <link rel="stylesheet" href="src/game/game.css">
   <script src="src/game/bootstrap.ts" type="module" defer></script>
@@ -10,6 +11,8 @@
 
 <body>
   <canvas id="game"></canvas>
+  <game-touch-controls hidden></game-touch-controls>
+  <game-menu hidden></game-menu>
   <div id="loading" role="status" aria-live="polite">
     <span class="loading-spinner" aria-hidden="true"></span>
     <span id="loading-message">Загрузка мира…</span>

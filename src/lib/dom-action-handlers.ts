@@ -1,0 +1,38 @@
+import { Destroyable } from "#lib/destroyable";
+
+export abstract class DomActionHandlers<Parent> extends Destroyable {
+  protected readonly parent: Parent;
+
+  readonly attr: string = "action";
+
+  protected constructor(parent: Parent) {
+    super();
+    this.parent = parent;
+
+    queueMicrotask(() => {
+      if (!this.destroyed) {
+        this.initHandlers();
+      }
+    });
+  }
+
+  protected abstract initHandlers(): void;
+
+  protected readonly onAction = (e: Event) => {
+    const { target } = e;
+
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const action = target.closest<HTMLElement>(`[data-${this.attr}]`)?.dataset[this.attr] ?? "unknown";
+
+    if (action in this) {
+      const method = action as keyof this;
+
+      if (typeof this[method] === "function") {
+        this[method](e);
+      }
+    }
+  };
+}

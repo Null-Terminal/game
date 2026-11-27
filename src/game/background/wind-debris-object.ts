@@ -1,11 +1,13 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 
-import type { AnimationInstance } from "#engine/game-objects";
-import { GameObject } from "#engine/game-objects";
+import { GameObject, type AnimationInstance } from "#engine/game-objects";
 
 import { roadDebris, stormDebris } from "#game/background/wind-debris-object/presets";
+import { WindDebrisObjectDebug } from "#game/background/wind-debris-object/debug";
 import { WindDebrisRender } from "#game/background/wind-debris-object/render";
+
 import type { WindDebrisOptions, WindDebrisSceneOptions } from "#game/background/wind-debris-object/types";
+import type { ProjectGame } from "#game/settings";
 
 export type {
   NewspaperOptions,
@@ -21,13 +23,20 @@ export type {
 export { roadDebris, stormDebris } from "#game/background/wind-debris-object/presets";
 
 export class WindDebrisObject extends GameObject<WindDebrisOptions> {
+  declare game: ProjectGame;
+
   static override readonly animations = {
-    wind: (object: GameObject) => WindDebrisObject.#createPlayback(object),
-    road: (object: GameObject) => WindDebrisObject.#createPlayback(object, roadDebris),
-    storm: (object: GameObject) => WindDebrisObject.#createPlayback(object, stormDebris)
+    wind: (go: GameObject) => WindDebrisObject.#createPlayback(go),
+    road: (go: GameObject) => WindDebrisObject.#createPlayback(go, roadDebris),
+    storm: (go: GameObject) => WindDebrisObject.#createPlayback(go, stormDebris)
   };
 
   override readonly animations = WindDebrisObject.animations;
+
+  @cache
+  override get debug(): WindDebrisObjectDebug {
+    return new WindDebrisObjectDebug(this);
+  }
 
   @cache
   override get render(): WindDebrisRender {
@@ -38,29 +47,33 @@ export class WindDebrisObject extends GameObject<WindDebrisOptions> {
     return this.canvas.events.background;
   }
 
+  override get sleepable() {
+    return false;
+  }
+
   init() {
     if (this.options.show == null) {
       this.play(this.animations.wind);
     }
   }
 
-  static #createPlayback(object: GameObject, preset?: WindDebrisSceneOptions): AnimationInstance {
-    if (!(object instanceof WindDebrisObject)) {
+  static #createPlayback(go: GameObject, preset?: WindDebrisSceneOptions): AnimationInstance {
+    if (!(go instanceof WindDebrisObject)) {
       throw new TypeError("Wind animation requires a WindDebrisObject");
     }
 
-    const { seed, wind, motion, particles } = preset ?? object.options;
+    const { seed, wind, motion, particles } = preset ?? go.options;
 
     if (
       seed == null || !Number.isFinite(seed) ||
       wind == null || motion == null || particles == null ||
-      Object.values(particles).some((options) =>
-        options != null && (!Number.isInteger(options.count) || options.count < 0 || options.count > 100)
+      Object.values(particles).some((opts) =>
+        opts != null && (!Number.isInteger(opts.count) || opts.count < 0 || opts.count > 100)
       )
     ) {
       throw new RangeError("Wind debris requires a scene with a finite seed and particle counts from 0 to 100");
     }
 
-    return object.render.createPlayback({ seed, wind, motion, particles });
+    return go.render.createPlayback({ seed, wind, motion, particles });
   }
 }

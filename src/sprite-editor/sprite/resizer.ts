@@ -1,8 +1,9 @@
+import { Destroyable } from "#lib/destroyable";
 import type { Sprite } from "#sprite-editor/sprite";
 
 type ResizeType = "ns-resize" | "nw-resize" | "w-resize";
 
-export class SpriteResizer {
+export class SpriteResizer extends Destroyable {
   readonly #sprite: Sprite;
   #handles: HTMLElement[] = [];
 
@@ -14,16 +15,18 @@ export class SpriteResizer {
   #startHeight = 0;
 
   constructor(sprite: Sprite) {
+    super();
+
     this.#sprite = sprite;
     this.#makeCanvasResizable();
-  }
 
-  destroy() {
-    window.removeEventListener("pointermove", this.#onResizeMove);
-    window.removeEventListener("pointerup", this.#onResizeEnd);
+    this.onDestroy(() => {
+      window.removeEventListener("pointermove", this.#onResizeMove);
+      window.removeEventListener("pointerup", this.#onResizeEnd);
 
-    this.#handles.splice(0).forEach((handle) => {
-      handle.remove();
+      this.#handles.splice(0).forEach((handle) => {
+        handle.remove();
+      });
     });
   }
 

@@ -2,7 +2,7 @@ export function removeCanvasBackground(canvas: OffscreenCanvas, color: string | 
   const ctx = canvas.getContext("2d")!;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const { data } = imageData;
 
   if (data.length < 4) {
     return;
@@ -47,7 +47,15 @@ export function removeTargetColor(
   const keyRange = keyMax - keyMin;
 
   const chromatic = keyRange >= 64;
-  const dominant = color[0] === keyMax ? 0 : color[1] === keyMax ? 1 : 2;
+  let dominant = 2;
+
+  if (color[0] === keyMax) {
+    dominant = 0;
+
+  } else if (color[1] === keyMax) {
+    dominant = 1;
+  }
+
   const otherChannels = [0, 1, 2].filter((channel) => channel !== dominant);
 
   // У такого ключа один канал заметно ярче двух остальных: например, зелёный у #00ff00

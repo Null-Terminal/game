@@ -1,9 +1,10 @@
-import { cast } from "#/tstools";
+import { cast } from "#/utils/cast";
 import { LoadedAnimation } from "#engine/animation";
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
 
 import { RTree, type RTreeEntry, type RTreePredicate, type RTreePublicNode } from "#engine/rtree";
 import { GameObjectPool, type PoolPointer } from "#engine/game-object-pool";
+import { Arenas } from "#engine/game/arena";
 
 import type { Game } from "#engine/game";
 import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
@@ -11,8 +12,11 @@ import type { GameObject, CreateOptionsOf } from "#engine/game-objects";
 import type * as t from "#engine/game/world/types";
 
 export type * from "#engine/game/world/types";
+export type * from "#engine/game/arena";
 
-export class World extends Disposable {
+export { Arena, Arenas } from "#engine/game/arena";
+
+export class World extends Destroyable {
   static of<const T extends [new (...args: any[]) => GameObject, object?][]>(entries: {
     [I in keyof T]: T[I] extends [
         infer C extends new (...args: any[]) => GameObject,
@@ -25,7 +29,7 @@ export class World extends Disposable {
   }
 
   game!: Game;
-  readonly options: Required<t.WorldOptions>;
+  readonly options: t.WorldOptions;
 
   readonly statics = new RTree();
   readonly dynamics = new RTree();
@@ -33,16 +37,25 @@ export class World extends Disposable {
   readonly staticInteracts = new RTree();
   readonly dynamicInteracts = new RTree();
 
-  readonly objects = new GameObjectPool();
+  readonly objects = new GameObjectPool(this);
+  #arenas: Arenas | null = null;
+
+  get arenas(): Arenas {
+    if (this.#arenas == null) {
+      throw new Error(`${this.constructor.name}.arenas: world is not mounted`);
+    }
+
+    return this.#arenas;
+  }
 
   #mounted = false;
 
   constructor(opts: t.WorldOptions) {
     super();
-    this.options = { ...opts };
+    this.options = opts;
   }
 
-  mount(game: Game) {
+  async mount(game: Game) {
     if (this.#mounted) {
       throw new Error(`${this.constructor.name}.mount: already mounted`);
     }
@@ -50,23 +63,60 @@ export class World extends Disposable {
     this.#mounted = true;
     this.game = game;
 
-    this.onDestroy(
-      game.canvas.emitter.on(game.canvas.events.beforeRender, () => {
-        this.dynamics.clear();
-        this.dynamicInteracts.clear();
-      })
-    );
+    const declaredArenas = this.options.arenas ?? Arenas.declare({});
+    this.#arenas = declaredArenas.create(this);
 
-    this.nextTick(() => {
-      for (const elem of this.options.objects) {
-        this.createObject(elem[0], elem[1]);
-      }
+    const subscription = game.canvas.events.beforeRender.on(({ now }) => {
+      this.dynamics.clear();
+      this.dynamicInteracts.clear();
+      this.arenas.flush();
+      this.arenas.checkAutoUnload(now);
     });
+
+    this.onDestroy(subscription);
+
+    for (const [go, opts] of this.options.persistentObjects) {
+      this.createObject(go, opts);
+    }
+
+    await this.#arenas.preload();
   }
 
   override destroy() {
-    super.destroy();
-    this.objects.destroy();
+    if (this.destroyed) {
+      return;
+    }
+
+    const errors: unknown[] = [];
+
+    try {
+      super.destroy();
+
+    } catch (err) {
+      errors.push(err);
+    }
+
+    try {
+      this.#arenas?.destroy();
+
+    } catch (err) {
+      errors.push(err);
+    }
+
+    try {
+      this.objects.destroy();
+
+    } catch (err) {
+      errors.push(err);
+    }
+
+    if (errors.length === 1) {
+      throw errors[0];
+    }
+
+    if (errors.length > 1) {
+      throw new AggregateError(errors, `${this.constructor.name}.destroy: cleanup failed`);
+    }
   }
 
   createObject(go: t.WorldObject[0], opts?: t.WorldObject[1]): PoolPointer {
@@ -121,11 +171,11 @@ export class World extends Disposable {
     }
   }
 
-  hasCollision(minX: number, minY: number, maxX: number, maxY: number): boolean {
+  hasCollision(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): boolean {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
 
     if (this.dynamics.searchFirst(x1, y1, x2, y2, pred) == null) {
       return this.statics.searchFirst(x1, y1, x2, y2, pred) != null;
@@ -134,44 +184,49 @@ export class World extends Disposable {
     return true;
   }
 
-  findDynamicCollision(minX: number, minY: number, maxX: number, maxY: number): t.Collision | null {
-    const x1 = minX - 1, x2 = maxX + 1;
-    const y1 = minY - 1, y2 = maxY + 1;
-
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
-    const collision = this.dynamics.searchFirst(x1, y1, x2, y2, pred);
-
-    return collision == null ? null : this.#collisionMapper(collision);
-  }
-
-  findBestDynamicCollision(
+  findBestCollision(
     minX: number,
     minY: number,
     maxX: number,
     maxY: number,
-    score: t.CollisionScore
+    score: t.CollisionScore,
+    exclude?: GameObject
   ): t.Collision | null {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
-    const collision = this.dynamics.searchBest(x1, y1, x2, y2, (node) => {
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
+
+    const rank = (node: RTreePublicNode) => {
       if (!pred(node)) {
         return Infinity;
       }
 
       const object = this.objects.get(node.pointer[0], node.pointer[1])!;
       return score(node.bbox, object);
-    });
+    };
+
+    const dynamic = this.dynamics.searchBest(x1, y1, x2, y2, rank);
+    const stationary = this.statics.searchBest(x1, y1, x2, y2, rank);
+
+    let collision = dynamic;
+
+    if (stationary != null) {
+      const stationaryIsBetter = collision == null || rank(stationary) < rank(collision);
+
+      if (stationaryIsBetter) {
+        collision = stationary;
+      }
+    }
 
     return collision == null ? null : this.#collisionMapper(collision);
   }
 
-  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
+  findInteractCollisions(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): readonly t.Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
 
     const dynamicCollisions = this.dynamicInteracts.search(x1, y1, x2, y2, pred);
     const staticCollisions = this.staticInteracts.search(x1, y1, x2, y2, pred);
@@ -183,11 +238,11 @@ export class World extends Disposable {
     return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
-  findCollisions(minX: number, minY: number, maxX: number, maxY: number): readonly t.Collision[] {
+  findCollisions(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): readonly t.Collision[] {
     const x1 = minX - 1, x2 = maxX + 1;
     const y1 = minY - 1, y2 = maxY + 1;
 
-    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY);
+    const pred = this.#getCollisionPredicate(minX, minY, maxX, maxY, exclude);
 
     const dynamicCollisions = this.dynamics.search(x1, y1, x2, y2, pred);
     const staticCollisions = this.statics.search(x1, y1, x2, y2, pred);
@@ -199,13 +254,14 @@ export class World extends Disposable {
     return dynamicCollisions.concat(staticCollisions).map(this.#collisionMapper);
   }
 
-  #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number): RTreePredicate {
+  #getCollisionPredicate(minX: number, minY: number, maxX: number, maxY: number, exclude?: GameObject): RTreePredicate {
     return ({ bbox, pointer: [kind, i] }) => {
       if (!(maxX > bbox[0] && minX < bbox[2] && maxY > bbox[1] && minY < bbox[3])) {
         return false;
       }
 
-      return this.objects.get(kind, i)?.destroyed === false;
+      const object = this.objects.get(kind, i);
+      return object !== exclude && object?.destroyed === false && !object.status.sleeping;
     };
   }
 

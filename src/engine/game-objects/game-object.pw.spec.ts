@@ -18,10 +18,51 @@ test("reusing an object resets its position and size", async ({ page }) => {
     };
 
     destroy();
+
     return result;
   });
 
   expect(result).toEqual({ reused: true, geometry: [0, 0, 0, 0] });
+});
+
+test("pool reuse starts a fresh destruction lifecycle", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ pool, createProbe, destroy }) => {
+    const first = createProbe();
+    const firstSignal = first.object.abortSignal;
+    let cleanups = 0;
+
+    first.object.onDestroy(() => cleanups++);
+    pool.delete(...first.pointer);
+
+    const second = createProbe();
+    const secondSignal = second.object.abortSignal;
+    const afterReuse = cleanups;
+    const signalRenewed = firstSignal !== secondSignal && firstSignal.aborted && !secondSignal.aborted;
+
+    second.object.onDestroy(() => cleanups++);
+    pool.delete(...second.pointer);
+
+    const result = {
+      reused: second.object === first.object,
+      afterReuse,
+      signalRenewed,
+      cleanups,
+      secondSignalAborted: secondSignal.aborted
+    };
+
+    destroy();
+    return result;
+  });
+
+  expect(result).toEqual({
+    reused: true,
+    afterReuse: 1,
+    signalRenewed: true,
+    cleanups: 2,
+    secondSignalAborted: true
+  });
 });
 
 test("destroying an object removes its movement subscription", async ({ page }) => {
@@ -29,24 +70,180 @@ test("destroying an object removes its movement subscription", async ({ page }) 
 
   const result = await scene.evaluate(({ pool, canvas, createProbe, destroy }) => {
     const first = createProbe({ movement: { at: (distance) => [distance, 0] } });
-    const subscribed = canvas.events.beforeRender.length;
+    const subscribed = canvas.events.beforeRender.size;
 
     pool.delete(...first.pointer);
-    const removed = canvas.events.beforeRender.length;
+    const removed = canvas.events.beforeRender.size;
 
     const second = createProbe();
     const result = {
       subscribed,
       removed,
       reused: second.object === first.object,
-      afterReuse: canvas.events.beforeRender.length
+      afterReuse: canvas.events.beforeRender.size
     };
 
     destroy();
+
     return result;
   });
 
   expect(result).toEqual({ subscribed: 2, removed: 1, reused: true, afterReuse: 1 });
+});
+
+test("destroy releases its pool slot and reindexes the last object", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ pool, createProbe, destroy }) => {
+    const first = createProbe();
+    const second = createProbe();
+
+    first.object.destroy();
+    first.object.destroy();
+
+    const result = {
+      firstDestroyed: first.object.destroyed,
+      moved: pool.get(...first.pointer) === second.object,
+      movedIndex: second.object.poolPointer[1],
+      activeCount: pool.objects[first.pointer[0]]!.length
+    };
+
+    destroy();
+
+    return result;
+  });
+
+  expect(result).toEqual({
+    firstDestroyed: true,
+    moved: true,
+    movedIndex: 0,
+    activeCount: 1
+  });
+});
+
+test("destroy releases its pool slot when a destructor fails", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ pool, createProbe, destroy }) => {
+    const { object, pointer } = createProbe();
+    object.onDestroy(() => {
+      throw new Error("cleanup failed");
+    });
+
+    let error = "";
+
+    try {
+      object.destroy();
+
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : String(cause);
+    }
+
+    const result = {
+      error,
+      destroyed: object.destroyed,
+      activeCount: pool.objects[pointer[0]]!.length
+    };
+
+    destroy();
+
+    return result;
+  });
+
+  expect(result).toEqual({ error: "cleanup failed", destroyed: true, activeCount: 0 });
+});
+
+test("inspection shows the top object or every overlapping object in draw order", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ canvas, createProbe, destroy }) => {
+    const first = createProbe({ x: 10, y: 10, name: "behind", debug: { inspect: true } }).object;
+    const second = createProbe({ x: 10, y: 10, name: "front", debug: { inspect: true } }).object;
+
+    for (const object of [first, second]) {
+      object.resize(20, 20);
+      object.play(function still() {
+        return { draw() {} };
+      });
+    }
+
+    const context = canvas.canvas.getContext("2d")!;
+    canvas.events.main.emit({ ctx: context, now: 1, delta: 0 });
+
+    const tables: unknown[] = [];
+    const original = console.table;
+    console.table = (rows) => tables.push(rows);
+
+    try {
+      const bounds = canvas.canvas.getBoundingClientRect();
+      const click = new MouseEvent("click", {
+        clientX: bounds.left + bounds.width * 0.2,
+        clientY: bounds.top + bounds.height * 0.8
+      });
+
+      canvas.canvas.dispatchEvent(click);
+      canvas.canvas.dispatchEvent(new MouseEvent("click", {
+        clientX: click.clientX,
+        clientY: click.clientY,
+        ctrlKey: true
+      }));
+
+    } finally {
+      console.table = original;
+    }
+
+    destroy();
+
+    return tables;
+  });
+
+  expect(result).toMatchObject([
+    [{ type: "Probe", name: "front", animation: "still", status: "active", layer: "main", drawOrder: 2 }],
+    [
+      { name: "behind", drawOrder: 1 },
+      { name: "front", drawOrder: 2 }
+    ]
+  ]);
+});
+
+test("inspection keeps the animation shown in the last rendered frame", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ canvas, createProbe, destroy }) => {
+    const { object } = createProbe({ x: 10, y: 10, debug: { inspect: true } });
+    object.resize(20, 20);
+
+    object.play(function first() {
+      return { draw() {} };
+    });
+
+    const ctx = canvas.canvas.getContext("2d")!;
+    canvas.events.main.emit({ ctx, now: 1, delta: 0 });
+
+    object.play(function second() {
+      return { draw() {} };
+    });
+
+    let rows: unknown[] = [];
+    const original = console.table;
+    console.table = (value) => { rows = value; };
+
+    try {
+      const rect = canvas.canvas.getBoundingClientRect();
+      canvas.canvas.dispatchEvent(new MouseEvent("click", {
+        clientX: rect.left + rect.width * 0.2,
+        clientY: rect.top + rect.height * 0.8
+      }));
+
+    } finally {
+      console.table = original;
+      destroy();
+    }
+
+    return rows;
+  });
+
+  expect(result).toMatchObject([{ animation: "first" }]);
 });
 
 test("animation listeners do not survive pool reuse", async ({ page }) => {
@@ -56,20 +253,21 @@ test("animation listeners do not survive pool reuse", async ({ page }) => {
     const first = createAnimatedProbe();
     const event = first.object.animation.events.test;
 
-    first.object.animation.on(event, () => {});
-    const subscribed = event.length;
+    event.on(() => {});
+    const subscribed = event.size;
 
     pool.delete(...first.pointer);
 
     const second = createAnimatedProbe();
     const result = {
       subscribed,
-      removed: event.length,
+      removed: event.size,
       reused: second.object === first.object,
-      afterReuse: second.object.animation.events.test.length
+      afterReuse: second.object.animation.events.test.size
     };
 
     destroy();
+
     return result;
   });
 
@@ -92,6 +290,7 @@ test("a failed subclass creation rolls back the pool", async ({ page }) => {
     const entries = Object.values(pool.objects).reduce((count, store) => count + store.length, 0);
 
     destroy();
+
     return { error, entries };
   });
 
@@ -112,25 +311,393 @@ test("play preserves auxiliary render listeners until destroy", async ({ page })
     object.play(() => ({ draw() {} }));
     object.play(() => ({ draw() {} }));
 
-    const subscribed = canvas.events.main.length;
+    const subscribed = canvas.events.main.size;
 
     const ctx = canvas.canvas.getContext("2d")!;
-    canvas.emitter.emit(canvas.events.main, { ctx, now: 1, delta: 0.016 });
+    canvas.events.main.emit({ ctx, now: 1, delta: 0.016 });
 
     object.destroy();
 
     const result = {
       subscribed,
       ticks,
-      remaining: canvas.events.main.length,
+      remaining: canvas.events.main.size,
       playing: object.nowPlaying
     };
 
     destroy();
+
     return result;
   });
 
   expect(result).toEqual({ subscribed: 2, ticks: 1, remaining: 0, playing: null });
+});
+
+test("switching playback keeps its render position and restarts elapsed time", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ createProbe, canvas, destroy }) => {
+    const { object } = createProbe();
+    const calls: string[] = [];
+    const elapsed: number[] = [];
+    const ctx = canvas.canvas.getContext("2d")!;
+
+    object.play(() => ({
+      draw: (frame) => {
+        calls.push("first");
+        elapsed.push(frame.elapsed);
+      }
+    }));
+
+    canvas.events.main.on(() => calls.push("later"));
+
+    const emit = (now: number) => {
+      canvas.events.main.emit({ ctx, now, delta: 1 });
+    };
+
+    emit(1);
+    emit(2);
+
+    object.play(() => ({
+      draw: (frame) => {
+        calls.push("second");
+        elapsed.push(frame.elapsed);
+      }
+    }));
+
+    emit(3);
+    emit(4);
+
+    destroy();
+
+    return { calls, elapsed };
+  });
+
+  expect(result).toEqual({
+    calls: ["first", "later", "first", "later", "second", "later", "second", "later"],
+    elapsed: [0, 1, 0, 1]
+  });
+});
+
+test("object sound follows object sleep and canvas pause, then stops on destroy", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({
+    createProbe, createFailingSoundProbe, createSoundAnimation, canvas, destroy, getAudioContext
+  }) => {
+    const context = getAudioContext();
+    const buffer = context.createBuffer(1, 4096, context.sampleRate);
+    const originalCreate = context.createBufferSource.bind(context);
+    const sources: AudioBufferSourceNode[] = [];
+    let starts = 0;
+    let stops = 0;
+
+    context.createBufferSource = () => {
+      const source = originalCreate();
+      const start = source.start.bind(source);
+      const stop = source.stop.bind(source);
+
+      source.start = () => {
+        starts++;
+        start();
+      };
+
+      source.stop = () => {
+        stops++;
+        stop();
+      };
+
+      sources.push(source);
+      return source;
+    };
+
+    try {
+      const { object } = createProbe();
+      const animation = createSoundAnimation(buffer);
+      const soundListeners = () => [object.status.events.sleepChange.size, canvas.events.pauseChange.size];
+      const originalSound = object.sound;
+
+      originalSound.play(animation.sounds.default);
+      originalSound.ensurePlaying(animation.sounds.default);
+      const subscribed = soundListeners();
+
+      originalSound.reset();
+      const manuallyReset = soundListeners();
+      originalSound.play(animation.sounds.default);
+      const rebound = soundListeners();
+
+      object.status.sleep();
+      object.status.wake();
+      canvas.pause();
+      canvas.resume();
+      object.destroy();
+      const released = soundListeners();
+      let deadPlayRejected = false;
+
+      try {
+        originalSound.play(animation.sounds.default);
+
+      } catch {
+        deadPlayRejected = true;
+      }
+
+      const reused = createProbe().object;
+      const reusedSound = reused.sound;
+      reusedSound.play(animation.sounds.default);
+      const resubscribed = soundListeners();
+      reused.destroy();
+
+      let failure = "";
+
+      try {
+        createFailingSoundProbe(animation);
+
+      } catch (error) {
+        failure = error instanceof Error ? error.message : String(error);
+      }
+
+      return {
+        bufferReady: buffer.duration > 0,
+        reused: reused === object,
+        deadPlayRejected,
+        soundReused: reusedSound === originalSound,
+        failure,
+        subscribed,
+        manuallyReset,
+        rebound,
+        released,
+        resubscribed,
+        cleared: soundListeners(),
+        sources: sources.length,
+        looped: sources.every((source) => source.loop),
+        starts,
+        stops
+      };
+
+    } finally {
+      context.createBufferSource = originalCreate;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({
+    bufferReady: true,
+    reused: true,
+    deadPlayRejected: true,
+    soundReused: true,
+    failure: "Sound probe initialization failed",
+    subscribed: [1, 1],
+    manuallyReset: [0, 0],
+    rebound: [1, 1],
+    released: [0, 0],
+    resubscribed: [1, 1],
+    cleared: [0, 0],
+    sources: 6,
+    looped: true,
+    starts: 6,
+    stops: 6
+  });
+});
+
+test("waking restarts looped sounds without replaying one-shot sounds", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ createProbe, destroy, getAudioContext }) => {
+    const context = getAudioContext();
+    const createBufferSource = context.createBufferSource.bind(context);
+    let starts = 0;
+
+    context.createBufferSource = () => {
+      const source = createBufferSource();
+      const start = source.start.bind(source);
+
+      source.start = () => {
+        starts++;
+        start();
+      };
+
+      return source;
+    };
+
+    try {
+      const { object } = createProbe();
+      const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+      const oneShot = { buffer, loop: false, volume: 1 };
+      const loop = { buffer, loop: true, volume: 1 };
+
+      object.sound.play(oneShot);
+      object.sound.play(loop);
+      const initial = starts;
+
+      object.status.sleep();
+      object.status.wake();
+      const afterWake = starts;
+
+      object.sound.play(oneShot);
+      return { initial, afterWake, explicitReplay: starts };
+
+    } finally {
+      context.createBufferSource = createBufferSource;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({ initial: 2, afterWake: 3, explicitReplay: 4 });
+});
+
+test("animation default sound follows playback while manual sounds remain independent", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({
+    createProbe, createSoundAnimation, createSilentAnimation, destroy, getAudioContext
+  }) => {
+    const context = getAudioContext();
+    const buffer = context.createBuffer(1, 4096, context.sampleRate);
+    const originalCreate = context.createBufferSource.bind(context);
+    const originalCreateGain = context.createGain.bind(context);
+    const gains: GainNode[] = [];
+    let starts = 0;
+    let stops = 0;
+
+    const { object } = createProbe();
+    void object.game.audio;
+
+    context.createBufferSource = () => {
+      const source = originalCreate();
+      const start = source.start.bind(source);
+      const stop = source.stop.bind(source);
+
+      source.start = () => {
+        starts++;
+        start();
+      };
+
+      source.stop = () => {
+        stops++;
+        stop();
+      };
+
+      return source;
+    };
+
+    context.createGain = () => {
+      const gain = originalCreateGain();
+      gains.push(gain);
+      return gain;
+    };
+
+    try {
+      const animation = createSoundAnimation(buffer);
+      const silent = createSilentAnimation();
+      const counts = () => [starts, stops];
+
+      object.play(animation);
+      const first = counts();
+      const baseVolume = Number(gains[0]!.gain.value.toFixed(2));
+
+      object.sound.volume = 0.5;
+      const adjustedVolume = Number(gains[0]!.gain.value.toFixed(2));
+
+      object.ensurePlaying(animation);
+      const ensured = counts();
+
+      object.play(animation);
+      const restarted = counts();
+
+      const manual = { buffer, loop: true, volume: 0.2 };
+      object.sound.play(manual);
+      object.sound.ensurePlaying(manual);
+      const manualEnsured = counts();
+
+      object.play(silent);
+      const silentAnimation = counts();
+
+      const proceduralSounds = {
+        default: { buffer, loop: true, volume: 0.6 },
+        cue: { buffer, loop: false, volume: 0.8 }
+      };
+
+      object.play(() => ({ draw() {}, sounds: proceduralSounds }));
+      const proceduralDefault = counts();
+
+      object.sound.play(proceduralSounds.cue);
+      object.play(silent);
+      const proceduralStopped = counts();
+
+      object.destroy();
+      const resetVolume = object.sound.volume;
+
+      return {
+        first, ensured, restarted, manualEnsured, silentAnimation,
+        proceduralDefault, proceduralStopped, destroyed: counts(),
+        baseVolume, adjustedVolume, resetVolume,
+        volumes: gains.map((gain) => Number(gain.gain.value.toFixed(2)))
+      };
+
+    } finally {
+      context.createBufferSource = originalCreate;
+      context.createGain = originalCreateGain;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({
+    first: [1, 0],
+    ensured: [1, 0],
+    restarted: [2, 1],
+    manualEnsured: [3, 1],
+    silentAnimation: [3, 2],
+    proceduralDefault: [4, 2],
+    proceduralStopped: [5, 3],
+    destroyed: [5, 5],
+    baseVolume: 0.4,
+    adjustedVolume: 0.2,
+    resetVolume: 1,
+    volumes: [0.2, 0.2, 0.1, 0.3, 0.4]
+  });
+});
+
+test("game audio settings update effect and music buses", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const result = await scene.evaluate(({ createProbe, destroy, getAudioContext }) => {
+    const context = getAudioContext();
+    const originalCreateGain = context.createGain.bind(context);
+    const gains: GainNode[] = [];
+
+    context.createGain = () => {
+      const gain = originalCreateGain();
+      gains.push(gain);
+      return gain;
+    };
+
+    try {
+      const { object } = createProbe();
+      const { audio } = object.game;
+      const initial = gains.map((gain) => gain.gain.value);
+
+      object.game.settings.set("audio", { master: 0.5, effects: 0.25, music: 0.75 });
+      const changed = gains.map((gain) => gain.gain.value);
+
+      return {
+        initial,
+        changed,
+        effectsConnected: audio.output("effects") === gains[1],
+        musicConnected: audio.output("music") === gains[2]
+      };
+
+    } finally {
+      context.createGain = originalCreateGain;
+      destroy();
+    }
+  });
+
+  expect(result).toEqual({
+    initial: [1, 1, 1],
+    changed: [0.5, 0.25, 0.75],
+    effectsConnected: true,
+    musicConnected: true
+  });
 });
 
 const fixtureUrl = "/src/engine/game-objects/game-object/tests/fixture.ts";

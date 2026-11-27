@@ -1,12 +1,12 @@
-import { cache } from "#decorators/cache";
-import { Disposable } from "#engine/disposable";
+import { cache } from "#/utils/decorators/cache";
+import { Destroyable } from "#lib/destroyable";
 
 const kinds = new Map<number, string>();
 
-export abstract class KindedObject extends Disposable {
+export abstract class KindedObject extends Destroyable {
   @cache
   static get kind() {
-    const name = this.name;
+    const { name } = this;
 
     let hash = 0;
 

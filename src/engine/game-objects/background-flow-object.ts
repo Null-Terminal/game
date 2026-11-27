@@ -1,12 +1,12 @@
-import { cache } from "#decorators/cache";
-import { AnimationPlayback } from "#engine/animation";
-import type { LoadedAnimation } from "#engine/animation";
+import { cache } from "#/utils/decorators/cache";
+import { AnimationPlayback, type LoadedAnimation } from "#engine/animation";
 
 import { ifAlive } from "#engine/game-objects/decorators";
 import { BackgroundObject } from "#engine/game-objects/background-object";
 import type * as go from "#engine/game-objects/game-object";
 
 import { FlowLayout } from "#engine/game-objects/background-flow-object/layout";
+import { BackgroundFlowObjectDebug } from "#engine/game-objects/background-flow-object/debug";
 import { BackgroundFlowObjectRender } from "#engine/game-objects/background-flow-object/render";
 
 import type { BackgroundFlowRenderState, DefaultBackgroundFlowObjectOptions } from "#engine/game-objects/background-flow-object/types";
@@ -31,6 +31,11 @@ export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<
     return new BackgroundFlowObjectRender(this);
   }
 
+  @cache
+  override get debug(): BackgroundFlowObjectDebug {
+    return new BackgroundFlowObjectDebug(this);
+  }
+
   #playingSprites: readonly LoadedAnimation[] | null = null;
   #seed = 0;
 
@@ -47,10 +52,10 @@ export class BackgroundFlowObject extends BackgroundObject<go.GameObjectOptions<
       return;
     }
 
-    super.destroy();
-
     this.#playingSprites = null;
     this.#seed = 0;
+
+    super.destroy();
   }
 
   @ifAlive

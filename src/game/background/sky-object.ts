@@ -1,22 +1,31 @@
-import { cache } from "#decorators/cache";
+import { cache } from "#/utils/decorators/cache";
 import { isInRange } from "#/utils/validators";
 import { GameObject } from "#engine/game-objects";
 
+import { SkyObjectDebug } from "#game/background/sky-object/debug";
 import { overcastSky, stormSky } from "#game/background/sky-object/presets";
 import { SkyObjectRender } from "#game/background/sky-object/render";
 import type { SkyOptions, SkySceneOptions } from "#game/background/sky-object/types";
+import type { ProjectGame } from "#game/settings";
 
 export type * from "#game/background/sky-object/types";
-export { duskSky } from "#game/background/sky-object/presets";
+export { duskSky, overcastSky, stormSky } from "#game/background/sky-object/presets";
 
 export class SkyObject extends GameObject<SkyOptions> {
+  declare game: ProjectGame;
+
   static override readonly animations = {
-    sky: (object: GameObject) => SkyObject.#createPlayback(object),
-    storm: (object: GameObject) => SkyObject.#createPlayback(object, stormSky),
-    overcast: (object: GameObject) => SkyObject.#createPlayback(object, overcastSky)
+    sky: (go: GameObject) => SkyObject.#createPlayback(go),
+    storm: (go: GameObject) => SkyObject.#createPlayback(go, stormSky),
+    overcast: (go: GameObject) => SkyObject.#createPlayback(go, overcastSky)
   };
 
   override readonly animations = SkyObject.animations;
+
+  @cache
+  override get debug(): SkyObjectDebug {
+    return new SkyObjectDebug(this);
+  }
 
   @cache
   override get render(): SkyObjectRender {
@@ -25,6 +34,10 @@ export class SkyObject extends GameObject<SkyOptions> {
 
   override get redrawEvent() {
     return this.canvas.events.background;
+  }
+
+  override get sleepable() {
+    return false;
   }
 
   init() {
@@ -51,11 +64,11 @@ export class SkyObject extends GameObject<SkyOptions> {
     this.height = this.canvas.height;
   }
 
-  static #createPlayback(object: GameObject, scene?: SkySceneOptions) {
-    if (!(object instanceof SkyObject)) {
+  static #createPlayback(go: GameObject, scene?: SkySceneOptions) {
+    if (!(go instanceof SkyObject)) {
       throw new TypeError("Sky animation requires a SkyObject");
     }
 
-    return object.render.createPlayback(scene ?? object.options);
+    return go.render.createPlayback(scene ?? go.options);
   }
 }

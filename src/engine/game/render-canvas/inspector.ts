@@ -1,0 +1,101 @@
+import { LoadedAnimation } from "#engine/animation";
+
+import type { PlayableAnimation } from "#engine/game-objects";
+import type { RenderCanvas } from "#engine/game/render-canvas";
+import type { GameObject } from "#engine/game-objects/game-object";
+
+export interface InspectionEntry {
+  go: GameObject;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  frame: number | null;
+  animation: PlayableAnimation | null;
+  part: string | null;
+}
+
+interface InspectionHit {
+  entry: InspectionEntry;
+  drawOrder: number;
+}
+
+export class RenderCanvasInspector {
+  readonly #entries: InspectionEntry[] = [];
+
+  constructor(canvas: RenderCanvas) {
+    const entries = this.#entries;
+
+    const clear = canvas.events.beforeRender.on(() => {
+      entries.length = 0;
+    });
+
+    const onClick = (event: MouseEvent) => {
+      const rect = canvas.canvas.getBoundingClientRect();
+
+      const x = (event.clientX - rect.left) * canvas.width / rect.width;
+      const y = (event.clientY - rect.top) * canvas.height / rect.height;
+
+      const hits: InspectionHit[] = [];
+
+      for (let index = 0; index < entries.length; index++) {
+        const entry = entries[index]!;
+
+        if (entry.go.destroyed || x < entry.left || x >= entry.right || y < entry.top || y >= entry.bottom) {
+          continue;
+        }
+
+        hits.push({ entry, drawOrder: index + 1 });
+      }
+
+      if (hits.length > 0) {
+        const selected = event.ctrlKey ? hits : hits.slice(-1);
+        console.table(selected.map(({ entry, drawOrder }) => this.#row(entry, drawOrder)));
+      }
+    };
+
+    canvas.canvas.addEventListener("click", onClick, { signal: canvas.abortSignal });
+
+    canvas.onDestroy(() => {
+      clear.dispose();
+      entries.length = 0;
+    });
+  }
+
+  record(entry: InspectionEntry) {
+    this.#entries.push(entry);
+  }
+
+  #row({ go, left, top, right, bottom, frame, animation: playing, part }: InspectionEntry, drawOrder: number) {
+    let animation: string | null = null;
+
+    if (playing instanceof LoadedAnimation) {
+      animation = playing.name || "animation";
+
+    } else if (playing != null) {
+      animation = playing.name || "procedural";
+    }
+
+    const layer = Object.entries(go.canvas.events).find(([, event]) => event === go.redrawEvent)?.[0] ?? "custom";
+
+    const status = go.status.sleeping ? "sleeping" : "active";
+
+    return {
+      drawOrder,
+      layer,
+      type: go.constructor.name,
+      name: go.options.name ?? null,
+      part: part ?? null,
+      x: go.x,
+      y: go.y,
+      width: go.width,
+      height: go.height,
+      bbox: go.bbox?.join(", ") ?? null,
+      screenBounds: `${left}, ${top}, ${right}, ${bottom}`,
+      status,
+      animation,
+      frame: frame == null ? null : frame + 1,
+      pool: go.poolPointer.join(":")
+    };
+  }
+}

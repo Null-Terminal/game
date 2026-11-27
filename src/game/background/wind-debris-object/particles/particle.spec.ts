@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AnimationDefinition } from "#/animation-definition";
+import { AnimationDefinition } from "#lib/animation-definition";
 import { SeededRandom } from "#/utils/seeded-random";
 
 import { LoadedAnimation } from "#engine/animation";

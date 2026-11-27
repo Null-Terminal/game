@@ -10,6 +10,7 @@ export interface CameraLimit {
 }
 
 export interface CameraDeadZone {
+  // Отступы от краёв экрана в процентах его ширины и высоты
   left: number;
   right: number;
   top: number;

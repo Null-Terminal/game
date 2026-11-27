@@ -1,5 +1,5 @@
-import { cache } from "#decorators/cache";
-import { loadImage } from "#/file-loader";
+import { cache } from "#/utils/decorators/cache";
+import { loadImage } from "#sprite-editor/loader";
 
 import styles from "#sprite-editor/sprite/styles.css?raw";
 import template from "#sprite-editor/sprite/template.html?raw";

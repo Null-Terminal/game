@@ -5,9 +5,9 @@ try {
   await import("#game/main");
   loading.hidden = true;
 
-} catch (error) {
+} catch (err) {
   loading.hidden = false;
   loading.classList.add("loading-error");
   message.textContent = "Не удалось загрузить игру";
-  console.error(error);
+  console.error(err);
 }

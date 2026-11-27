@@ -1,6 +1,6 @@
-import { GameObjectDebug } from "#engine/game-objects/game-object/debug";
+import { GameObjectDebug, type ObjectRenderPayload } from "#engine/game-objects/game-object";
 
-import type { ObjectRenderPayload } from "#engine/game-objects/game-object";
+import type { RenderContext } from "#engine/rendering";
 import type { BackgroundObject } from "#engine/game-objects/background-object";
 
 export interface RepeatCellBounds {
@@ -12,7 +12,7 @@ export interface RepeatCellBounds {
   bottom: number;
 }
 
-export class BackgroundObjectDebug extends GameObjectDebug<BackgroundObject> {
+export class BackgroundObjectDebug<T extends BackgroundObject = BackgroundObject> extends GameObjectDebug<T> {
   override draw(payload: ObjectRenderPayload) {
     const { go } = this;
 
@@ -29,7 +29,7 @@ export class BackgroundObjectDebug extends GameObjectDebug<BackgroundObject> {
   }
 
   drawStretchSeams(
-    ctx: CanvasRenderingContext2D,
+    ctx: RenderContext,
     cell: RepeatCellBounds,
     repeatX: boolean | undefined,
     repeatY: boolean | undefined

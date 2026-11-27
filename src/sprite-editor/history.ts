@@ -1,9 +1,10 @@
+import { Destroyable } from "#lib/destroyable";
 import type { State, StateEvent } from "#sprite-editor/state";
 import type { SpriteEditor } from "#/sprite-editor";
 
 export type Command = Pick<State, "undo" | "redo">;
 
-export class EditorHistory {
+export class EditorHistory extends Destroyable {
   readonly #editor: SpriteEditor;
 
   #history: Command[] = [];
@@ -12,18 +13,19 @@ export class EditorHistory {
   #gridObserver: MutationObserver | null = null;
 
   constructor(editor: SpriteEditor) {
+    super();
     this.#editor = editor;
     this.#initHandlers();
-  }
 
-  destroy() {
-    this.#editor.removeEventListener("stateChange", this.#onStateChange);
-    document.removeEventListener("keydown", this.#onKeyboardUndoRedo);
+    this.onDestroy(() => {
+      this.#editor.removeEventListener("stateChange", this.#onStateChange);
+      document.removeEventListener("keydown", this.#onKeyboardUndoRedo);
 
-    this.#gridObserver?.disconnect();
-    this.#gridObserver = null;
+      this.#gridObserver?.disconnect();
+      this.#gridObserver = null;
 
-    this.clear();
+      this.clear();
+    });
   }
 
   clear() {

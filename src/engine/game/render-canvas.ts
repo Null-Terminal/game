@@ -1,33 +1,46 @@
-import { cache } from "#decorators/cache";
-import { EventEmitter, handler } from "#/event-emitter";
+import { cache } from "#/utils/decorators/cache";
+import { EventEmitter, handler } from "#lib/event-emitter";
 
-import { Disposable } from "#engine/disposable";
+import { Destroyable } from "#lib/destroyable";
+import { RenderCanvasInspector } from "#engine/game/render-canvas/inspector";
+import { Canvas2DStrategy, WebGLStrategy, WebGLUnavailableError } from "#engine/rendering";
+import type { RenderContext, RenderStrategy } from "#engine/rendering";
+
 import type { RenderCanvasOptions, RenderPayload } from "#engine/game/render-canvas/types";
 
 export type * from "#engine/game/render-canvas/types";
 
-export class RenderCanvas extends Disposable {
+export class RenderCanvas extends Destroyable {
   readonly canvas: HTMLCanvasElement;
   readonly options: Required<RenderCanvasOptions>;
 
   readonly emitter = new EventEmitter({
-    beforeRender: handler<RenderPayload>(),
-    background: handler<RenderPayload>(),
-    static: handler<RenderPayload>(),
-    dynamic: handler<RenderPayload>({ withFlush: true }),
-    interact: handler<RenderPayload>({ withFlush: true }),
-    main: handler<RenderPayload>(),
-    overlay: handler<RenderPayload>(),
-    ui: handler<RenderPayload>(),
+    pauseChange: handler<boolean>(),
+    beforeRender: handler<RenderPayload>({ ordered: true }),
+    background: handler<RenderPayload>({ ordered: true }),
+    scene: handler<RenderPayload>({ ordered: true, withFlush: true }),
+    interact: handler<RenderPayload>({ ordered: true, withFlush: true }),
+    main: handler<RenderPayload>({ ordered: true }),
+    overlay: handler<RenderPayload>({ ordered: true }),
+    ui: handler<RenderPayload>({ ordered: true }),
   });
 
   get paused() {
     return this.#paused;
   }
 
+  get running() {
+    return this.#redrawId !== 0;
+  }
+
   @cache
   get events() {
     return this.emitter.events;
+  }
+
+  @cache
+  get inspector() {
+    return new RenderCanvasInspector(this);
   }
 
   get fps() {
@@ -36,6 +49,10 @@ export class RenderCanvas extends Disposable {
 
   get delta() {
     return this.#delta;
+  }
+
+  get textureStats() {
+    return this.#strategy.textureStats;
   }
 
   get width() {
@@ -54,10 +71,8 @@ export class RenderCanvas extends Disposable {
     this.canvas.height = value;
   }
 
-  @cache
-  get #ctx() {
-    return this.canvas.getContext("2d")!;
-  }
+  readonly #ctx: RenderContext;
+  readonly #strategy: RenderStrategy;
 
   #redrawId = 0;
   #paused = false;
@@ -74,11 +89,28 @@ export class RenderCanvas extends Disposable {
       width: 1024,
       height: 768,
       showFPS: false,
+      backend: "webgl",
       ...opts
     };
 
     this.canvas.width = this.options.width;
     this.canvas.height = this.options.height;
+
+    let strategy: RenderStrategy | null = null;
+
+    if (this.options.backend === "webgl") {
+      try {
+        strategy = new WebGLStrategy(this.canvas);
+
+      } catch (err) {
+        if (!(err instanceof WebGLUnavailableError)) {
+          throw err;
+        }
+      }
+    }
+
+    this.#strategy = strategy ?? new Canvas2DStrategy(this.canvas);
+    this.#ctx = this.#strategy.context;
 
     this.start();
   }
@@ -87,14 +119,25 @@ export class RenderCanvas extends Disposable {
     super.destroy();
     this.stop();
     this.emitter.off();
+    this.#strategy.destroy();
   }
 
   pause() {
+    if (this.#paused) {
+      return;
+    }
+
     this.#paused = true;
+    this.events.pauseChange.emit(true);
   }
 
   resume() {
+    if (!this.#paused) {
+      return;
+    }
+
     this.#paused = false;
+    this.events.pauseChange.emit(false);
   }
 
   togglePause() {
@@ -149,14 +192,13 @@ export class RenderCanvas extends Disposable {
       lastRedraw = now;
       payload.now = now;
 
-      this.emitter.emit(this.events.beforeRender, payload);
-      this.emitter.emit(this.events.background, payload);
-      this.emitter.emit(this.events.static, payload);
-      this.emitter.emit(this.events.dynamic, payload);
-      this.emitter.emit(this.events.interact, payload);
-      this.emitter.emit(this.events.main, payload);
-      this.emitter.emit(this.events.overlay, payload);
-      this.emitter.emit(this.events.ui, payload);
+      this.events.beforeRender.emit(payload);
+      this.events.background.emit(payload);
+      this.events.scene.emit(payload);
+      this.events.interact.emit(payload);
+      this.events.main.emit(payload);
+      this.events.overlay.emit(payload);
+      this.events.ui.emit(payload);
 
       if (this.options.showFPS) {
         this.drawFPS();
@@ -168,6 +210,7 @@ export class RenderCanvas extends Disposable {
 
   stop() {
     cancelAnimationFrame(this.#redrawId);
+    this.#redrawId = 0;
   }
 
   clear() {

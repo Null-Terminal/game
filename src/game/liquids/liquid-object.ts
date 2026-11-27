@@ -1,0 +1,60 @@
+import type { Game } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
+
+import type { StateValue } from "#engine/game-objects";
+import { InteractObject, ifAlive } from "#engine/game-objects";
+import type { DefaultGameObjectOptions, GameObject } from "#engine/game-objects";
+
+import type { BBoxTuple } from "#engine/rtree";
+
+import { PersonObject } from "#game/characters/person-object";
+
+import { acid } from "#game/sprites/hazards/acid";
+import { water } from "#game/sprites/hazards/water";
+
+export type LiquidKind = keyof typeof LiquidObject.kinds;
+
+export type LiquidObjectOptions = DefaultGameObjectOptions & {
+  bbox: BBoxTuple;
+  kind: LiquidKind;
+  damagePerSecond?: number;
+};
+
+export class LiquidObject extends InteractObject<LiquidObjectOptions> {
+  static readonly kinds = {
+    water: { show: water, damagePerSecond: 0 },
+    acid: { show: acid, damagePerSecond: 35 }
+  } as const;
+
+  override create(game: Game, poolPointer: PoolPointer, opts?: LiquidObjectOptions, snapshot?: StateValue) {
+    if (opts == null) {
+      throw new TypeError("Liquid kind is required");
+    }
+
+    return super.create(game, poolPointer, {
+      ...LiquidObject.kinds[opts.kind],
+      ...opts
+    }, snapshot);
+  }
+
+  override get redrawEvent() {
+    return this.canvas.events.background;
+  }
+
+  @ifAlive
+  override visit(go: GameObject) {
+    if (!(go instanceof PersonObject)) {
+      return;
+    }
+
+    const damage = this.options.damagePerSecond;
+
+    if (damage == null || damage <= 0) {
+      return;
+    }
+
+    go.updateStats(({ hp }) => ({
+      hp: hp - damage * this.canvas.delta
+    }));
+  }
+}

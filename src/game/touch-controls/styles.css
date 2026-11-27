@@ -1,0 +1,83 @@
+:host {
+  display: none;
+}
+
+:host([hidden]) {
+  display: none !important;
+}
+
+@media (any-pointer: coarse) {
+  :host {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    pointer-events: none;
+  }
+}
+
+button {
+  width: 68px;
+  height: 68px;
+  border: 1px solid #78c4d5;
+  border-radius: 50%;
+  background: rgb(10 32 52 / 70%);
+  color: #e4f8ff;
+  font: 30px monospace;
+  touch-action: none;
+  user-select: none;
+  pointer-events: auto;
+}
+
+button:active {
+  background: rgb(19 107 131 / 85%);
+}
+
+#pause {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+}
+
+.movement,
+.actions {
+  position: absolute;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.movement {
+  left: max(20px, env(safe-area-inset-left));
+}
+
+.actions {
+  right: max(20px, env(safe-area-inset-right));
+}
+
+.actions button:nth-child(2) {
+  margin-bottom: 32px;
+}
+
+@media (max-width: 520px) {
+  button {
+    width: 56px;
+    height: 56px;
+  }
+
+  .movement,
+  .actions {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  #pause {
+    top: max(80px, calc(env(safe-area-inset-top) + 64px));
+  }
+}

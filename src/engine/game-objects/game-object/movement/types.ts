@@ -1,5 +1,14 @@
 export type MovePoint = [x: number, y: number];
-export type MovementOptions = PathMovement | FunctionMovement | SineMovement | CircleMovement;
+
+export type MovementSnapshot =
+  | { kind: "path"; elapsed: number; pathIndex: number }
+  | { kind: "curve"; elapsed: number; distance: number };
+
+export type MovementOptions =
+  | PathMovement
+  | FunctionMovement
+  | SineMovement
+  | CircleMovement;
 
 export type MoveSpeed = number | ((elapsed: number) => number);
 

@@ -1,4 +1,5 @@
-import type { Handlers } from "#/event-emitter";
+import type { LoadedSound } from "#engine/audio";
+import type { EventChannel } from "#lib/event-emitter";
 
 import type { FrameEffects, LoadedAnimation } from "#engine/animation";
 import type { KindedGameObjectCtor } from "#engine/game-object-pool";
@@ -19,23 +20,45 @@ export interface Effects extends FrameEffects {
 }
 
 export interface DefaultGameObjectOptions {
+  // Имя для отладки
   name?: string;
 
+  // Стабильный ID, если порядок создания объекта может меняться
+  stateKey?: string;
+
+  // Начальная анимация или её имя
   show?: string | PlayableAnimation;
+
+  // Настройки движения при создании объекта
   movement?: MovementOptions;
 
+  // Может ли объект уходить в сон при удалении от viewport
+  sleep?: boolean;
+
+  // Дочерние объекты, которые создаются вместе с этим объектом
   accept?: WithMap | null;
+
+  // Родительский объект в композиции
   acceptor?: GameObject | null;
 
+  // Эффекты отрисовки и скорость анимации
   effects?: Effects;
+
+  // Настройки отладочного отображения
   debug?: GameObjectDebugOptions;
 }
 
 export type GameObjectOptions<T = DefaultGameObjectOptions> =
-  { x?: number; y?: number } & T |
-  { bbox?: BBoxTuple } & T;
+  | { x?: number; y?: number } & T
+  | { bbox?: BBoxTuple } & T;
+
+export interface AnimationSoundBank {
+  readonly default?: LoadedSound;
+  readonly [name: string]: LoadedSound | undefined;
+}
 
 export interface AnimationInstance {
+  sounds?: AnimationSoundBank;
   draw(frame: ObjectRenderPayload): void;
   advance?(elapsed: number): void;
   destroy?(): void;
@@ -47,7 +70,7 @@ export type AnimationSource = (go: GameObject) => AnimationInstance;
 export type PlayableAnimation = LoadedAnimation | AnimationSource;
 
 export type Animations = Record<string, PlayableAnimation>;
-export type AnimationEvents<T extends Animations> = { [K in keyof T]: Handlers<string> };
+export type AnimationEvents<T extends Animations> = { [K in keyof T]: EventChannel<string> };
 
 export type AbstractGameObjectCtor = abstract new (...args: any[]) => GameObject;
 
@@ -73,8 +96,8 @@ export type Refs<T extends WithMap> = {
 };
 
 export type RefOf<O, E> =
-  E extends ((options: O) => infer _ extends readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
-    ? (options: O) => readonly [C, CreateOptionsOf<C>?]
+  E extends ((opts: O) => infer _ extends readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
+    ? (opts: O) => readonly [C, CreateOptionsOf<C>?]
     : E extends (readonly [infer C extends KindedGameObjectCtor<typeof GameObject>, ...any])
       ? readonly [C, CreateOptionsOf<C>?]
       : E;
