@@ -7,6 +7,9 @@ import { run, jump } from "#game/sprites/character/run";
 import { stay } from "#game/sprites/character/stay";
 import type { ProjectGame } from "#game/settings";
 
+// Нажатие незадолго до приземления не теряется
+const jumpBufferSeconds = 0.12;
+
 export class PersonObject extends PhysicsObject {
   declare game: ProjectGame;
 
@@ -53,6 +56,7 @@ export class PersonObject extends PhysicsObject {
   #fallPeak = 0;
   #forgiveFall = true;
   #grounded = false;
+  #jumpBufferRemaining = 0;
 
   get input() {
     return this.game.input;
@@ -65,6 +69,7 @@ export class PersonObject extends PhysicsObject {
   init() {
     this.#fallPeak = 0;
     this.#grounded = false;
+    this.#jumpBufferRemaining = 0;
     this.#forgiveFall = true;
 
     this.onDestroy(this.game.camera.bindTo(this));
@@ -87,6 +92,13 @@ export class PersonObject extends PhysicsObject {
   #initPhysics = ({ delta }: RenderPayload) => {
     const { stats, actions } = this;
 
+    if (this.input.consumePress("jump")) {
+      this.#jumpBufferRemaining = jumpBufferSeconds;
+
+    } else {
+      this.#jumpBufferRemaining = Math.max(0, this.#jumpBufferRemaining - delta);
+    }
+
     // Горизонтальное движение
     stats.vx = stats.speed;
 
@@ -101,7 +113,8 @@ export class PersonObject extends PhysicsObject {
       stats.vx = 0;
     }
 
-    if (this.input.consumePress("jump") && stats.onGround) {
+    if (this.#jumpBufferRemaining > 0 && stats.onGround) {
+      this.#jumpBufferRemaining = 0;
       stats.vy += stats.jump;
       stats.onGround = false;
       this.ensurePlaying(this.animations.jump);

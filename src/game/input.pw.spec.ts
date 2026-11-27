@@ -191,6 +191,31 @@ test("a quick press reaches the next game update and expires after it", async ({
   expect(result).toEqual({ releasedBeforeUpdate: true, quickPressReceived: true, expiredAfterUpdate: true });
 });
 
+test("jump pressed just before landing is buffered briefly", async ({ page }) => {
+  await page.goto("/tests/fixture.html");
+
+  const result = await page.evaluate(async () => {
+    const fixtureUrl = "/src/game/platforms/tests/moving-platform.ts";
+    const { createMovingPlatformScene } = await import(fixtureUrl) as typeof platformFixture;
+    const { player, step, destroy } = await createMovingPlatformScene({ platformSpeed: 0, jetpack: false });
+    const delta = 1 / 60;
+
+    player.stats.onGround = false;
+    player.input.press("test:jump", "jump");
+    player.input.release("test:jump");
+    step(delta, 1000 * delta);
+
+    player.stats.onGround = true;
+    step(delta, 2000 * delta);
+    const jumped = player.stats.vy > 0;
+
+    destroy();
+    return jumped;
+  });
+
+  expect(result).toBe(true);
+});
+
 test("a gamepad without a standard mapping starts the game and controls the pause menu", async ({ page }) => {
   await page.goto("/game.html");
 
