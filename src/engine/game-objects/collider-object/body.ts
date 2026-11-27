@@ -1,5 +1,6 @@
 import { ifAlive } from "#engine/game-objects/decorators";
 import { ServantObject } from "#engine/game-objects/servant-object";
+
 import type { ColliderObject } from "#engine/game-objects/collider-object";
 import type { BBoxTuple, RTree, RTreeEntry } from "#engine/rtree";
 
@@ -35,8 +36,8 @@ export class CollisionBody extends ServantObject<ColliderObject> {
 
   #lastX = 0;
   #lastY = 0;
-
   #idleSeconds = 0;
+
   #moved = false;
   #mounted = false;
   #sleeping = false;
@@ -100,6 +101,7 @@ export class CollisionBody extends ServantObject<ColliderObject> {
 
     this.#lastX = go.x;
     this.#lastY = go.y;
+
     this.#idleSeconds = 0;
     this.#moved = true;
 
@@ -181,11 +183,14 @@ export class CollisionBody extends ServantObject<ColliderObject> {
 
     super.destroy();
     this.#removeStatic();
+
     this.#shapes.length = 0;
     this.#entries.length = 0;
+
     this.#kind = Kind.Solid;
     this.#mode = Mode.Static;
     this.#idleSeconds = 0;
+
     this.#moved = false;
     this.#mounted = false;
     this.#sleeping = false;
@@ -228,7 +233,18 @@ export class CollisionBody extends ServantObject<ColliderObject> {
       const previous = entries[index + 1];
       const bounds = this.#shapes[index]!();
 
-      if (previous != null && (bounds == null || previous.slice(2).some((value, i) => value !== bounds[i]))) {
+      // Пропускаем kind и index перед координатами в записи R-дерева
+      const SKIP = 2;
+
+      if (
+        previous != null && (
+          bounds == null ||
+          previous[SKIP + 0] !== bounds[0] ||
+          previous[SKIP + 1] !== bounds[1] ||
+          previous[SKIP + 2] !== bounds[2] ||
+          previous[SKIP + 3] !== bounds[3]
+        )
+      ) {
         tree.remove(...previous);
         entries[index + 1] = null;
       }
