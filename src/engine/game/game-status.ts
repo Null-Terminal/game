@@ -11,13 +11,13 @@ enum State {
 export class GameStatus {
   static readonly State = State;
 
-  readonly #game: Game;
+  readonly game: Game;
 
   #state: State = State.Playing;
   #loadingLevel = false;
 
   constructor(game: Game) {
-    this.#game = game;
+    this.game = game;
   }
 
   get playing() {
@@ -41,7 +41,7 @@ export class GameStatus {
   }
 
   async runLevelLoad(load: () => Promise<World>): Promise<World> {
-    const game = this.#game;
+    const { game } = this;
     const { events } = game;
 
     if (game.destroyed || this.#loadingLevel) {
@@ -82,7 +82,7 @@ export class GameStatus {
     }
 
     this.#set(State.Paused);
-    this.#game.canvas.pause();
+    this.game.canvas.pause();
   }
 
   resume() {
@@ -93,7 +93,7 @@ export class GameStatus {
     this.#set(State.Playing);
 
     if (!this.loadingLevel) {
-      this.#game.canvas.resume();
+      this.game.canvas.resume();
     }
   }
 
@@ -112,7 +112,7 @@ export class GameStatus {
     }
 
     this.#set(State.Finished);
-    this.#game.canvas.pause();
+    this.game.canvas.pause();
   }
 
   async restart() {
@@ -121,15 +121,15 @@ export class GameStatus {
     }
 
     this.#set(State.Restarting);
-    this.#game.canvas.pause();
+    this.game.canvas.pause();
 
     try {
-      await this.#game.reloadLevel();
+      await this.game.reloadLevel();
       this.#set(State.Playing);
-      this.#game.canvas.resume();
+      this.game.canvas.resume();
 
     } catch (err) {
-      if (!this.#game.destroyed) {
+      if (!this.game.destroyed) {
         this.#set(State.Finished);
       }
 
@@ -138,7 +138,7 @@ export class GameStatus {
   }
 
   #set(state: State) {
-    if (this.#game.destroyed) {
+    if (this.game.destroyed) {
       throw new Error(`${this.constructor.name}: called on destroyed game`);
     }
 

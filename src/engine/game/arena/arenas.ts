@@ -59,7 +59,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       .reduce((count) => count + 1, 0);
   }
 
-  readonly #world: World;
+  readonly world: World;
 
   readonly #settingsSubscription: Subscription;
   #unloadSettings: BaseGameSettings["arenaUnload"];
@@ -90,7 +90,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       unload: { checkInterval: opts?.unload?.checkInterval ?? 1000 }
     };
 
-    this.#world = world;
+    this.world = world;
     this.#refsToPreload = new Set(refsToPreload);
     this.#unloadSettings = world.game.settings.get("arenaUnload");
 
@@ -277,7 +277,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   async #loadNewArena(source: t.ArenaSource, snapshot?: t.ArenaSnapshot): Promise<Arena> {
-    const world = this.#world;
+    const { world } = this;
 
     if (world.destroyed || world.game == null) {
       throw new Error(`${this.constructor.name}.loadArena: world is not active`);
@@ -325,7 +325,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   #commit<T>(action: () => T): Promise<T> {
-    const world = this.#world;
+    const { world } = this;
 
     const runAction = () => {
       if (world.destroyed) {

@@ -10,12 +10,11 @@ export type * from "#engine/game-object-pool/types";
 
 export class GameObjectPool extends Destroyable {
   readonly objects: Record<number, t.GameObjectStore> = {};
-  readonly #world: World;
+  readonly world: World;
 
   constructor(world: World) {
     super();
-
-    this.#world = world;
+    this.world = world;
 
     this.onDestroy(() => {
       for (const [kind, store] of Object.entries(this.objects)) {
@@ -82,7 +81,7 @@ export class GameObjectPool extends Destroyable {
     const fromPool = buffer.length > length;
     const object = fromPool ? buffer[length]! : new GObject();
 
-    object.world = this.#world;
+    object.world = this.world;
     object.arena = arena;
     store.length++;
 
