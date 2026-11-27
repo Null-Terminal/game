@@ -2,34 +2,11 @@ import { LoadedAnimation } from "#engine/animation";
 import { ServantObject } from "#engine/game-objects/servant-object";
 
 import type { GameObject } from "#engine/game-objects/game-object";
+import type { DebugBounds, DebugPart } from "#engine/game-objects/game-object/debug/types";
 import type { ObjectRenderPayload } from "#engine/game-objects/game-object/render";
 import type { RenderContext } from "#engine/rendering";
 
-export interface GameObjectDebugOptions {
-  // Рамка объекта; строкой можно задать её цвет
-  bounds?: boolean | string;
-
-  // Подпись с типом, именем, анимацией и кадром
-  label?: boolean;
-
-  // Выводит сведения об объекте в консоль по клику
-  inspect?: boolean;
-}
-
-export interface DebugBounds {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
-export interface DebugPart {
-  bounds: Readonly<DebugBounds>;
-  animation?: LoadedAnimation;
-  frame?: number;
-  name?: string;
-  color?: string;
-}
+export type * from "#engine/game-objects/game-object/debug/types";
 
 export class GameObjectDebug<T extends GameObject = GameObject> extends ServantObject<T> {
   protected readonly boundsColor: string = "#00FFFF";
