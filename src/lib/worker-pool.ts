@@ -16,6 +16,7 @@ export abstract class WorkerClient<Request, Result> {
 export class WorkerPool extends Destroyable {
   readonly #slots: WorkerSlot[] = [];
   readonly #queue: WorkerJob[] = [];
+
   readonly #maxWorkers: number;
   readonly #idleTimeout: number | null;
 
@@ -35,6 +36,7 @@ export class WorkerPool extends Destroyable {
     }
 
     const cores = typeof navigator === "undefined" ? maxWorkers : navigator.hardwareConcurrency;
+
     this.#maxWorkers = Math.min(maxWorkers, Number.isInteger(cores) && cores > 0 ? cores : maxWorkers);
     this.#idleTimeout = idleTimeout;
 
@@ -132,6 +134,7 @@ export class WorkerPool extends Destroyable {
 
     const index = this.#slots.indexOf(other);
 
+    // Свободный воркер другого типа выполняет другой скрипт, поэтому заменяем его
     this.#clearIdleTimer(other);
     other.worker.terminate();
     this.#slots.splice(index, 1);
@@ -162,6 +165,7 @@ export class WorkerPool extends Destroyable {
         job.resolve(data.value);
       }
 
+      // Сначала отдаём воркеру следующую задачу, если она есть в очереди
       this.#dispatch();
       this.#scheduleIdle(slot);
     });
@@ -191,6 +195,7 @@ export class WorkerPool extends Destroyable {
       return;
     }
 
+    // Завершаем воркер, если он останется свободным до истечения тайм-аута
     this.#clearIdleTimer(slot);
     slot.idleTimer = setTimeout(() => {
       slot.idleTimer = null;
