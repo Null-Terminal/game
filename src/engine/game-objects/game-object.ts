@@ -7,6 +7,7 @@ import type { Arena } from "#engine/game/arena";
 import type { World } from "#engine/game/world";
 import type { PoolPointer } from "#engine/game-object-pool";
 import type { BBoxTuple } from "#engine/rtree";
+import type { CollisionStatus } from "#engine/game-objects/collision-status";
 
 import { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 import { KindedObject } from "#engine/game-objects/kinded-object";
@@ -223,7 +224,7 @@ export abstract class GameObject<T extends go.GameObjectOptions = go.GameObjectO
   }
 
   @ifAlive
-  visit(_go: GameObject) {
+  visit(_go: GameObject, _status?: CollisionStatus, _impactSpeed = 0) {
     // Ничего не делаю по умолчанию
   }
 

@@ -1,23 +1,16 @@
-import type { Collision, CollisionScore, Game, RenderPayload } from "#engine/game";
-import type { PoolPointer } from "#engine/game-object-pool";
-
 import { ifAlive, ifDead, ifSleeping } from "#engine/game-objects/decorators";
 import { GameObject, type GameObjectOptions } from "#engine/game-objects/game-object";
+import { CollisionStatus } from "#engine/game-objects/collision-status";
 
 import { PhysicsObjectMotion } from "#engine/game-objects/physics-object/motion";
 import { registerPhysicsStatsState } from "#engine/game-objects/physics-object/stats-state";
+
+import type { Collision, CollisionScore, Game, RenderPayload } from "#engine/game";
+import type { PoolPointer } from "#engine/game-object-pool";
 import type { StateValue } from "#engine/game-objects";
 
 export { PhysicsObjectMotion } from "#engine/game-objects/physics-object/motion";
-
-export enum CollisionStatus {
-  NoCollision     = 0b00000,
-  LeftCollision   = 0b00001,
-  RightCollision  = 0b00010,
-  TopCollision    = 0b00100,
-  BottomCollision = 0b01000,
-  Crashed         = 0b10000,
-}
+export { CollisionStatus } from "#engine/game-objects/collision-status";
 
 const ridingTolerance: Record<number, number> = {};
 
@@ -76,10 +69,10 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
 
   @ifAlive
   @ifSleeping(0)
-  override move(dx: number, dy: number): number {
+  override move(dx: number, dy: number, deltaSeconds?: number): number {
     const status = this.motion.kinematic ?
       this.kinematicMove(dx, dy) :
-      this.solidMove(dx, dy);
+      this.solidMove(dx, dy, deltaSeconds);
 
     this.onMove(status);
     return status;
@@ -89,11 +82,11 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
     Object.assign(this.stats, patch(this.stats));
   }
 
-  protected solidMove(dx: number, dy: number): number {
+  protected solidMove(dx: number, dy: number, deltaSeconds?: number): number {
     this.prevX = this.x;
     this.prevY = this.y;
 
-    let moveStatus = this.#updateRiding(dy);
+    let moveStatus = this.#updateRiding(dy, deltaSeconds);
 
     if (dy < 0 && moveStatus & CollisionStatus.BottomCollision) {
       dy = 0;
@@ -126,7 +119,7 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
 
     if (dy !== 0) {
       const targetY = this.y + dy;
-      const newY = this.#moveY(dy);
+      const newY = this.#moveY(dy, deltaSeconds);
 
       if (newY !== this.y) {
         this.y = newY;
@@ -152,7 +145,7 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
       // Гравитация
       stats.vy = Math.max(stats.gravity, stats.vy + stats.gravity * payload.delta);
 
-      const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta);
+      const moveStatus = this.move(stats.vx * payload.delta, stats.vy * payload.delta, payload.delta);
 
       stats.onGround = (moveStatus & CollisionStatus.BottomCollision) !== 0;
 
@@ -187,7 +180,7 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
     return this.world.findCollisions(x, y, x + width, y + height, this);
   }
 
-  #updateRiding(dy: number) {
+  #updateRiding(dy: number, deltaSeconds?: number) {
     // При движении вверх отрываемся от платформы, чтобы она не притягивала объект обратно
     if (dy > 0) {
       this.#riding = null;
@@ -292,7 +285,13 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
       // Это значение используется для визуальной фиксации спрайта, но не вызывает коллизий.
       this.render.setVisualOffsetY(shiftY);
 
-      riding.visit(this);
+      let impactSpeed = 0;
+
+      if (!this.stats.onGround && this.stats.vy < 0) {
+        impactSpeed = this.#impactSpeed(riding, deltaSeconds);
+      }
+
+      riding.visit(this, CollisionStatus.BottomCollision, impactSpeed);
       status |= CollisionStatus.BottomCollision;
 
     } else {
@@ -389,7 +388,7 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
         const edge = delta > 0 ? bbox[0] - this.width : bbox[2];
 
         if (edge === resolved) {
-          object.visit(this);
+          object.visit(this, delta > 0 ? CollisionStatus.RightCollision : CollisionStatus.LeftCollision, Math.abs(this.stats.vx));
         }
       }
     }
@@ -432,11 +431,11 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
     }
 
     this.y = raisedY;
-    support.visit(this);
+    support.visit(this, CollisionStatus.BottomCollision);
     return true;
   }
 
-  #moveY(delta: number): number {
+  #moveY(delta: number, deltaSeconds?: number): number {
     const target = this.y + delta;
 
     const bottom = Math.min(this.y, target);
@@ -460,12 +459,28 @@ export abstract class PhysicsObject<T extends GameObjectOptions = GameObjectOpti
         const edge = delta > 0 ? bbox[1] - this.height : bbox[3];
 
         if (edge === resolved) {
-          object.visit(this);
+          let impactSpeed = Math.abs(this.stats.vy);
+
+          if (delta < 0) {
+            impactSpeed = this.stats.onGround ? 0 : this.#impactSpeed(object, deltaSeconds);
+          }
+
+          object.visit(this, delta > 0 ? CollisionStatus.TopCollision : CollisionStatus.BottomCollision, impactSpeed);
         }
       }
     }
 
     return resolved;
+  }
+
+  #impactSpeed(surface: GameObject, deltaSeconds?: number) {
+    let surfaceSpeed = 0;
+
+    if (deltaSeconds != null && deltaSeconds > 0) {
+      surfaceSpeed = (surface.y - surface.prevY) / deltaSeconds;
+    }
+
+    return Math.max(0, surfaceSpeed - this.stats.vy);
   }
 
   #shift(current: number, previous: number): number {
