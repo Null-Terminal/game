@@ -54,9 +54,13 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   readonly options: t.ResolvedArenasOptions;
 
   get size() {
-    return this.#arenas.values()
-      .filter((arena) => arena.loaded)
-      .reduce((count) => count + 1, 0);
+    let count = 0;
+
+    for (const _arena of this) {
+      count++;
+    }
+
+    return count;
   }
 
   readonly world: World;
