@@ -3,32 +3,22 @@ import { isInRange } from "#/utils/validators";
 import { GameObject, type AnimationInstance } from "#engine/game-objects";
 
 import { FogObjectDebug } from "#game/background/fog-object/debug";
+import { denseFog, hazeFog } from "#game/background/fog-object/presets";
 import { FogObjectRender } from "#game/background/fog-object/render";
+
 import type { FogAppearanceOptions, FogObjectOptions } from "#game/background/fog-object/types";
 import type { ProjectGame } from "#game/settings";
 
 export type * from "#game/background/fog-object/types";
+export { denseFog, hazeFog } from "#game/background/fog-object/presets";
 
 export class FogObject extends GameObject<FogObjectOptions> {
   declare game: ProjectGame;
-  static readonly #haze: FogAppearanceOptions = {
-    texture: { density: 12, seed: 0x4e2d9a71 },
-    opacity: 0.25,
-    speed: 1
-  };
-
-  static readonly #dense: FogAppearanceOptions = {
-    texture: { density: 36, seed: 0x4e2d9a71 },
-    opacity: 0.75,
-    speed: 3,
-    flow: true,
-    sway: 2
-  };
 
   static override readonly animations = {
     fog: (go: GameObject) => FogObject.#createPlayback(go),
-    haze: (go: GameObject) => FogObject.#createPlayback(go, FogObject.#haze),
-    dense: (go: GameObject) => FogObject.#createPlayback(go, FogObject.#dense)
+    haze: (go: GameObject) => FogObject.#createPlayback(go, hazeFog),
+    dense: (go: GameObject) => FogObject.#createPlayback(go, denseFog)
   };
 
   override readonly animations = FogObject.animations;

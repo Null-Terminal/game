@@ -9,10 +9,11 @@ import type { SkyOptions, SkySceneOptions } from "#game/background/sky-object/ty
 import type { ProjectGame } from "#game/settings";
 
 export type * from "#game/background/sky-object/types";
-export { duskSky } from "#game/background/sky-object/presets";
+export { duskSky, overcastSky, stormSky } from "#game/background/sky-object/presets";
 
 export class SkyObject extends GameObject<SkyOptions> {
   declare game: ProjectGame;
+
   static override readonly animations = {
     sky: (go: GameObject) => SkyObject.#createPlayback(go),
     storm: (go: GameObject) => SkyObject.#createPlayback(go, stormSky),
