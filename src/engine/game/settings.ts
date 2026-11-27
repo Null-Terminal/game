@@ -10,7 +10,7 @@ export type * from "#engine/game/settings/types";
 const baseDefaults: BaseGameSettings = {
   audio: { master: 1, effects: 1, music: 1 },
   sleep: null,
-  arenaUnload: null
+  arenas: { unload: null }
 };
 
 export class GameSettings<T extends object = object> {
@@ -21,7 +21,7 @@ export class GameSettings<T extends object = object> {
       const saved = await storage.get("settings", "game");
       const current = cast<Record<string, unknown>>(settings.#values);
 
-      settings.#values = settings.#mergeValues(current, saved) as SettingsValues<T>;
+      settings.#values = settings.#mergeValues(current, saved, "game") as SettingsValues<T>;
       settings.#validateSettings(settings.#values);
 
     } catch (err) {
@@ -81,14 +81,18 @@ export class GameSettings<T extends object = object> {
       throw new RangeError("Sleep distance must be positive");
     }
 
-    const { arenaUnload } = settings;
+    const { unload } = settings.arenas;
 
-    if (arenaUnload != null && !isPositive(arenaUnload.distanceScreens)) {
+    if (unload != null && !isPositive(unload.distanceScreens)) {
       throw new RangeError("Arena unload distance must be positive");
     }
   }
 
-  #mergeValues(defaults: Record<string, unknown>, stored: unknown): Record<string, unknown> {
+  #mergeValues(
+    defaults: Record<string, unknown>,
+    stored: unknown,
+    section: "game" | "arenas" | null
+  ): Record<string, unknown> {
     if (typeof stored !== "object" || stored == null || Array.isArray(stored)) {
       return defaults;
     }
@@ -97,18 +101,22 @@ export class GameSettings<T extends object = object> {
 
     for (const [key, value] of Object.entries(defaults)) {
       const saved = (stored as Record<string, unknown>)[key];
+      const isDistanceSetting = (section === "game" && key === "sleep") || (section === "arenas" && key === "unload");
 
-      if ((key === "sleep" || key === "arenaUnload") && saved === null) {
-        result[key] = null;
+      if (isDistanceSetting) {
+        if (saved === null) {
+          result[key] = null;
 
-      } else if (
-        (key === "sleep" || key === "arenaUnload") &&
-        saved != null && typeof saved === "object" && !Array.isArray(saved)
-      ) {
-        result[key] = { distanceScreens: (saved as Record<string, unknown>)["distanceScreens"] };
+        } else if (typeof saved === "object" && !Array.isArray(saved)) {
+          result[key] = { distanceScreens: (saved as Record<string, unknown>)["distanceScreens"] };
+
+        } else {
+          result[key] = value;
+        }
 
       } else if (typeof value === "object" && value != null && !Array.isArray(value)) {
-        result[key] = this.#mergeValues(value as Record<string, unknown>, saved);
+        const childSection = section === "game" && key === "arenas" ? "arenas" : null;
+        result[key] = this.#mergeValues(value as Record<string, unknown>, saved, childSection);
 
       } else if (typeof saved === typeof value && (typeof saved !== "number" || Number.isFinite(saved))) {
         result[key] = saved;

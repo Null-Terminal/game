@@ -3,7 +3,7 @@ import { isPositive } from "#/utils/validators";
 import { Destroyable } from "#lib/destroyable";
 
 import type { World } from "#engine/game/world";
-import type { BaseGameSettings } from "#engine/game";
+import type { ArenasSettings } from "#engine/game";
 import type { Subscription } from "#lib/event-emitter";
 
 import type * as t from "#engine/game/arena/types";
@@ -62,7 +62,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   readonly world: World;
 
   readonly #settingsSubscription: Subscription;
-  #unloadSettings: BaseGameSettings["arenaUnload"];
+  #settings: ArenasSettings;
 
   readonly #refsToPreload: Set<t.ArenaRef>;
   readonly #arenas = new Set<Arena>();
@@ -92,11 +92,11 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
 
     this.world = world;
     this.#refsToPreload = new Set(refsToPreload);
-    this.#unloadSettings = world.game.settings.get("arenaUnload");
+    this.#settings = world.game.settings.get("arenas");
 
     this.#settingsSubscription = world.game.settings.events.change.on((key) => {
-      if (key === "arenaUnload") {
-        this.#unloadSettings = world.game.settings.get("arenaUnload");
+      if (key === "arenas") {
+        this.#settings = world.game.settings.get("arenas");
       }
     });
 
@@ -185,7 +185,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   checkAutoUnload(now: number) {
-    const unload = this.#unloadSettings;
+    const { unload } = this.#settings;
 
     if (unload == null) {
       return;
@@ -212,7 +212,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       this.#scheduledUnloads.add(arena);
 
       void this.#commitArena(arena, () => {
-        const currentDistance = this.#unloadSettings?.distanceScreens;
+        const currentDistance = this.#settings.unload?.distanceScreens;
 
         if (arena.loaded && currentDistance != null && arena.isFarFromViewport(currentDistance)) {
           this.#unloadArena(arena);

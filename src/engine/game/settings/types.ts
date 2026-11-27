@@ -9,10 +9,14 @@ export interface AudioSettings {
   music: number;
 }
 
+export interface ArenasSettings {
+  unload: { distanceScreens: number } | null;
+}
+
 export interface BaseGameSettings {
   audio: AudioSettings;
   sleep: SleepSettings | null;
-  arenaUnload: { distanceScreens: number } | null;
+  arenas: ArenasSettings;
 }
 
 export type SettingsValues<T extends object> = BaseGameSettings & Omit<T, keyof BaseGameSettings>;

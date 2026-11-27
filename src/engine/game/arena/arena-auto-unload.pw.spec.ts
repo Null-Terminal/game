@@ -224,12 +224,12 @@ test("automatic unload follows the current game setting", async ({ page }) => {
     game.canvas.stop();
 
     world.arenas.checkAutoUnload(performance.now() + 1000);
-    game.settings.set("arenaUnload", null);
+    game.settings.set("arenas", { unload: null });
     world.arenas.flush();
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
     const stayedLoaded = arena.loaded;
 
-    game.settings.set("arenaUnload", { distanceScreens: 1 });
+    game.settings.set("arenas", { unload: { distanceScreens: 1 } });
     world.arenas.checkAutoUnload(performance.now() + 2000);
     world.arenas.flush();
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
