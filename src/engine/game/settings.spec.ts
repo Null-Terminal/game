@@ -76,10 +76,10 @@ describe("GameSettings", () => {
 
     expect(() => settings.set("audio", { master: 1.5, effects: 1, music: 1 })).toThrow(RangeError);
     expect(() => settings.set("sleep", { distanceScreens: 0 })).toThrow(RangeError);
-    expect(() => settings.set("arenas", { unload: { distanceScreens: -1 } })).toThrow(RangeError);
+    expect(() => settings.set("arenas", { distanceScreens: -1 })).toThrow(RangeError);
     expect(settings.get("audio").master).toBe(1);
     expect(settings.get("sleep")).toBeNull();
-    expect(settings.get("arenas")).toEqual({ unload: null });
+    expect(settings.get("arenas")).toBeNull();
   });
 
   it.each([
@@ -87,11 +87,11 @@ describe("GameSettings", () => {
     { saved: null, fallback: { distanceScreens: 1 } }
   ])("restores the arena unload setting: $saved", async ({ saved, fallback }) => {
     const storage = new MemoryStorage();
-    storage.values.set("settings:game", { arenas: { unload: saved } });
+    storage.values.set("settings:game", { arenas: saved });
 
-    const settings = await GameSettings.load({ arenas: { unload: fallback } }, storage);
+    const settings = await GameSettings.load({ arenas: fallback }, storage);
 
-    expect(settings.get("arenas")).toEqual({ unload: saved });
+    expect(settings.get("arenas")).toEqual(saved);
   });
 
   it("drops obsolete sleep options from saved settings", async () => {

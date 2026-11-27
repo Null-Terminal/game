@@ -40,7 +40,7 @@ export function createArenaScene(arenas?: ArenasOptions, unloadDistanceScreens?:
   const element = document.getElementById("game") as HTMLCanvasElement;
   const canvas = new RenderCanvas(element, { width: 320, height: 240, backend: "2d" });
   const settings = new GameSettings({
-    arenas: { unload: unloadDistanceScreens == null ? null : { distanceScreens: unloadDistanceScreens } }
+    arenas: unloadDistanceScreens == null ? null : { distanceScreens: unloadDistanceScreens }
   });
 
   const game = Game.camera(new Camera()).settings(settings).create(canvas);

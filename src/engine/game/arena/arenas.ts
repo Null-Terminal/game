@@ -66,7 +66,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   readonly world: World;
 
   readonly #settingsSubscription: Subscription;
-  #settings: ArenasSettings;
+  #settings: ArenasSettings | null;
 
   readonly #refsToPreload: Set<t.ArenaRef>;
   readonly #arenas = new Set<Arena>();
@@ -189,13 +189,13 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
   }
 
   checkAutoUnload(now: number) {
-    const { unload } = this.#settings;
+    const settings = this.#settings;
 
-    if (unload == null) {
+    if (settings == null) {
       return;
     }
 
-    const { distanceScreens } = unload;
+    const { distanceScreens } = settings;
 
     if (now - this.#lastAutoUnloadCheckAt < this.options.unload.checkInterval) {
       return;
@@ -216,7 +216,7 @@ export class Arenas<T extends Record<string, t.ArenaSource> = Record<string, t.A
       this.#scheduledUnloads.add(arena);
 
       void this.#commitArena(arena, () => {
-        const currentDistance = this.#settings.unload?.distanceScreens;
+        const currentDistance = this.#settings?.distanceScreens;
 
         if (arena.loaded && currentDistance != null && arena.isFarFromViewport(currentDistance)) {
           this.#unloadArena(arena);
