@@ -1,3 +1,4 @@
+<p class="hint">←/→ — изменить значение.</p>
 <div class="groups">
   <section>
     <h2>Звук</h2>
@@ -34,17 +35,34 @@
     <div class="binding"><span>Пауза</span><button type="button" data-action="captureKeyboard" data-keyboard-control="pause"></button></div>
   </section>
 
-  <section>
+  <section id="gamepad-settings" hidden>
     <h2>Геймпад</h2>
+    <label for="gamepad-device">Геймпад</label>
+    <select id="gamepad-device" data-action="selectGamepad" disabled>
+      <option value="">Геймпад не обнаружен</option>
+    </select>
+    <label for="gamepad-layout">Раскладка</label>
+    <select id="gamepad-layout" data-action="setGamepadLayout">
+      <option value="playstation">PlayStation</option>
+      <option value="xbox">Xbox</option>
+    </select>
+    <h3>Управление меню</h3>
+    <p class="hint">Кнопки выбора и перехода между разделами настраиваются для каждого геймпада. Привязки сохраняются для выбранного геймпада.</p>
+    <div class="binding"><span>Выбрать</span><button type="button" data-action="captureMenuGamepad" data-menu-gamepad="confirm"></button></div>
+    <div class="binding"><span>Назад</span><button type="button" data-action="captureMenuGamepad" data-menu-gamepad="back"></button></div>
+    <div class="binding"><span>Предыдущий раздел</span><button type="button" data-action="captureMenuGamepad" data-menu-gamepad="previousGroup"></button></div>
+    <div class="binding"><span>Следующий раздел</span><button type="button" data-action="captureMenuGamepad" data-menu-gamepad="nextGroup"></button></div>
+    <button id="reset-menu-gamepad" type="button" data-action="resetMenuGamepad">Сбросить управление меню</button>
+    <p id="menu-controls-error" class="error" role="alert"></p>
     <label for="vibration-intensity">Интенсивность вибрации <output id="vibration-intensity-value" for="vibration-intensity"></output></label>
     <input id="vibration-intensity" type="range" min="0" max="1" step="0.05" value="0" data-action="setVibrationIntensity" disabled>
-    <p class="hint">Добавьте кнопку или направление стика. Сначала отпустите кнопки геймпада, затем нажмите нужную.</p>
-    <div class="binding"><span>Влево</span><div class="binding-values"><span data-gamepad-values="left"></span><button type="button" data-action="captureGamepad" data-gamepad-add="left">Добавить</button></div></div>
-    <div class="binding"><span>Вправо</span><div class="binding-values"><span data-gamepad-values="right"></span><button type="button" data-action="captureGamepad" data-gamepad-add="right">Добавить</button></div></div>
-    <div class="binding"><span>Прыжок</span><div class="binding-values"><span data-gamepad-values="jump"></span><button type="button" data-action="captureGamepad" data-gamepad-add="jump">Добавить</button></div></div>
-    <div class="binding"><span>Джетпак</span><div class="binding-values"><span data-gamepad-values="jetpack"></span><button type="button" data-action="captureGamepad" data-gamepad-add="jetpack">Добавить</button></div></div>
-    <div class="binding"><span>Использовать</span><div class="binding-values"><span data-gamepad-values="use"></span><button type="button" data-action="captureGamepad" data-gamepad-add="use">Добавить</button></div></div>
-    <div class="binding"><span>Пауза</span><div class="binding-values"><span data-gamepad-values="pause"></span><button type="button" data-action="captureGamepad" data-gamepad-add="pause">Добавить</button></div></div>
+    <p class="hint">Добавьте кнопку или направление стика. Уже зажатые кнопки и оси будут пропущены до отпускания.</p>
+    <div class="binding"><span>Влево</span><div class="binding-values"><span data-gamepad-values="left"></span><button type="button" data-action="captureGamepad" data-gamepad-add="left" aria-label="Добавить привязку геймпада: Влево">+</button></div></div>
+    <div class="binding"><span>Вправо</span><div class="binding-values"><span data-gamepad-values="right"></span><button type="button" data-action="captureGamepad" data-gamepad-add="right" aria-label="Добавить привязку геймпада: Вправо">+</button></div></div>
+    <div class="binding"><span>Прыжок</span><div class="binding-values"><span data-gamepad-values="jump"></span><button type="button" data-action="captureGamepad" data-gamepad-add="jump" aria-label="Добавить привязку геймпада: Прыжок">+</button></div></div>
+    <div class="binding"><span>Джетпак</span><div class="binding-values"><span data-gamepad-values="jetpack"></span><button type="button" data-action="captureGamepad" data-gamepad-add="jetpack" aria-label="Добавить привязку геймпада: Джетпак">+</button></div></div>
+    <div class="binding"><span>Использовать</span><div class="binding-values"><span data-gamepad-values="use"></span><button type="button" data-action="captureGamepad" data-gamepad-add="use" aria-label="Добавить привязку геймпада: Использовать">+</button></div></div>
+    <div class="binding"><span>Пауза</span><div class="binding-values"><span data-gamepad-values="pause"></span><button type="button" data-action="captureGamepad" data-gamepad-add="pause" aria-label="Добавить привязку геймпада: Пауза">+</button></div></div>
     <button id="reset-controls" type="button" data-action="resetControls">Сбросить управление</button>
     <p id="controls-error" class="error" role="alert"></p>
   </section>

@@ -24,36 +24,41 @@ test("Game owns the same input used by the player and destroys it", async ({ pag
   expect(result).toEqual({ shared: true, destroyed: true });
 });
 
-test("gamepad selection stays on the connected device until it disconnects", async ({ page }) => {
+test("preferred gamepad falls back while missing and returns when reconnected", async ({ page }) => {
   await page.goto("/tests/fixture.html");
 
   const selected = await page.evaluate(async () => {
     const modulePath = "/src/engine/input.ts";
     const { GamepadInput } = await import(modulePath) as typeof engineInput;
     const first = { id: "first", connected: true, mapping: "" };
-    const second = { id: "second", connected: true, mapping: "standard" };
+    const second = { id: "second", connected: false, mapping: "standard" };
 
     Object.defineProperty(navigator, "getGamepads", {
       configurable: true,
       value: () => [first, second]
     });
 
-    const initial = GamepadInput.getGamepad()?.id;
-    first.connected = false;
-    const afterDisconnect = GamepadInput.getGamepad()?.id;
-    first.connected = true;
+    GamepadInput.setPreferredId("second");
+    const whileMissing = GamepadInput.getGamepad()?.id;
+    second.connected = true;
     const afterReconnect = GamepadInput.getGamepad()?.id;
     second.connected = false;
-    const afterSecondDisconnect = GamepadInput.getGamepad()?.id;
+    const afterDisconnect = GamepadInput.getGamepad()?.id;
+    first.connected = false;
+    const withNone = GamepadInput.getGamepad()?.id ?? null;
+    first.connected = true;
+    second.connected = true;
+    const restored = GamepadInput.getGamepad()?.id;
 
-    return { initial, afterDisconnect, afterReconnect, afterSecondDisconnect };
+    return { whileMissing, afterReconnect, afterDisconnect, withNone, restored };
   });
 
   expect(selected).toEqual({
-    initial: "first",
-    afterDisconnect: "second",
+    whileMissing: "first",
     afterReconnect: "second",
-    afterSecondDisconnect: "first"
+    afterDisconnect: "first",
+    withNone: null,
+    restored: "second"
   });
 });
 
@@ -233,10 +238,10 @@ test("a gamepad without a standard mapping starts the game and controls the paus
   await expect(menu.locator("#gamepad-status")).toContainText("Геймпад подключён без стандартной раскладки");
   await expect(menu.locator("#gamepad-status")).toContainText("Вибрация через браузер недоступна");
 
-  await page.evaluate(() => (window as TestWindow).fakeGamepadButtons![0]!.pressed = true);
+  await page.evaluate(() => (window as TestWindow).fakeGamepadButtons![1]!.pressed = true);
   await expect(menu).toBeHidden();
 
-  await page.evaluate(() => (window as TestWindow).fakeGamepadButtons![0]!.pressed = false);
+  await page.evaluate(() => (window as TestWindow).fakeGamepadButtons![1]!.pressed = false);
   await page.evaluate(() => (window as TestWindow).fakeGamepadButtons![9]!.pressed = true);
   await expect(menu).toBeVisible();
 

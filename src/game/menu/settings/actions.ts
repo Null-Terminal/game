@@ -1,4 +1,5 @@
 import { DomActionHandlers } from "#lib/dom-action-handlers";
+import { GamepadInput } from "#engine/input";
 import { audioChannels } from "#game/menu/settings/audio-channels";
 
 import type { GameSettingsPanel } from "#game/menu/settings";
@@ -43,6 +44,29 @@ export class SettingsActions extends DomActionHandlers<GameSettingsPanel> {
 
     if (event.type === "input" && input instanceof HTMLInputElement && !input.disabled) {
       this.#settings?.set("vibrationIntensity", input.valueAsNumber);
+    }
+  }
+
+  selectGamepad(event: Event) {
+    const select = event.target;
+
+    if (event.type === "change" && select instanceof HTMLSelectElement) {
+      const id = GamepadInput.selectGamepad(Number(select.value));
+
+      if (id != null) {
+        this.#settings?.set("gamepadId", id);
+      }
+
+      this.parent.syncGamepadDevices();
+    }
+  }
+
+  setGamepadLayout(event: Event) {
+    const select = event.target;
+
+    if (event.type === "change" && select instanceof HTMLSelectElement &&
+      (select.value === "playstation" || select.value === "xbox")) {
+      this.#settings?.set("gamepadLayout", select.value);
     }
   }
 

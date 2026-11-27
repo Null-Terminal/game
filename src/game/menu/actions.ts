@@ -11,6 +11,10 @@ export class MenuActions extends DomActionHandlers<GameMenu> {
     void this.parent.playGame();
   }
 
+  restartGame() {
+    void this.parent.restartGame();
+  }
+
   openSettings() {
     this.parent.openSettings();
   }

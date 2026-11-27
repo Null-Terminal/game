@@ -1,6 +1,8 @@
 import { SettingsActions } from "#game/menu/settings/actions";
+import { GamepadInput } from "#engine/input";
 import { audioChannels } from "#game/menu/settings/audio-channels";
 import { BindingActions } from "#game/menu/settings/bindings";
+import { MenuBindingActions } from "#game/menu/settings/menu-bindings";
 import { defaultDistanceScreens } from "#game/settings/defaults";
 
 import styles from "#game/menu/settings/styles.css?raw";
@@ -28,9 +30,13 @@ export class GameSettingsPanel extends HTMLElement {
 
   #settingsActions: SettingsActions | null = null;
   #bindingActions: BindingActions | null = null;
+  #menuBindingActions: MenuBindingActions | null = null;
 
   #lastSleepDistance: number = defaultDistanceScreens.sleep;
   #lastArenaUnloadDistance: number = defaultDistanceScreens.arenaUnload;
+
+  #selectedGamepadId: string | null = null;
+  #gamepadDevicesSignature = "";
 
   constructor() {
     super();
@@ -39,9 +45,12 @@ export class GameSettingsPanel extends HTMLElement {
 
   connectedCallback() {
     this.shadowRoot!.innerHTML = `<style>${styles}</style>${template}`;
+    this.#gamepadDevicesSignature = "";
     this.#settingsActions = new SettingsActions(this);
     this.#bindingActions = new BindingActions(this);
+    this.#menuBindingActions = new MenuBindingActions(this);
     this.#subscribeToSettings();
+    this.syncGamepadDevices();
   }
 
   disconnectedCallback() {
@@ -51,6 +60,8 @@ export class GameSettingsPanel extends HTMLElement {
     this.#settingsActions = null;
     this.#bindingActions?.destroy();
     this.#bindingActions = null;
+    this.#menuBindingActions?.destroy();
+    this.#menuBindingActions = null;
   }
 
   mount(game: Game<ProjectSettings>) {
@@ -76,6 +87,7 @@ export class GameSettingsPanel extends HTMLElement {
     }
 
     this.#getInput("dynamic-effects").checked = settings.get("dynamicEffects");
+    this.#getSelect("gamepad-layout").value = settings.get("gamepadLayout");
 
     const vibrationInput = this.#getInput("vibration-intensity");
     const vibrationIntensity = vibrationInput.disabled ? 0 : settings.get("vibrationIntensity");
@@ -106,14 +118,19 @@ export class GameSettingsPanel extends HTMLElement {
     if (changedKey == null || changedKey === "controls") {
       this.#bindingActions?.sync();
     }
+
+    if (changedKey == null || changedKey === "gamepadLayout" || changedKey === "menuGamepadProfiles") {
+      this.#menuBindingActions?.sync();
+    }
   }
 
   cancelBindingCapture() {
     this.#bindingActions?.cancelCapture();
+    this.#menuBindingActions?.cancelCapture();
   }
 
   pollGamepadBindingCapture(): boolean {
-    return this.#bindingActions?.pollGamepadCapture() ?? false;
+    return this.#menuBindingActions?.pollGamepadCapture() || this.#bindingActions?.pollGamepadCapture() || false;
   }
 
   setVibrationAvailable(available: boolean) {
@@ -122,6 +139,52 @@ export class GameSettingsPanel extends HTMLElement {
     if (input.disabled !== !available) {
       input.disabled = !available;
       this.sync("vibrationIntensity");
+    }
+  }
+
+  syncGamepadDevices() {
+    const select = this.#getSelect("gamepad-device");
+    const devices = GamepadInput.getConnectedGamepads();
+
+    const signature = JSON.stringify(devices);
+    const unavailable = devices.length === 0;
+
+    const section = this.shadowRoot!.getElementById("gamepad-settings")!;
+
+    if (section.hidden !== unavailable) {
+      section.hidden = unavailable;
+    }
+
+    if (signature !== this.#gamepadDevicesSignature) {
+      this.#gamepadDevicesSignature = signature;
+      select.replaceChildren();
+
+      if (unavailable) {
+        select.add(new Option("Геймпад не обнаружен", ""));
+
+      } else {
+        for (const { index, id } of devices) {
+          select.add(new Option(`${index + 1}. ${id || "Геймпад"}`, String(index)));
+        }
+      }
+    }
+
+    if (select.disabled !== unavailable) {
+      select.disabled = unavailable;
+    }
+
+    const selectedIndex = GamepadInput.selectedIndex;
+    const value = selectedIndex == null ? "" : String(selectedIndex);
+
+    if (select.value !== value) {
+      select.value = value;
+    }
+
+    const selectedGamepadId = GamepadInput.getGamepad()?.id ?? null;
+
+    if (selectedGamepadId !== this.#selectedGamepadId) {
+      this.#selectedGamepadId = selectedGamepadId;
+      this.cancelBindingCapture();
     }
   }
 
@@ -144,6 +207,10 @@ export class GameSettingsPanel extends HTMLElement {
 
   #getOutput(id: string): HTMLOutputElement {
     return this.shadowRoot!.getElementById(id) as HTMLOutputElement;
+  }
+
+  #getSelect(id: string): HTMLSelectElement {
+    return this.shadowRoot!.getElementById(id) as HTMLSelectElement;
   }
 }
 

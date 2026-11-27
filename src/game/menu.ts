@@ -26,6 +26,16 @@ export class GameMenu extends HTMLElement {
   }
 
   @cache
+  get gameOverScreen() {
+    return this.shadowRoot!.getElementById("game-over-screen")!;
+  }
+
+  @cache
+  get restartButton() {
+    return this.shadowRoot!.getElementById("restart") as HTMLButtonElement;
+  }
+
+  @cache
   get startButton() {
     return this.shadowRoot!.getElementById("start") as HTMLButtonElement;
   }
@@ -50,7 +60,6 @@ export class GameMenu extends HTMLElement {
     return this.shadowRoot!.querySelector("game-settings-panel") as GameSettingsPanel;
   }
 
-  #loadingInitialWorld = false;
   #loadInitialWorld: (() => Promise<void>) | null = null;
 
   #input: MenuInput | null = null;
@@ -60,6 +69,11 @@ export class GameMenu extends HTMLElement {
   @cache
   get #error() {
     return this.shadowRoot!.getElementById("error")!;
+  }
+
+  @cache
+  get #restartError() {
+    return this.shadowRoot!.getElementById("restart-error")!;
   }
 
   constructor() {
@@ -116,7 +130,7 @@ export class GameMenu extends HTMLElement {
   async playGame() {
     const game = this.game;
 
-    if (game == null || this.#loadingInitialWorld) {
+    if (game == null || game.status.loadingLevel) {
       return;
     }
 
@@ -127,11 +141,10 @@ export class GameMenu extends HTMLElement {
       return;
     }
 
-    this.#loadingInitialWorld = true;
-    this.#sync();
-
     try {
-      await this.#loadInitialWorld?.();
+      const loading = this.#loadInitialWorld?.();
+      this.#sync();
+      await loading;
       game.status.resume();
 
     } catch (err) {
@@ -139,14 +152,41 @@ export class GameMenu extends HTMLElement {
       console.error(err);
 
     } finally {
-      this.#loadingInitialWorld = false;
       this.#sync();
+    }
+  }
+
+  async restartGame() {
+    const game = this.game;
+
+    if (game == null || !game.status.finished) {
+      return;
+    }
+
+    this.#restartError.textContent = "";
+
+    try {
+      const restarting = game.status.restart();
+      this.#sync();
+      await restarting;
+
+    } catch (err) {
+      this.#restartError.textContent = "Не удалось начать заново. Попробуйте ещё раз.";
+      console.error(err);
+
+    } finally {
+      this.#sync();
+
+      if (game.status.finished) {
+        this.restartButton.focus();
+      }
     }
   }
 
   openSettings() {
     this.menuScreen.hidden = true;
     this.settingsScreen.hidden = false;
+    this.settingsPanel.syncGamepadDevices();
     this.settingsPanel.sync();
     this.backButton.focus();
   }
@@ -165,16 +205,28 @@ export class GameMenu extends HTMLElement {
       return;
     }
 
-    const visible = game.status.paused;
+    const gameOver = game.status.finished || game.status.restarting;
+    const visible = game.status.paused || gameOver;
     const wasHidden = this.hidden;
 
     this.hidden = !visible;
 
+    if (gameOver) {
+      this.menuScreen.hidden = true;
+      this.settingsScreen.hidden = true;
+      this.gameOverScreen.hidden = false;
+
+    } else if (!this.gameOverScreen.hidden) {
+      this.gameOverScreen.hidden = true;
+      this.menuScreen.hidden = false;
+    }
+
     this.startButton.textContent = game.hasWorld ? "Продолжить" : "Начать игру";
-    this.startButton.disabled = this.#loadingInitialWorld;
+    this.startButton.disabled = game.status.loadingLevel;
+    this.restartButton.disabled = game.status.restarting;
 
     if (visible && wasHidden) {
-      this.startButton.focus();
+      (gameOver ? this.restartButton : this.startButton).focus();
       this.#input?.activate();
 
     } else if (!visible && !wasHidden) {

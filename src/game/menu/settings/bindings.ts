@@ -2,13 +2,23 @@ import { DomActionHandlers } from "#lib/dom-action-handlers";
 import { GamepadInput, type GamepadBinding } from "#engine/input";
 
 import { gameActions, type GameAction } from "#game/input/types";
+import { areBindingsEqual, formatGamepadBinding, getActiveGamepadBindings, getBindingKey } from "#game/menu/settings/gamepad-binding";
 import { defaultProjectSettings } from "#game/settings";
 
 import type { GameSettingsPanel } from "#game/menu/settings";
 
 type Capture =
   | { device: "keyboard"; action: GameAction }
-  | { device: "gamepad"; action: GameAction; armed: boolean };
+  | { device: "gamepad"; action: GameAction; held: Set<string> };
+
+const actionLabels: Record<GameAction, string> = {
+  left: "Влево",
+  right: "Вправо",
+  jump: "Прыжок",
+  jetpack: "Джетпак",
+  use: "Использовать",
+  pause: "Пауза"
+};
 
 export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
   #capture: Capture | null = null;
@@ -39,10 +49,13 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
 
       if (capture?.device !== "keyboard") {
         keyboardButton.textContent = controls.keyboard[action];
+        keyboardButton.setAttribute("aria-label", `Назначить клавишу: ${actionLabels[action]}, сейчас ${controls.keyboard[action]}`);
       }
 
       if (capture?.device !== "gamepad") {
-        addGamepadButton.textContent = "Добавить";
+        addGamepadButton.textContent = "+";
+        addGamepadButton.setAttribute("aria-label", `Добавить привязку геймпада: ${actionLabels[action]}`);
+        delete addGamepadButton.dataset["capturing"];
       }
 
       this.#renderGamepadBindings(action, controls.gamepad[action]);
@@ -61,8 +74,11 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
       return;
     }
 
-    this.#capture = { device: "keyboard", action: button.dataset["keyboardControl"] as GameAction };
+    this.parent.cancelBindingCapture();
+    const action = button.dataset["keyboardControl"] as GameAction;
+    this.#capture = { device: "keyboard", action };
     button.textContent = "Нажмите клавишу…";
+    button.setAttribute("aria-label", `Нажмите клавишу: ${actionLabels[action]}`);
     this.#error.textContent = "";
   }
 
@@ -73,8 +89,14 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
       return;
     }
 
-    this.#capture = { device: "gamepad", action: button.dataset["gamepadAdd"] as GameAction, armed: false };
-    button.textContent = "Отпустите кнопки…";
+    this.parent.cancelBindingCapture();
+    const action = button.dataset["gamepadAdd"] as GameAction;
+    const gamepad = GamepadInput.getGamepad();
+    const held = new Set(gamepad == null ? [] : getActiveGamepadBindings(gamepad).map(getBindingKey));
+    this.#capture = { device: "gamepad", action, held };
+    button.textContent = "Нажмите кнопку…";
+    button.setAttribute("aria-label", `Нажмите кнопку геймпада: ${actionLabels[action]}`);
+    button.dataset["capturing"] = "";
     this.#error.textContent = "";
   }
 
@@ -89,21 +111,19 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
 
     if (gamepad == null) {
       this.#error.textContent = "Геймпад не обнаружен.";
-      capture.armed = false;
       return true;
     }
 
-    const binding = this.#findActiveGamepadBinding(gamepad);
-
-    if (!capture.armed) {
-      if (binding == null) {
-        capture.armed = true;
-        this.#getGamepadAddButton(capture.action).textContent = "Нажмите кнопку…";
+    this.#error.textContent = "";
+    const active = getActiveGamepadBindings(gamepad);
+    const activeKeys = new Set(active.map(getBindingKey));
+    for (const key of capture.held) {
+      if (!activeKeys.has(key)) {
+        capture.held.delete(key);
       }
-
-      return true;
     }
 
+    const binding = active.find((item) => !capture.held.has(getBindingKey(item)));
     if (binding == null) {
       return true;
     }
@@ -115,7 +135,7 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
 
     const duplicate = gameActions.find((action) =>
       controls.gamepad[action].some((item) =>
-        this.#areBindingsEqual(item, binding)));
+        areBindingsEqual(item, binding)));
 
     if (duplicate != null) {
       this.#error.textContent = "Эта кнопка или ось уже назначена.";
@@ -182,7 +202,7 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
       const item = document.createElement("span");
 
       item.className = "gamepad-binding";
-      item.append(this.#formatGamepadBinding(binding));
+      item.append(formatGamepadBinding(binding));
 
       const remove = document.createElement("button");
 
@@ -191,46 +211,11 @@ export class BindingActions extends DomActionHandlers<GameSettingsPanel> {
       remove.dataset["action"] = "removeGamepad";
       remove.dataset["gamepadRemove"] = action;
       remove.dataset["index"] = String(index);
-      remove.setAttribute("aria-label", `Удалить ${this.#formatGamepadBinding(binding)}`);
+      remove.setAttribute("aria-label", `Удалить ${formatGamepadBinding(binding)}: ${actionLabels[action]}`);
 
       item.append(remove);
       container.append(item);
     }
-  }
-
-  #findActiveGamepadBinding(gamepad: Gamepad): GamepadBinding | null {
-    for (let index = 0; index < gamepad.buttons.length; index++) {
-      if (GamepadInput.isButtonPressed(gamepad, index)) {
-        return { button: index };
-      }
-    }
-
-    for (let index = 0; index < gamepad.axes.length; index++) {
-      const value = gamepad.axes[index]!;
-
-      if (Math.abs(value) >= 0.6) {
-        return { axis: index, direction: value < 0 ? -1 : 1 };
-      }
-    }
-
-    return null;
-  }
-
-  #areBindingsEqual(first: GamepadBinding, second: GamepadBinding): boolean {
-    if ("button" in first && "button" in second) {
-      return first.button === second.button;
-    }
-
-    return "axis" in first && "axis" in second &&
-      first.axis === second.axis && first.direction === second.direction;
-  }
-
-  #formatGamepadBinding(binding: GamepadBinding): string {
-    if ("button" in binding) {
-      return `Кнопка ${binding.button}`;
-    }
-
-    return `Ось ${binding.axis} ${binding.direction < 0 ? "−" : "+"}`;
   }
 
   readonly #handleKeyboardBinding = (event: KeyboardEvent) => {

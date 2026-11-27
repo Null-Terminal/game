@@ -33,6 +33,27 @@
   border-radius: 12px;
   background: #0d1b30;
   box-shadow: 0 24px 80px rgb(0 0 0 / 45%);
+  scrollbar-color: #4b718a #0d1b30;
+  scrollbar-width: thin;
+}
+
+.panel::-webkit-scrollbar {
+  width: 10px;
+}
+
+.panel::-webkit-scrollbar-track {
+  background: #0d1b30;
+  border-radius: 0 12px 12px 0;
+}
+
+.panel::-webkit-scrollbar-thumb {
+  border: 2px solid #0d1b30;
+  border-radius: 10px;
+  background: #4b718a;
+}
+
+.panel::-webkit-scrollbar-thumb:hover {
+  background: #50e9f9;
 }
 
 .settings-panel {
@@ -86,7 +107,7 @@ button:hover {
   border-color: #50e9f9;
 }
 
-button:focus-visible {
+button:focus {
   outline: 2px solid #50e9f9;
   outline-offset: 3px;
 }

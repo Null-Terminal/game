@@ -113,9 +113,6 @@ export class GameStatus {
 
     this.#set(State.Finished);
     this.#game.canvas.pause();
-
-    alert("Вы проиграли!");
-    void this.restart().catch(console.error);
   }
 
   async restart() {
