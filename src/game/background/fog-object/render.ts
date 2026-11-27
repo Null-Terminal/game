@@ -39,7 +39,7 @@ export class FogObjectRender extends GameObjectRender<FogObject> {
   #drawFog(frame: ObjectRenderPayload) {
     this.#visibleBounds = null;
 
-    if (this.go.game.settings.get("dynamicEffects") === false) {
+    if (!this.go.game.settings.get("dynamicEffects")) {
       return;
     }
 

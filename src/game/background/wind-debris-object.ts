@@ -7,6 +7,7 @@ import { WindDebrisObjectDebug } from "#game/background/wind-debris-object/debug
 import { WindDebrisRender } from "#game/background/wind-debris-object/render";
 
 import type { WindDebrisOptions, WindDebrisSceneOptions } from "#game/background/wind-debris-object/types";
+import type { ProjectGame } from "#game/settings";
 
 export type {
   NewspaperOptions,
@@ -22,6 +23,8 @@ export type {
 export { roadDebris, stormDebris } from "#game/background/wind-debris-object/presets";
 
 export class WindDebrisObject extends GameObject<WindDebrisOptions> {
+  declare game: ProjectGame;
+
   static override readonly animations = {
     wind: (go: GameObject) => WindDebrisObject.#createPlayback(go),
     road: (go: GameObject) => WindDebrisObject.#createPlayback(go, roadDebris),

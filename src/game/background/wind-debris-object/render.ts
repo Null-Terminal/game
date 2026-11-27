@@ -76,6 +76,12 @@ export class WindDebrisRender extends GameObjectRender<WindDebrisObject> {
 
   #drawParticles(frame: ObjectRenderPayload) {
     const { ctx, elapsed } = frame;
+
+    if (!this.go.game.settings.get("dynamicEffects")) {
+      this.#lastElapsed = elapsed;
+      return;
+    }
+
     const { width, height } = this.go.canvas;
     const scene = this.#scene;
     const random = this.#random;

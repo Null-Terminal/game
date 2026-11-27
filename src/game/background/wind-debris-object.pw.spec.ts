@@ -48,6 +48,44 @@ test("wind particles have distinct bounds and can be inspected individually", as
   );
 });
 
+test("dynamic effects setting stops and restores wind particles", async ({ page }) => {
+  const scene = await createScene(page);
+
+  const counts = await scene.evaluate(({ debris, canvas, render, destroy }) => {
+    const ctx = canvas.canvas.getContext("2d")!;
+    const originalStroke = ctx.strokeRect;
+    let drawn = 0;
+
+    ctx.strokeRect = function (x, y, width, height) {
+      drawn++;
+      return originalStroke.call(this, x, y, width, height);
+    };
+
+    try {
+      render(16);
+      const enabled = drawn;
+
+      drawn = 0;
+      debris.game.settings.set("dynamicEffects", false);
+      render(32);
+      const disabled = drawn;
+
+      drawn = 0;
+      debris.game.settings.set("dynamicEffects", true);
+      render(48);
+      return { enabled, disabled, restored: drawn };
+
+    } finally {
+      ctx.strokeRect = originalStroke;
+      destroy();
+    }
+  });
+
+  expect(counts.enabled).toBeGreaterThan(0);
+  expect(counts.disabled).toBe(0);
+  expect(counts.restored).toBeGreaterThan(0);
+});
+
 const fixtureUrl = "/src/game/background/wind-debris-object/tests/fixture.ts";
 
 async function createScene(page: Page): Promise<JSHandle<fixture.WindDebrisScene>> {
